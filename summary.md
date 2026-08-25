@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 23:20 UTC — 10548 systemes evalues
+genere 2026-08-25 23:20 UTC — 10563 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `89c65c03c4ad` : 1574 systemes
+- `89c65c03c4ad` : 1589 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 5277 | 2643 | 336 | 189 | 513 | 434 | 553 | 550 | 10.4% |
-| ref | 4 | 3 | 5147 | 1248 | 2153 | 1 | 679 | 247 | 2 | 817 | 15.9% |
+| ref | 4 | 3 | 5162 | 1249 | 2160 | 1 | 680 | 249 | 2 | 821 | 15.9% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 553, dont T2 : 100%
-- candidats SANS connectivite : 821, dont T2 : 100%
+- candidats SANS connectivite : 825, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -48,9 +48,9 @@ qui ne sature pas.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
-- `89c65c03c4ad` — 209 candidats
+- `89c65c03c4ad` — 213 candidats
   - AVEC connectivite (74) : T0=13.19 T1=0.00 T2=2.80 — pondere **5.59**
-  - SANS connectivite (135) : T0=15.96 T1=0.00 T2=2.71 — pondere **5.42**
+  - SANS connectivite (139) : T0=15.95 T1=0.00 T2=2.73 — pondere **5.47**
 - `0327bdc4c76a` — 107 candidats
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
