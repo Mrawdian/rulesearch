@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 20:57 UTC — 4352 systemes evalues
+genere 2026-08-25 20:57 UTC — 4367 systemes evalues
 
 ## versions du DSL presentes
-- `615abe43d6bc` : 3375 systemes
+- `615abe43d6bc` : 3390 systemes
 - `0327bdc4c76a` : 853 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -15,7 +15,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 2149 | 1076 | 146 | 71 | 221 | 169 | 212 | 229 | 10.7% |
-| ref | 4 | 3 | 2079 | 476 | 890 | 0 | 286 | 102 | 1 | 324 | 15.6% |
+| ref | 4 | 3 | 2094 | 480 | 894 | 1 | 289 | 102 | 1 | 327 | 15.6% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -23,7 +23,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 232, dont T2 : 100%
-- candidats SANS connectivite : 328, dont T2 : 100%
+- candidats SANS connectivite : 331, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -55,11 +55,11 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.21 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,2-3)@grid + PAIRDIFF(>=1)@knight + CONNECTED(v2) + COUNT(v2,1-2)@grid
 - `T2` indices=0.21 — COUNT(v1,0-0)@cols + MONO@blocks + COUNT(v0,1-1)@diags
 - `T2` indices=0.21 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-3)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@knight
+- `T2` indices=0.21 — SUM(5+-0)@rows + COUNT(v1,1-1)@cols + NEQADJ@diags
 - `T2` indices=0.21 — PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-4)@grid + PAIRSTEP(1)@adj
 - `T2` indices=0.22 — NEQADJ@cols + COUNT(v0,2-2)@diags + NEQADJ@blocks
 - `T2` indices=0.22 — CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,1-3)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.22 — MONO@rows + COUNT(v1,1-1)@blocks
-- `T2` indices=0.22 — SUM(7+-1)@cols + COUNT(v2,2-2)@diags
 
 ## cout
 - temps total 1.2 h, dont 2% brule sur des systemes MORT
