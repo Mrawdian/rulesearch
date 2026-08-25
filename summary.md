@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 20:12 UTC — 2366 systemes evalues
+genere 2026-08-25 20:12 UTC — 2380 systemes evalues
 
 ## versions du DSL presentes
-- `615abe43d6bc` : 1389 systemes
+- `615abe43d6bc` : 1403 systemes
 - `0327bdc4c76a` : 853 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -15,7 +15,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 1148 | 588 | 85 | 46 | 127 | 82 | 103 | 103 | 9.0% |
-| ref | 4 | 3 | 1094 | 253 | 485 | 0 | 144 | 43 | 1 | 168 | 15.4% |
+| ref | 4 | 3 | 1108 | 255 | 492 | 0 | 147 | 44 | 1 | 169 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -23,7 +23,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 106, dont T2 : 100%
-- candidats SANS connectivite : 172, dont T2 : 100%
+- candidats SANS connectivite : 173, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
