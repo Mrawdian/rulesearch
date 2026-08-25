@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 19:32 UTC — 373 systemes evalues
+genere 2026-08-25 19:33 UTC — 388 systemes evalues
 
 ## versions du DSL presentes
-- `0327bdc4c76a` : 249 systemes
+- `0327bdc4c76a` : 264 systemes
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
@@ -13,7 +13,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 131 | 64 | 17 | 6 | 14 | 6 | 9 | 13 | 9.9% |
+| connect | 4 | 3 | 146 | 71 | 18 | 6 | 15 | 7 | 11 | 16 | 11.0% |
 | ref | 4 | 3 | 118 | 23 | 54 | 0 | 17 | 4 | 0 | 20 | 16.9% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -21,7 +21,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 16, dont T2 : 100%
+- candidats AVEC connectivite : 19, dont T2 : 100%
 - candidats SANS connectivite : 24, dont T2 : 100%
 - **echantillon trop faible pour conclure**
 
@@ -29,7 +29,9 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - `T2` indices=0.18 — PAIRDIFF(>=1)@knight + PAIRSTEP(1)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-6)@grid
 - `T2` indices=0.21 — PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-4)@grid + PAIRSTEP(1)@adj
+- `T2` indices=0.24 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-4)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.27 — MONO@cols + NEQADJ@rows
+- `T2` indices=0.29 — PAIRDIFF(>=1)@knight + CONNECTED(v1) + COUNT(v1,4-8)@grid
 - `T2` indices=0.29 — CONNECTED(v2) + COUNT(v2,1-4)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.31 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,2-6)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.31 — NEQADJ@cols + SUM(5+-0)@rows
@@ -41,6 +43,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.39 — SUM(2+-0)@diags + MONO@cols
 - `T2` indices=0.39 — MONO@rows + MONO@diags
 - `T2` indices=0.39 — COUNT(v2,1-2)@cols + MONO@rows
+- `T2` indices=0.40 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-4)@grid + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-2)@grid
 - `T2` indices=0.40 — MONO@blocks + PAIRSTEP(1)@adj
 - `T2` indices=0.41 — CONNECTED(v1) + COUNT(v1,8-9)@grid + PAIRSTEP(1)@adj
 - `T2` indices=0.41 — CONNECTED(v0) + COUNT(v0,8-9)@grid + PAIRSTEP(2)@knight
@@ -49,11 +52,8 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.44 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-5)@grid + CONNECTED(v1) + COUNT(v1,4-5)@grid + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-6)@grid
 - `T2` indices=0.46 — MONO@blocks + SUM(2+-1)@diags
 - `T2` indices=0.46 — MONO@blocks + NEQADJ@diags
-- `T2` indices=0.47 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,4-6)@grid + PAIRSTEP(1)@adj
-- `T2` indices=0.47 — SUM(7+-1)@cols + COUNT(v1,2-2)@cols + NOTRIPLE@blocks
-- `T2` indices=0.47 — NEQADJ@rows + SUM(2+-0)@diags
 
 ## cout
-- temps total 0.1 h, dont 7% brule sur des systemes MORT
-- TROP-CHER : 9 systemes abandonnes (2.4% des systemes), 88% du temps total
-  dont 9 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
+- temps total 0.1 h, dont 6% brule sur des systemes MORT
+- TROP-CHER : 11 systemes abandonnes (2.8% des systemes), 89% du temps total
+  dont 11 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
