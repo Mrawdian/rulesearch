@@ -3,6 +3,24 @@
 Lis ce fichier en entier avant toute action. Puis `summary.md`. Puis
 `DECISIONS.md`. Ne touche pas au code avant ces trois lectures.
 
+## Protocole de session
+
+A appliquer a chaque intervention, sans exception.
+
+1. **Lire avant d agir** : `CLAUDE.md`, puis `DECISIONS.md`, puis `WORKLOG.md`.
+   Aucune modification du depot avant ces trois lectures. `WORKLOG.md` donne
+   l etat reel du serveur et ce qui a deja ete tente.
+2. **Ecrire l entree `WORKLOG.md` avant le commit final**, pas apres. Entree la
+   plus recente en haut, au format defini dans le fichier. Le commit qui corrige
+   et l entree qui le documente vont ensemble.
+3. **Toujours distinguer verifie de suppose.** Ce qui a ete execute et observe
+   va dans **Verifie** ; tout le reste va dans **Non verifie / suppose**, meme
+   si c est probable. Ne jamais presenter une deduction comme une observation.
+4. **Commande refusee : consigner et s arreter.** Si un `sudo`, un acces
+   journal ou une dependance manque, l ecrire dans **Bloque sur**, le signaler
+   a l operateur humain, et s arreter sur ce point. **Ne pas contourner.**
+   Le reste de la tache, qui n en depend pas, doit etre mene a terme.
+
 ## Ce qu'on cherche
 
 L'espace des **systemes de regles** de puzzles, pas l'espace des instances.

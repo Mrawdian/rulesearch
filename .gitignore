@@ -3,3 +3,4 @@ __pycache__/
 desktop.ini
 scheduler.log
 queue.json
+runs/
