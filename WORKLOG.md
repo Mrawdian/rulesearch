@@ -11,6 +11,103 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-25 17:49 - regression .gitignore (summary.md) et garde sur sh()
+
+**Demande** : retirer `summary.md` du `.gitignore`, puis journaliser en ERROR
+les echecs de commandes git dans `scheduler.py`. Egalement : `block_systems`
+de 400 a 60 dans `queue.json`.
+
+**Cause reelle** : a l intervention precedente, `summary.md` a ete ajoute au
+`.gitignore` au motif qu il est regenere a chaque bloc. C etait une erreur, et
+elle venait de moi : je n avais pas lu `scheduler.py` avant de proposer
+l ajout. Or le scheduler **versionne deliberement** ce fichier :
+
+    sh("git add -A summary.md found/ && git ... commit ... --allow-empty")
+
+Une fois `summary.md` ignore, `git add` sortait en code 1
+(`The following paths are ignored by one of your .gitignore files`). A cause du
+`&&`, le `commit` ne s executait plus **du tout** : ni `summary.md`, ni
+`found/` n etaient plus pousses. La sortie qui compte cessait d arriver sur
+GitHub.
+
+**Pourquoi c est reste invisible** : `sh()` capturait stdout/stderr et
+retournait `CompletedProcess` sans que l appelant ne teste `returncode`.
+L echec etait donc totalement muet - le scheduler continuait sa boucle comme
+si le push avait reussi. C est la cause racine de la regression : non pas
+l erreur de `.gitignore` elle-meme, mais l absence de toute remontee d echec
+qui l a laissee passer.
+
+Precision sur l enonce de la demande : il n y avait **pas de WARNING generique**
+a remplacer. `sh()` ne journalisait rien. La modification **ajoute** une
+journalisation la ou il n y en avait aucune.
+
+**Correction** :
+- `.gitignore` : `summary.md` retire. Restent `__pycache__/`, `*.pyc`,
+  `desktop.ini`, `scheduler.log`, `queue.json`, `runs/`.
+- `scheduler.py` : `sh()` teste desormais `returncode` et journalise sur stderr
+  `[sched][ERROR] commande en echec (rc=N) : <cmd>` suivi de stdout/stderr
+  tronques a 2000 caracteres. Valeur de retour inchangee, aucun appelant
+  modifie, **rien d autre touche** dans le scheduler.
+- `queue.json` (non versionne, edite directement sur le serveur) :
+  `block_systems` 400 -> 60. Les 5 configs sont intactes. Motif : le scheduler
+  enchaine les configs sequentiellement et n avait produit que du `baseline` ;
+  `connect` et `static-ref`, qui testent l hypothese centrale, n avaient jamais
+  tourne. Des blocs courts accelerent la rotation complete.
+
+**Verifie** (execute et observe) :
+- `git add -A summary.md found/` sort desormais en **0** (sortait en 1 avant le
+  correctif). La chaine `&&` du scheduler est donc retablie. Echec et
+  retablissement tous deux constates directement sur le serveur.
+- `scheduler.py` re-parse sans erreur (`ast.parse`).
+- `block_systems` relu a 60 dans `queue.json`.
+- Lecture de `scheduler.py` : la boucle externe fait `git pull --rebase
+  --autostash` puis `load_queue()` **a chaque cycle**. `queue.json` est donc
+  relu sans redemarrage - mais seulement **apres** la boucle interne sur les 5
+  configs, donc pas avant la fin du cycle courant (celui a 400).
+- `queue.json` etant non suivi et ignore, le `git pull` du scheduler ne
+  l ecrase pas.
+
+**Non verifie / suppose** :
+- La journalisation ERROR n a **jamais ete declenchee en conditions reelles** :
+  le correctif fait justement que la commande reussit. Le chemin d erreur est
+  correct par lecture, pas par observation.
+- Le service tourne encore avec l **ancien** `scheduler.py` charge en memoire
+  et `block_systems=400`. Aucun effet des deux correctifs n a encore ete
+  observe a l execution.
+- Non verifie si des blocs ont echoue silencieusement entre l ajout de
+  `summary.md` au `.gitignore` et son retrait ; le cas echeant, les `found/`
+  correspondants ont ete rattrapes par le commit courant.
+- L effet de `block_systems=60` sur la duree reelle d un cycle complet n est
+  pas mesure.
+
+**Bloque sur** : `sudo` toujours refuse pour l utilisateur `rulesearch`
+(`sudo -n systemctl restart rulesearch` -> `sudo: interactive authentication is
+required`). Egalement refuse pour `systemctl stop` et `journalctl -u
+rulesearch`. Contournement non tente, conformement au protocole. **Le
+redemarrage est pris en charge par Mrawdian.** Tant qu il n a pas eu lieu, les
+correctifs de `scheduler.py` ne sont pas actifs.
+
+En attente de sa confirmation avant de regenerer `summary.md` et de relever le
+tableau : le faire avant ne montrerait que du `baseline` a 400, sans rapport
+avec les changements.
+
+**Pour Claude chat** :
+- `summary.md` **est versionne et pousse par le scheduler** apres chaque bloc.
+  C est le canal par lequel les resultats arrivent dans le depot. Ne jamais
+  l ajouter au `.gitignore` : cela casse silencieusement aussi le push de
+  `found/`. C est l erreur commise ici.
+- Regle generale qui en decoule : avant d ignorer un fichier, verifier qu aucun
+  script ne le committe explicitement. `grep` sur le nom du fichier dans
+  `scheduler.py` et `nightly.sh` suffit.
+- `queue.json` **n est pas dans le depot** (ignore, local au serveur). Son
+  contenu ne peut pas etre lu depuis GitHub. Etat actuel : `block_systems=60`,
+  5 configs `baseline`, `connect`, `cages`, `static-ref`, `big`.
+- Un `summary.md` ne montrant que `baseline` ne signifie pas que les autres
+  configs ont echoue : elles n ont simplement pas encore ete atteintes dans la
+  rotation sequentielle.
+- Les commits `auto: resume <tag>` sont produits par le scheduler lui-meme
+  (identite `rulesearch@local`), pas par une intervention humaine.
+
 ## 2026-08-25 17:41 — restauration de l arborescence engine/ et canary/
 
 **Demande** : le service systemd `rulesearch` ne demarrait pas (redemarrage en

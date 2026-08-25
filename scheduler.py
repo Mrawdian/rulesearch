@@ -26,7 +26,16 @@ DEFAULT_QUEUE = {
 
 
 def sh(cmd, **kw):
-    return subprocess.run(cmd, shell=True, cwd=HERE, capture_output=True, text=True, **kw)
+    r = subprocess.run(cmd, shell=True, cwd=HERE, capture_output=True, text=True, **kw)
+    if r.returncode != 0:
+        print("[sched][ERROR] commande en echec (rc=%d) : %s" % (r.returncode, cmd),
+              file=sys.stderr, flush=True)
+        for name, out in (("stdout", r.stdout), ("stderr", r.stderr)):
+            txt = (out or "").strip()
+            if txt:
+                print("[sched][ERROR] %s: %s" % (name, txt[-2000:]),
+                      file=sys.stderr, flush=True)
+    return r
 
 
 def load_queue():
