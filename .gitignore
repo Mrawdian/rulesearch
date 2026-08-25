@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+desktop.ini
+scheduler.log
+queue.json
