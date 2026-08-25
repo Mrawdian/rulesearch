@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 19:41 UTC — 680 systemes evalues
+genere 2026-08-25 19:41 UTC — 695 systemes evalues
 
 ## versions du DSL presentes
-- `0327bdc4c76a` : 556 systemes
+- `0327bdc4c76a` : 571 systemes
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
@@ -14,7 +14,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 296 | 142 | 32 | 11 | 32 | 15 | 32 | 29 | 9.8% |
-| ref | 4 | 3 | 260 | 54 | 115 | 0 | 31 | 11 | 0 | 49 | 18.8% |
+| ref | 4 | 3 | 275 | 58 | 118 | 0 | 35 | 11 | 0 | 53 | 19.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -22,7 +22,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 32, dont T2 : 100%
-- candidats SANS connectivite : 53, dont T2 : 100%
+- candidats SANS connectivite : 57, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -55,14 +55,14 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.31 — NEQADJ@blocks + MONO@cols
 - `T2` indices=0.32 — NEQADJ@blocks + NEQADJ@cols
 - `T2` indices=0.33 — SUM(3+-1)@cols + MONO@blocks
+- `T2` indices=0.33 — MONO@rows + MONO@diags
 - `T2` indices=0.33 — SUM(2+-1)@blocks + NEQADJ@diags + SUM(2+-0)@blocks
 - `T2` indices=0.34 — PAIRDIFF(>=1)@knight + CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,4-6)@grid
 - `T2` indices=0.34 — PAIRDIFF(>=1)@knight + CONNECTED(v2) + COUNT(v2,4-6)@grid
-- `T2` indices=0.34 — SUM(2+-1)@cols + MONO@blocks
 
 ## cout
 - temps total 0.2 h, dont 3% brule sur des systemes MORT
-- TROP-CHER : 32 systemes abandonnes (4.7% des systemes), 95% du temps total
+- TROP-CHER : 32 systemes abandonnes (4.6% des systemes), 95% du temps total
   dont 32 avec CONNECTED, 0 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
   - avec CONNECTED : 13.1% sur 244 systemes
