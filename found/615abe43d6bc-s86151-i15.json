@@ -1,0 +1,21 @@
+{
+  "ts": 1787687432.583807,
+  "dsl_hash": "615abe43d6bc",
+  "seed": 86151,
+  "idx": 15,
+  "n": 4,
+  "d": 3,
+  "sys": "MONO@cols + NOTRIPLE@diags + MONO@cols",
+  "ms": 13,
+  "total_grids": 13,
+  "clue_frac": 0.458,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 13,
+    "1": 0,
+    "2": 1,
+    "3": 0
+  },
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
