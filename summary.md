@@ -1,11 +1,11 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 22:41 UTC — 8856 systemes evalues
+genere 2026-08-25 22:41 UTC — 8871 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes
 - `0327bdc4c76a` : 853 systemes
-- `12564867381b` : 413 systemes
+- `12564867381b` : 428 systemes
 - `12a0c0c5e34b` : 294 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -17,7 +17,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 4423 | 2227 | 280 | 153 | 432 | 345 | 465 | 469 | 10.6% |
-| ref | 4 | 3 | 4309 | 1048 | 1818 | 1 | 571 | 204 | 2 | 665 | 15.4% |
+| ref | 4 | 3 | 4324 | 1053 | 1824 | 1 | 572 | 205 | 2 | 667 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -25,7 +25,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 472, dont T2 : 100%
-- candidats SANS connectivite : 669, dont T2 : 100%
+- candidats SANS connectivite : 671, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
