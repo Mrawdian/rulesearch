@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 20:32 UTC — 3195 systemes evalues
+genere 2026-08-25 20:32 UTC — 3210 systemes evalues
 
 ## versions du DSL presentes
-- `615abe43d6bc` : 2218 systemes
+- `615abe43d6bc` : 2233 systemes
 - `0327bdc4c76a` : 853 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -15,7 +15,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 1566 | 784 | 110 | 58 | 165 | 122 | 153 | 157 | 10.0% |
-| ref | 4 | 3 | 1505 | 350 | 643 | 0 | 209 | 69 | 1 | 233 | 15.5% |
+| ref | 4 | 3 | 1520 | 355 | 648 | 0 | 212 | 69 | 1 | 235 | 15.5% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -23,7 +23,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 160, dont T2 : 100%
-- candidats SANS connectivite : 237, dont T2 : 100%
+- candidats SANS connectivite : 239, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -44,6 +44,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.17 — PAIRSTEP(2)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-3)@grid + PAIRSTEP(2)@adj
 - `T2` indices=0.18 — PAIRDIFF(>=1)@knight + PAIRSTEP(1)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-6)@grid
 - `T2` indices=0.18 — MONO@blocks + MONO@cols + COUNT(v2,2-2)@diags
+- `T2` indices=0.18 — MONO@cols + NOTRIPLE@rows + SUM(2+-1)@rows
 - `T2` indices=0.19 — PAIRSTEP(1)@knight + CONNECTED(v0) + COUNT(v0,1-4)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.20 — COUNT(v1,0-1)@cols + SUM(5+-0)@blocks + MONO@diags
 - `T2` indices=0.20 — PAIRDIFF(>=1)@knight + CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,1-3)@grid + PAIRDIFF(>=1)@knight
@@ -59,7 +60,6 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.22 — NEQADJ@cols + MONO@rows
 - `T2` indices=0.22 — PAIRSTEP(2)@knight + CONNECTED(v2) + COUNT(v2,2-3)@grid
 - `T2` indices=0.23 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,3-4)@grid + CONNECTED(v0) + COUNT(v0,2-3)@grid + PAIRDIFF(>=1)@knight
-- `T2` indices=0.23 — COUNT(v2,1-1)@cols + COUNT(v1,1-1)@diags + MONO@rows
 
 ## cout
 - temps total 0.9 h, dont 2% brule sur des systemes MORT
