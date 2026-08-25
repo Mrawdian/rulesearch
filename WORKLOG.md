@@ -11,6 +11,67 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - AVERTISSEMENT : 7172 enregistrements produits sous un code jamais commite
+
+**Constat**, decouvert en verifiant l'etat de `runs/` apres le commit
+`b152e57`. Cinq `dsl_hash` distincts coexistent :
+
+    615abe43d6bc : 7172 enregistrements   <-- 84 % des donnees
+    0327bdc4c76a :  853
+    12a0c0c5e34b :  294
+    12564867381b :  284   <-- etat commite actuel
+    6680f7b47e6f :  124
+
+**Cause reelle** : `engine/` a ete modifie **en place, sur un arbre de
+production en marche**. `scheduler.py` relance `run.py` en sous-processus a
+chaque bloc, et `run.py` reimporte `engine/` a chaque fois. Chaque etat
+intermediaire de mes editions successives -- ajout de la paire nue, ajout de
+`DEFAULT_MAX_LEVEL`, remplacement par la paire cachee, retouche de
+commentaires -- a donc ete **capte et execute par la production**, produisant
+une serie par etat.
+
+`615abe43d6bc` correspond a un etat transitoire dont **la source n'existe plus
+nulle part** : ni dans git, ni sur le disque. 7172 enregistrements, soit la
+grande majorite des donnees accumulees, sont rattaches a un code irrecuperable.
+
+**Ce qui n'est PAS casse** : `dsl_hash` a fait exactement son travail. Les
+series sont separees, `summary.md` les liste et rappelle qu'elles ne sont pas
+comparables. Aucune conclusion n'a melange deux hashs. L'invariant 2 a tenu.
+
+**Ce qui est perdu** : le temps machine, et la reproductibilite de la plus
+grosse serie. L'analyse de saturation rapportee plus haut (437 candidats avec
+connectivite, 621 sans, 100 % de T2 des deux cotes) provient de cette serie.
+La conclusion reste valide -- T3 n'ayant jamais ete invoque, le comportement
+etait identique a `DEFAULT_MAX_LEVEL = 2` -- mais elle n'est pas rejouable a
+l'identique.
+
+**Erreur de methode, a moi** : editer `engine/` pendant que le service tourne.
+Il aurait fallu arreter le service, editer, verifier, puis redemarrer. Le
+`sudo` refuse rendait l'arret impossible, ce qui aurait du etre une raison de
+**grouper les editions** au lieu de les enchainer.
+
+**Non verifie / suppose** :
+- L'attribution de chaque hash a un etat precis du code est **deduite de la
+  chronologie**, pas verifiee : les sources intermediaires n'existent plus.
+- Non verifie si des fichiers de `found/` portent un hash orphelin ; c'est
+  probable, les noms sont prefixes par le hash.
+- Non verifie si l'episode de `__pycache__` perime a produit des
+  enregistrements sous un hash ne correspondant pas au code reellement
+  execute. C'est possible, et ce serait plus grave que le reste : le hash
+  mentirait au lieu de simplement pointer une source disparue.
+
+**Decision en attente de l'utilisateur** : purger les series a hash orphelin,
+ou les conserver. Elles sont inoffensives pour les conclusions puisque
+separees, mais elles gonflent `summary.md` et le temps de `summarize.py`.
+
+**Pour Claude chat** :
+- **Ne jamais editer `engine/` pendant que le service tourne.** Chaque
+  sauvegarde intermediaire devient une serie distincte executee en production.
+- Un `dsl_hash` present dans `summary.md` ne garantit pas que la source
+  correspondante existe encore. `615abe43d6bc` n'est retrouvable nulle part.
+- La serie de reference actuelle est **`12564867381b`**, la seule qui
+  corresponde a un commit.
+
 ## 2026-08-26 - T2 sature, T3 inerte deux fois, canary6, verdict neutralise
 
 **Demande** : neutraliser le verdict quand l'indicateur sature ; implementer T3
