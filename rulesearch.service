@@ -1,0 +1,18 @@
+[Unit]
+Description=rulesearch engine
+After=network-online.target
+
+[Service]
+Type=simple
+User=rulesearch
+WorkingDirectory=/home/rulesearch/rulesearch
+Environment=RS_PYTHON=pypy3
+ExecStart=/usr/bin/python3 /home/rulesearch/rulesearch/scheduler.py
+Restart=always
+RestartSec=30
+Nice=10
+StandardOutput=append:/home/rulesearch/rulesearch/scheduler.log
+StandardError=append:/home/rulesearch/rulesearch/scheduler.log
+
+[Install]
+WantedBy=multi-user.target
