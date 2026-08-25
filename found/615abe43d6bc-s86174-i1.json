@@ -1,0 +1,21 @@
+{
+  "ts": 1787687784.962801,
+  "dsl_hash": "615abe43d6bc",
+  "seed": 86174,
+  "idx": 1,
+  "n": 4,
+  "d": 3,
+  "sys": "PAIRDIFF(>=1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,2-6)@grid",
+  "ms": 190,
+  "total_grids": 13,
+  "clue_frac": 0.302,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 15,
+    "1": 0,
+    "2": 3,
+    "3": 0
+  },
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
