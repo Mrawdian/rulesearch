@@ -1,18 +1,18 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 22:49 UTC — 9210 systemes evalues
+genere 2026-08-25 22:49 UTC — 9224 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `89c65c03c4ad` : 236 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `89c65c03c4ad` : 250 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7702 enregistrements (84%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7716 enregistrements (84%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 4602 | 2318 | 286 | 163 | 449 | 365 | 481 | 486 | 10.6% |
-| ref | 4 | 3 | 4484 | 1090 | 1886 | 1 | 593 | 213 | 2 | 699 | 15.6% |
+| ref | 4 | 3 | 4498 | 1096 | 1891 | 1 | 595 | 213 | 2 | 700 | 15.6% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 489, dont T2 : 100%
-- candidats SANS connectivite : 703, dont T2 : 100%
+- candidats SANS connectivite : 704, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -57,9 +57,9 @@ qui ne sature pas.
 - `12a0c0c5e34b` — 31 candidats
   - AVEC connectivite (13) : T0=13.31 T1=0.00 T2=3.08 — pondere **6.15**
   - SANS connectivite (18) : T0=15.83 T1=0.00 T2=2.94 — pondere **5.89**
-- `89c65c03c4ad` — 27 candidats
+- `89c65c03c4ad` — 28 candidats
   - AVEC connectivite (10) : T0=11.50 T1=0.00 T2=3.30 — pondere **6.60**
-  - SANS connectivite (17) : T0=16.29 T1=0.00 T2=3.18 — pondere **6.35**
+  - SANS connectivite (18) : T0=16.17 T1=0.00 T2=3.17 — pondere **6.33**
 
 **T1 n'a JAMAIS ete invoquee** sur l'ensemble des enregistrements. La
 hierarchie effective en production est T0/T2, pas T0/T1/T2. Le niveau
