@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 19:34 UTC — 461 systemes evalues
+genere 2026-08-25 19:36 UTC — 476 systemes evalues
 
 ## versions du DSL presentes
-- `0327bdc4c76a` : 337 systemes
+- `0327bdc4c76a` : 352 systemes
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
@@ -13,7 +13,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 176 | 86 | 20 | 6 | 21 | 8 | 15 | 18 | 10.2% |
+| connect | 4 | 3 | 191 | 92 | 22 | 6 | 21 | 10 | 19 | 19 | 9.9% |
 | ref | 4 | 3 | 161 | 35 | 76 | 0 | 20 | 5 | 0 | 25 | 15.5% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -21,7 +21,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 21, dont T2 : 100%
+- candidats AVEC connectivite : 22, dont T2 : 100%
 - candidats SANS connectivite : 29, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
@@ -54,6 +54,6 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.42 — MONO@blocks + MONO@diags
 
 ## cout
-- temps total 0.1 h, dont 5% brule sur des systemes MORT
-- TROP-CHER : 15 systemes abandonnes (3.3% des systemes), 91% du temps total
-  dont 15 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
+- temps total 0.1 h, dont 4% brule sur des systemes MORT
+- TROP-CHER : 19 systemes abandonnes (4.0% des systemes), 93% du temps total
+  dont 19 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
