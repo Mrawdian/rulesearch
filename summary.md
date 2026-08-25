@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 20:29 UTC — 3122 systemes evalues
+genere 2026-08-25 20:30 UTC — 3137 systemes evalues
 
 ## versions du DSL presentes
-- `615abe43d6bc` : 2145 systemes
+- `615abe43d6bc` : 2160 systemes
 - `0327bdc4c76a` : 853 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -14,7 +14,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 1522 | 768 | 106 | 58 | 160 | 119 | 145 | 149 | 9.8% |
+| connect | 4 | 3 | 1537 | 772 | 108 | 58 | 162 | 120 | 147 | 153 | 10.0% |
 | ref | 4 | 3 | 1476 | 340 | 632 | 0 | 204 | 69 | 1 | 230 | 15.6% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -22,13 +22,13 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 152, dont T2 : 100%
+- candidats AVEC connectivite : 156, dont T2 : 100%
 - candidats SANS connectivite : 234, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
 
-- **145 systemes avec CONNECTED sur 1296 (11.2%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **147 systemes avec CONNECTED sur 1310 (11.2%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -63,8 +63,8 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 ## cout
 - temps total 0.9 h, dont 3% brule sur des systemes MORT
-- TROP-CHER : 146 systemes abandonnes (4.7% des systemes), 95% du temps total
-  dont 145 avec CONNECTED, 1 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- TROP-CHER : 148 systemes abandonnes (4.7% des systemes), 95% du temps total
+  dont 147 avec CONNECTED, 1 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 11.7% sur 1239 systemes
-  - sans CONNECTED : 0.0% sur 283 systemes
+  - avec CONNECTED : 11.7% sur 1253 systemes
+  - sans CONNECTED : 0.0% sur 284 systemes
