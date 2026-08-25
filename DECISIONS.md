@@ -68,3 +68,32 @@ comparable non plus.
 Reouverture : une fois l'hypothese tranchee a d=3, verifier qu'elle tient a
 un autre domaine (d=2 et d=4, chaque fois **les deux tags ensemble**). Un
 resultat obtenu a un seul domaine ne se generalise pas.
+
+## 2026-08-25 - borne de temps par systeme, verdict TROP-CHER
+Defaut de conception : `count_solutions` avait un budget de noeuds, mais
+`random_solution` et `minimal_clues` n'en avaient aucun. Un systeme vivant et
+couteux pouvait donc consommer un bloc entier. Constate en production : le
+premier bloc `connect` a n=4 d=3 a tourne **16 minutes a 98 % CPU sans emettre
+une seule ligne** -- zero systeme evalue sur 15.
+
+Ajout de `--max-seconds` (defaut 45), verifie avant `count_solutions` et a
+chaque tour de la boucle sur les instances.
+
+Verdict distinct **TROP-CHER**, et non TIMEOUT : les deux abandons n'ont pas
+le meme sens. TIMEOUT = budget de noeuds epuise, le systeme est
+combinatoirement dur. TROP-CHER = budget de temps depasse, ce qui inclut le
+cout de generation et de minimisation. Les confondre rendrait la mesure
+inexploitable.
+
+Ce verdict est une **information de recherche**, pas seulement une rustine :
+un systeme trop cher a evaluer a n=4 est un fait sur le systeme. Si la
+connectivite en produit systematiquement, c'est un resultat sur la fracture
+locale / non-locale, pas un incident d'exploitation. `summarize.py` ventile
+donc les TROP-CHER avec et sans CONNECTED.
+
+Ni le solveur ni les seuils existants (MIN_GRIDS, MAX_CLUE_FRAC) ne sont
+touches.
+
+Reouverture : si une part importante des systemes tombe en TROP-CHER a 45 s,
+le seuil est mal calibre ou le cout de `minimal_clues` doit etre attaque
+directement. A surveiller des le premier bloc complet.

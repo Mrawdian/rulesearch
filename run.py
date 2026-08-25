@@ -134,14 +134,21 @@ def gen_system(n, d, rng, families):
 
 MIN_GRIDS = 12
 MAX_CLUE_FRAC = 0.55
+# budget de temps par systeme. count_solutions a un budget de noeuds,
+# random_solution et minimal_clues n'en avaient aucun : un systeme vivant
+# et couteux pouvait bloquer un bloc entier.
+MAX_SECONDS = 45
 
 
-def evaluate_system(rs, n_instances=6):
+def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
     n = rs.n; cells = n * n
+    t0 = time.time()
     # pre-filtre : propagation seule, sans backtracking. Ne peut produire
     # que des vrais positifs (voir engine/prefilter.py et canary/canary4.py).
     if is_dead(rs):
         return {"verdict": "MORT", "total_grids": 0, "prefiltered": True}
+    if time.time() - t0 > max_seconds:
+        return {"verdict": "TROP-CHER", "elapsed_s": round(time.time() - t0, 1)}
     total = count_solutions(rs, [UNASSIGNED] * cells, cap=MIN_GRIDS + 1)
     if total is None:
         return {"verdict": "TIMEOUT"}
@@ -153,6 +160,10 @@ def evaluate_system(rs, n_instances=6):
     fracs, levels, uses_acc = [], [], {0: 0, 1: 0, 2: 0}
     solved = 0
     for _ in range(n_instances):
+        if time.time() - t0 > max_seconds:
+            return {"verdict": "TROP-CHER",
+                    "elapsed_s": round(time.time() - t0, 1),
+                    "total_grids": total}
         sol = random_solution(rs)
         if sol is None:
             return {"verdict": "MORT", "total_grids": total}
@@ -194,6 +205,7 @@ def main():
     ap.add_argument("--families", default="static,cages,relational,connect")
     ap.add_argument("--instances", type=int, default=6)
     ap.add_argument("--max-systems", type=int, default=0)
+    ap.add_argument("--max-seconds", type=int, default=MAX_SECONDS)
     ap.add_argument("--skip-canary", action="store_true")
     a = ap.parse_args()
 
@@ -225,7 +237,7 @@ def main():
         seen.add(rs.label)
         t0 = time.time()
         try:
-            res = evaluate_system(rs, a.instances)
+            res = evaluate_system(rs, a.instances, a.max_seconds)
         except Exception as e:
             res = {"verdict": "ERREUR", "err": repr(e)[:200]}
         rec = {"ts": time.time(), "dsl_hash": dh, "seed": a.seed, "idx": i,

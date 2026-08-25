@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 18:03 UTC — 124 systemes evalues
+genere 2026-08-25 18:49 UTC — 124 systemes evalues
 
 ## versions du DSL presentes
 - `6680f7b47e6f` : 124 systemes
@@ -9,9 +9,9 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ## verdicts par configuration
 
-| tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | CAND | %cand |
-|---|---|---|---|---|---|---|---|---|---|---|
-| baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 7 | 5.6% |
+| tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -34,3 +34,4 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 ## cout
 - temps total 0.0 h, dont 69% brule sur des systemes MORT
+- TROP-CHER : 0 systemes abandonnes (0.0% des systemes), 0% du temps total

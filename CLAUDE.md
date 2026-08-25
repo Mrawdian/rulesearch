@@ -13,6 +13,20 @@ Un systeme est retenu (CANDIDAT) s'il produit des instances a solution
 unique, resolubles par deduction pure sans devinette, avec peu d'indices
 et un niveau de technique superieur au plus faible.
 
+Verdicts possibles : MORT, SUR-CONTRAINT, LIBRE, DEVINETTE, PLAT, CANDIDAT,
+plus deux abandons a ne pas confondre :
+
+- **TIMEOUT** : budget de **noeuds** epuise dans `count_solutions`.
+- **TROP-CHER** : budget de **temps par systeme** depasse (`--max-seconds`,
+  45 s par defaut). `count_solutions` avait un budget de noeuds, mais
+  `random_solution` et `minimal_clues` n'en avaient aucun : un systeme vivant
+  et couteux pouvait bloquer un bloc entier.
+
+TROP-CHER n'est pas qu'une rustine : un systeme trop cher a evaluer a n=4 est
+un **fait sur le systeme**. La question ouverte est de savoir si la
+connectivite en produit systematiquement -- `summarize.py` ventile les
+TROP-CHER avec et sans CONNECTED.
+
 ## Ce que l'oracle ne couvre pas
 
 La structure est calculable. L'interet de jouer ne l'est pas. Ce moteur est

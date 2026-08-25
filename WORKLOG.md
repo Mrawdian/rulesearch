@@ -11,6 +11,92 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-25 18:52 - borne de temps par systeme, verdict TROP-CHER
+
+**Demande** : ajouter une borne de temps par systeme (`--max-seconds`, defaut
+45), avec un verdict distinct **TROP-CHER**, et le documenter partout.
+
+**Cause reelle** : le bloc `connect` a n=4 d=3 lance a 18:28 a tourne **16
+minutes a 98,7 % CPU sans ecrire une seule ligne** -- 0 systeme evalue sur 15,
+`results.jsonl` vide. Le processus n'etait pas bloque : il calculait un unique
+systeme.
+
+Defaut de conception, identifie par l'auteur : `count_solutions` a un budget de
+**noeuds**, mais `random_solution` et `minimal_clues` n'avaient **aucun**
+budget. Un systeme vivant et couteux pouvait donc consommer un bloc entier. Le
+pre-filtre ne corrige pas cela : par conception il ne borne que les systemes
+MORT, pas le cout des systemes vivants.
+
+**Correction** (`run.py`) :
+- constante `MAX_SECONDS = 45` et argument `--max-seconds`.
+- `evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS)` prend un
+  `t0 = time.time()` en tete et teste le depassement **avant
+  `count_solutions`** et **a chaque tour de la boucle sur les instances**.
+- au depassement, retourne `{"verdict": "TROP-CHER", "elapsed_s": ...}` (plus
+  `total_grids` quand il est connu), et **non** TIMEOUT.
+- `--max-seconds` etant dans `vars(a)`, il est enregistre automatiquement dans
+  le `config.json` de chaque run.
+
+`summarize.py` : colonne TROP-CHER dans la table des verdicts, et dans la
+section cout le nombre de systemes abandonnes, leur part des systemes et leur
+part du temps total, **ventiles avec et sans CONNECTED**.
+
+`README.md`, `CLAUDE.md`, `DECISIONS.md` : TROP-CHER documente, avec la
+distinction explicite d'avec TIMEOUT.
+
+**Ni le solveur ni les seuils existants (`MIN_GRIDS`, `MAX_CLUE_FRAC`) ne sont
+touches.** Verifie sur le diff.
+
+**Verifie** (execute et observe) :
+- **Les quatre canaris passent depuis la racine ET depuis `engine/`** : 8
+  executions, exit=0 partout. `canary3` : `OK : aucune divergence.`
+  `canary4` : `OK : aucun faux positif.`
+- `run.py --help` expose bien `--max-seconds MAX_SECONDS`.
+- `summarize.py` tourne sans regression sur les 124 anciens enregistrements et
+  emet la nouvelle ligne : `TROP-CHER : 0 systemes abandonnes (0.0% des
+  systemes), 0% du temps total`.
+- `ast.parse` passe sur `run.py` et `summarize.py`.
+- **`dsl_hash` inchange : `0327bdc4c76a`.** `run.py` est a la racine, pas dans
+  `engine/` : la borne de temps ne casse donc **pas** la comparabilite de la
+  serie en cours. Seul `prefilter.py` avait change le hash.
+
+**Non verifie / suppose** :
+- **TROP-CHER n'a jamais ete declenche.** Le compteur est a 0 : le chemin de
+  code est correct par lecture et par diff, pas par observation. Aucun systeme
+  n'a encore ete abandonne pour depassement.
+- Le seuil de 45 s n'est pas calibre par la mesure. Il est choisi a priori.
+  S'il s'avere trop bas, des systemes evaluables seront abandonnes a tort ;
+  trop haut, le goulot demeure.
+- Le test de depassement place juste apres `is_dead()` est en pratique presque
+  toujours faux (le pre-filtre coute 0,02 s). Il est conserve parce qu'il a ete
+  demande explicitement, et il ne coute rien.
+- L'hypothese que la connectivite produise systematiquement des systemes trop
+  chers est **la question ouverte**, pas un resultat. Aucune donnee ne
+  l'etaye encore.
+- Le gain de debit du pre-filtre reste non mesure en production.
+
+**Bloque sur** : `sudo` toujours refuse. **Demande a Mrawdian :
+`sudo systemctl restart rulesearch`.** Necessaire ici pour deux raisons : le
+bloc `connect` en cours tourne toujours avec l'ancien `run.py` **sans borne de
+temps** (demarre a 18:28, plus de 20 min sur un seul systeme), et il ne
+s'arretera pas de lui-meme. Sans redemarrage, la borne ne s'appliquera qu'au
+bloc suivant -- qui n'arrivera pas tant que celui-ci n'a pas fini.
+
+**Pour Claude chat** :
+- **TIMEOUT et TROP-CHER ne sont pas synonymes.** TIMEOUT = budget de noeuds
+  epuise dans `count_solutions` (systeme combinatoirement dur). TROP-CHER =
+  budget de temps par systeme depasse, generation et minimisation incluses.
+  Les confondre rend la mesure inexploitable.
+- TROP-CHER est une **information de recherche**, pas un incident : un systeme
+  trop cher a evaluer a n=4 est un fait sur le systeme. La ventilation
+  avec/sans CONNECTED dans la section cout de `summary.md` est la mesure qui
+  repond a cette question.
+- Le `dsl_hash` reste **`0327bdc4c76a`**. Les runs de cette serie restent
+  comparables entre eux malgre le changement de `run.py`.
+- Un `summary.md` affichant `TROP-CHER : 0` peut vouloir dire deux choses
+  opposees : aucun systeme trop cher, **ou** aucun bloc n'a encore tourne avec
+  la borne. Verifier la date du run avant de conclure.
+
 ## 2026-08-25 18:25 - pre-filtre MORT (v3), correction canary4, file a domaine egal
 
 **Demande** : integrer cinq fichiers livres (`prefilter.py`, `canary4.py`,

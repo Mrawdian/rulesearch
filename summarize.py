@@ -39,17 +39,18 @@ w("")
 
 w("## verdicts par configuration")
 w("")
-w("| tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | CAND | %cand |")
-w("|---|---|---|---|---|---|---|---|---|---|---|")
+w("| tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |")
+w("|---|---|---|---|---|---|---|---|---|---|---|---|")
 groups = collections.defaultdict(list)
 for r in recs:
     groups[(r["tag"], r.get("n"), r.get("d"))].append(r)
 for (tag, n, d), rs in sorted(groups.items()):
     c = collections.Counter(x["verdict"] for x in rs)
     tot = len(rs)
-    w("| %s | %s | %s | %d | %d | %d | %d | %d | %d | %d | %.1f%% |" % (
+    w("| %s | %s | %s | %d | %d | %d | %d | %d | %d | %d | %d | %.1f%% |" % (
         tag, n, d, tot, c["MORT"], c["LIBRE"], c["DEVINETTE"], c["PLAT"],
-        c["SUR-CONTRAINT"], c["CANDIDAT"], 100 * c["CANDIDAT"] / max(1, tot)))
+        c["SUR-CONTRAINT"], c["TROP-CHER"], c["CANDIDAT"],
+        100 * c["CANDIDAT"] / max(1, tot)))
 w("")
 
 # hypothese de fracture : la connectivite produit-elle plus de T2 ?
@@ -107,6 +108,17 @@ if recs:
     mort_ms = sum(r.get("ms", 0) for r in mort)
     w("- temps total %.1f h, dont %.0f%% brule sur des systemes MORT" %
       (tot_ms / 3.6e6, 100 * mort_ms / max(1, tot_ms)))
+    cher = [r for r in recs if r["verdict"] == "TROP-CHER"]
+    cher_ms = sum(r.get("ms", 0) for r in cher)
+    w("- TROP-CHER : %d systemes abandonnes (%.1f%% des systemes), "
+      "%.0f%% du temps total" %
+      (len(cher), 100 * len(cher) / max(1, len(recs)),
+       100 * cher_ms / max(1, tot_ms)))
+    if cher:
+        conn = sum(1 for r in cher if "CONNECTED" in r.get("sys", ""))
+        w("  dont %d avec CONNECTED, %d sans (un systeme trop cher a "
+          "evaluer est un fait sur le systeme, pas seulement un incident)" %
+          (conn, len(cher) - conn))
 
 with open(os.path.join(HERE, "summary.md"), "w") as f:
     f.write("\n".join(out) + "\n")
