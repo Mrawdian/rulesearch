@@ -11,6 +11,96 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-25 19:35 - canary5, garde permanente de l'interruption par alarme
+
+**Demande** : verser au depot le test du declenchement de l'alarme, avec en
+plus une verification de faux positif ; l'enregistrer dans `run_canaries()` et
+le documenter. Consigner par ailleurs comme question ouverte l'observation sur
+`count_solutions`.
+
+**Cause reelle** : le chemin d'interruption avait deja echoue **en silence**.
+Une borne testee entre les appels ne pouvait pas interrompre un blocage
+survenant dans un appel, et `summary.md` affichait `TROP-CHER : 0` -- lisible a
+tort comme "aucun systeme trop cher". Un chemin de code sans canari peut
+retomber dans cet etat sans que rien ne le signale.
+
+**Correction** :
+- `canary/canary5.py` (nouveau). Deux verifications symetriques :
+  - **A, faux negatif** : `minimal_clues` remplace par une boucle de calcul
+    pur, sans appel systeme ni test d'heure, que seul un signal peut
+    interrompre. Exige un TROP-CHER en `phase == "minimal_clues"` avec
+    `interrompu == True`, dans le budget imparti.
+  - **B, faux positif** : avec le vrai `minimal_clues` et un budget large,
+    aucun record ne doit porter TROP-CHER sans avoir reellement consomme son
+    budget. Un systeme sain etiquete TROP-CHER disparaitrait des candidats
+    sans laisser de trace -- exactement le mode de defaillance du pre-filtre
+    surveille par `canary4`.
+  - verifie en outre que l'alarme est **desarmee entre deux systemes** : si
+    tous les systemes ressortaient TROP-CHER, `signal.alarm(0)` manquerait.
+- `run.py` : `canary5.py` ajoute a la liste de `run_canaries()`.
+- `README.md` : section Canaris listant les cinq, avec le role de chacun.
+- `CLAUDE.md` : canary5 mentionne comme garde de l'interruption, et nouvelle
+  section **Question ouverte : le budget de noeuds de count_solutions**.
+
+**Isolation du canari** : `canary5` redirige `run.HERE` vers un repertoire
+temporaire et y lie `engine/` symboliquement. Il n'ecrit donc ni dans `runs/`,
+ni dans `found/`, ni dans `summary.md`. Verifie : aucun repertoire `canary5*`
+dans `runs/` apres dix executions.
+
+**Verifie** (execute et observe) :
+- **Les cinq canaris passent depuis la racine ET depuis `engine/` : 10/10,
+  exit 0.** `canary5` : `OK : aucun faux negatif, aucun faux positif.`
+- `canary5` passe aussi sous **pypy3**, l'interpreteur de production.
+- Detail d'une execution : partie A, 40 systemes, 16 TROP-CHER dont plusieurs
+  en `phase=minimal_clues` a `elapsed_s=3.0`, et **24 systemes evalues
+  normalement** apres interruption -- l'alarme est bien desarmee entre deux
+  systemes. Partie B, 12 systemes, **0 TROP-CHER**.
+- `dsl_hash` inchange : **`0327bdc4c76a`**. `canary5.py` est dans `canary/`,
+  pas dans `engine/`.
+
+**Question ouverte consignee, non tranchee** : en partie A, seul
+`minimal_clues` avait ete truque, et pourtant des systemes ont ete interrompus
+en `phase == "count_solutions"`. Si cette fonction peut consommer 3 s alors
+qu'elle possede un budget de **noeuds**, ce budget ne borne pas ce qu'on croit
+-- ce serait un **defaut du solveur**, pas une lenteur. `CLAUDE.md` le consigne
+avec la consigne explicite de **ne pas toucher au solveur** avant d'avoir la
+distribution du champ `phase` sur les vrais TROP-CHER de production.
+
+**Non verifie / suppose** :
+- L'observation sur `count_solutions` vient d'un **banc**, pas de donnees de
+  production. Elle peut etre un artefact du cas artificiel. C'est une question,
+  pas un resultat.
+- `canary5` ajoute au demarrage un cout non mesure precisement, de l'ordre de
+  la minute (la partie A accumule des attentes de 3 s). Les canaris ne tournent
+  qu'une fois par vie du scheduler -- `--skip-canary` ensuite -- donc le cout
+  est paye une fois par redemarrage, pas par bloc. Non chronometre.
+- La partie B pourrait devenir lente si le generateur tombait sur un systeme
+  reellement pathologique ; borne a 30 s par systeme, mais non observe.
+- Aucun TROP-CHER de production n'a encore ete examine.
+
+**Etat de la production, constate au passage** : le service a ete redemarre.
+`runs/` contient desormais une quinzaine de repertoires horodates 19:28-19:31
+alternant **`connect` et `static-ref`** -- la rotation fonctionne enfin, les
+deux tags tournent, et les blocs s'achevent en quelques secondes au lieu de
+geler. `found/` est passe a 38 fichiers. Non analyse en detail a ce stade.
+
+**Bloque sur** : rien de nouveau. `sudo` reste refuse ; un redemarrage sera
+necessaire pour que `run_canaries()` prenne `canary5` en compte, mais **rien
+n'est casse sans lui** : le canari existe et passe, il n'est simplement pas
+encore joue automatiquement au demarrage.
+
+**Pour Claude chat** :
+- Il y a maintenant **cinq** canaris. `canary5` garde le chemin
+  d'interruption, dans les deux sens : ne pas le retirer, il couvre une panne
+  qui s'est deja produite en silence.
+- `canary5` est **lent** (de l'ordre de la minute) : c'est normal, il attend
+  reellement des expirations de budget. Ne pas l'interpreter comme un blocage.
+- Il s'execute dans un repertoire temporaire : s'il apparait un jour un tag
+  `canary5a` ou `canary5b` dans `summary.md`, c'est que son isolation a casse.
+- La question ouverte sur `count_solutions` **ne doit pas etre tranchee par
+  raisonnement**. Elle attend une mesure : la distribution du champ `phase`
+  sur les TROP-CHER de production.
+
 ## 2026-08-25 19:15 - interruption par SIGALRM, champ phase, seuil a 20 s
 
 **Demande** : remplacer la borne de temps par une interruption SIGALRM,

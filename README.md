@@ -57,6 +57,21 @@ les appels ne peut rien interrompre quand le blocage est DANS un appel.
 Le champ `interrompu` distingue une interruption par signal d'un
 depassement constate entre deux appels.
 
+## Canaris
+Tous tournent avant chaque run ; `--skip-canary` est reserve au debug.
+Ils doivent passer depuis la racine ET depuis `engine/`.
+    canary.py   positif sudoku 4x4, plus un contre-canari sans contrainte
+    canary2.py  niveaux de technique requis par famille
+    canary3.py  correction de T1 : aucune divergence avec la solution
+    canary4.py  surete du pre-filtre : aucun faux positif
+    canary5.py  surete de l'interruption par alarme, dans les deux sens :
+                faux negatif (l'alarme ne se declenche pas, un systeme
+                pathologique gele un bloc -- c'est arrive) et faux positif
+                (un systeme sain etiquete TROP-CHER disparaitrait des
+                candidats, comme un faux positif du pre-filtre).
+                Tourne dans un repertoire temporaire : ne touche ni
+                `runs/`, ni `found/`, ni `summary.md`.
+
 ## Etat 24/08/2026
 - T1 (hidden single) corrige : n'est valide que sur un ALLDIFF de taille d.
   Applique a toute region il forcait des valeurs a tort -- invisible sur le

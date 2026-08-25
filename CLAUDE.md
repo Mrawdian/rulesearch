@@ -24,6 +24,11 @@ plus deux abandons a ne pas confondre :
   `random_solution` et `minimal_clues` n'en avaient aucun : un systeme vivant
   et couteux pouvait bloquer un bloc entier.
 
+La surete de cette interruption est gardee par `canary/canary5.py`, dans les
+deux sens : faux negatif (l'alarme ne se declenche pas) et faux positif (un
+systeme sain etiquete TROP-CHER, qui disparaitrait des candidats sans
+laisser de trace). Ce chemin a deja echoue silencieusement une fois.
+
 TROP-CHER n'est pas qu'une rustine : un systeme trop cher a evaluer a n=4 est
 un **fait sur le systeme**. La question ouverte est de savoir si la
 connectivite en produit systematiquement -- `summarize.py` ventile les
@@ -78,6 +83,24 @@ l'hypothese, ne la prouve pas.
 
 Si l'hypothese tombe, le DSL v2 n'est qu'un v1 elargi et il faut chercher la
 fracture ailleurs.
+
+## Question ouverte : le budget de noeuds de count_solutions
+
+En construisant `canary5.py`, seul `minimal_clues` avait ete rendu
+pathologique. Des systemes ont pourtant ete interrompus par l'alarme en
+**`phase == "count_solutions"`**, fonction qui n'avait pas ete truquee.
+
+Si `count_solutions` peut consommer 3 s et plus alors qu'elle possede un budget
+de **noeuds**, ce budget ne borne pas ce qu'on croit. Ce serait un **defaut du
+solveur**, pas une simple lenteur : un budget de noeuds cense garantir une
+terminaison bornee qui ne la garantit pas.
+
+Non tranche, et **a ne pas corriger a l'aveugle**. La mesure qui repond est la
+distribution du champ `phase` sur les vrais TROP-CHER de production. Si
+`count_solutions` y domine, le budget de noeuds est a revoir ; s'il est
+marginal, l'observation etait un artefact du banc.
+
+Ne pas toucher au solveur avant d'avoir cette distribution.
 
 ## Prochaine tache, par priorite
 

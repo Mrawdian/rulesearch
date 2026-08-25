@@ -38,7 +38,8 @@ def run_canaries():
     ok = True
     env = dict(os.environ)
     env["PYTHONPATH"] = os.path.join(HERE, "engine") + os.pathsep + env.get("PYTHONPATH", "")
-    for c in ("canary.py", "canary2.py", "canary3.py", "canary4.py"):
+    for c in ("canary.py", "canary2.py", "canary3.py", "canary4.py",
+              "canary5.py"):
         p = os.path.join(HERE, "canary", c)
         if not os.path.exists(p):
             continue
