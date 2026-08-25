@@ -152,6 +152,24 @@ non decomposable localement.
 `canary3` reste le filet : il exige que la deduction retrouve EXACTEMENT la
 solution d'origine. Ne jamais entreprendre ce chantier sans l'etendre d'abord.
 
+## Etat de la mesure de profondeur -- a lire avant d'en tirer quoi que ce soit
+
+- `max_level >= 2` vaut **100 % partout** : le seuil est SATURE, il ne
+  discrimine plus. Aucune conclusion, ni pour ni contre l'hypothese, ne peut
+  en etre tiree.
+- **T1 n'a jamais ete invoquee en production.** La hierarchie effective est
+  **T0/T2**, pas T0/T1/T2. Le niveau intermediaire est vide.
+- Il n'y a **pas de T3** : deux techniques d'elimination ont ete implementees,
+  verifiees correctes, et retirees pour inertie. Voir plus haut.
+- Ce qui discrimine encore : la mesure **continue** publiee par
+  `summarize.py` -- invocations par niveau, ponderees. Les systemes a
+  connectivite demandent plus de T2 et moins de T0. Ecart faible, dans le sens
+  de l'hypothese, sur trois series sur quatre.
+
+Cette mesure continue evalue l'**effort** de deduction, pas la profondeur au
+sens d'une hierarchie. Ne pas ecrire qu'un systeme est "plus profond" parce
+qu'il demande plus d'invocations : il est plus laborieux.
+
 ## Hypothese en cours
 
 La ligne de fracture entre systemes plats et systemes profonds n'est pas
@@ -226,9 +244,11 @@ Ne pas toucher au solveur avant d'avoir cette distribution.
      cout est **multiplicatif** et non additif : T2 imbrique dans T2. Elle
      censurerait davantage de systemes profonds -- donc detruirait la
      mesure qu'elle permet. Non retenue en l'etat.
-   Tant que ce n'est pas tranche, `DEFAULT_MAX_LEVEL` reste a 2 et la
-   mesure de profondeur est saturee -- donc aucune conclusion sur
-   l'hypothese centrale n'est possible.
+   Reformulation retenue : A etant la **seule voie connue** vers une
+   metrique non saturee, la question n'est plus *quand* reecrire le
+   moteur mais **accepte-t-on de ne jamais mesurer la profondeur au-dela
+   de T2**. Une piste moins couteuse existe : combler le trou entre T0 et
+   T2, puisque T1 est sans emploi dans l'espace explore.
 
 ## Ce qu'il ne faut pas faire
 

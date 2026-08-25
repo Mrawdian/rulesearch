@@ -8,18 +8,16 @@ les journaux ne le signalerait.
 C'est ce canari qui aurait attrape le bug T1 (hidden single applique a des
 regions qui n'exigent pas la presence de chaque valeur).
 
-Couvre T0, T1, T2 et T3. T3 (paire nue) partage exactement la fragilite de T1 :
-il n'est valide que sur une region ou chaque valeur DOIT apparaitre, donc un
-ALLDIFF de taille exactement d. Une paire nue appliquee a une region
-quelconque eliminerait des valeurs a tort, remplirait la grille, et rendrait
-une solution FAUSSE sans que rien ne le signale.
+Couvre T0, T1 et T2. Toute nouvelle technique doit etre ajoutee ICI avant
+d'etre activee : une technique fausse remplit la grille et rend une solution
+FAUSSE, ce qu'aucun autre canari ne verrait.
 
 Sortie non nulle = au moins une divergence = le moteur ment.
 """
 import random, sys
 from rulesearch import *
 from dsl2 import *
-from deduction import apply_T0, apply_T1, apply_T2, apply_T3, t1_regions
+from deduction import apply_T0, apply_T1, apply_T2, t1_regions
 
 random.seed(23)
 n = 4
@@ -42,11 +40,6 @@ def solve_and_grid(rs, puzzle):
         if c2:
             return None
         if p2:
-            continue
-        p3, c3 = apply_T3(rs, g)
-        if c3:
-            return None
-        if p3:
             continue
         break
     return g if all(x != UNASSIGNED for x in g) else None
@@ -82,11 +75,11 @@ for name, rs in tests:
             if g != sol:
                 div += 1
     total_div += div
-    print("%-14s instances=%2d resolues=%2d DIVERGENCES=%d (T1/T3 sur %d regions)"
+    print("%-14s instances=%2d resolues=%2d DIVERGENCES=%d (T1 sur %d regions)"
           % (name, tot, solved, div, len(t1_regions(rs))))
 
 if total_div:
     print("\nECHEC : la deduction ne retrouve pas la solution d'origine.")
-    print("T0..T3 sont en cause : une technique remplit la grille ET se trompe.")
+    print("Une technique remplit la grille ET se trompe.")
     sys.exit(1)
 print("\nOK : aucune divergence.")

@@ -289,3 +289,109 @@ celle qui a tourne. Exactement ce que `dsl_hash` est cense empecher.
 Ajoute a l'invariant 1 : purger `__pycache__` apres toute modification de
 `engine/`. Non automatise a ce stade -- candidat a une purge systematique au
 demarrage de `run.py`, non fait car cela touche au chemin de production.
+
+## 2026-08-26 - reformulation de l'option A : ce n'est plus une question de calendrier
+L'entree precedente presentait l'etat de candidats explicite comme "bonne
+architecture, mauvais moment". Cette formulation est trop douce, et l'auteur
+l'a corrigee.
+
+Puisque **toute technique d'ELIMINATION est inerte sur ce moteur** et que la
+seule famille de POSE connue au-dela de T2 -- la contradiction a profondeur 2
+-- a un cout multiplicatif qui detruirait la mesure qu'elle permet, A n'est
+plus une option parmi deux. C'est **la seule voie connue** vers une metrique de
+profondeur non saturee.
+
+La question n'est donc pas "quand reecrire le moteur" mais :
+
+    **accepte-t-on de ne jamais mesurer la profondeur au-dela de T2 ?**
+
+Repondre oui est un choix legitime -- le projet peut se contenter de T0/T2 et
+chercher ailleurs sa ligne de fracture. Mais c'est un choix, pas un report, et
+il doit etre pris comme tel.
+
+Reouverture inchangee sur le fond : le chantier se justifie de lui-meme quand
+le debit deviendra le probleme (n=5, n=6). Ce qui change est qu'en attendant,
+**aucune mesure de profondeur plus fine que T2 n'existe** -- sauf par la voie
+continue ci-dessous.
+
+
+## 2026-08-26 - une metrique CONTINUE discrimine la ou le seuil sature
+Mesure demandee avant de trancher A, et elle change la situation.
+
+Distribution sur 1143 candidats, toutes series : `max_level` vaut T2 pour
+**100 %** d'entre eux. Le seuil est donc bien sature. Mais les invocations par
+niveau, elles, varient :
+
+    serie 615abe43d6bc, 945 candidats
+      AVEC connectivite (397) : T0=12,99  T2=2,95  pondere 5,90
+      SANS connectivite (548) : T0=15,85  T2=2,67  pondere 5,34
+
+Le sens est celui que l'hypothese predit : les systemes a connectivite
+demandent **plus de T2 et moins de T0**. L'ecart est faible mais il va dans le
+meme sens sur trois des quatre series (la quatrieme, n=53, s'inverse).
+
+**Consequence pratique : il existe une sortie sans reecrire le moteur.** Une
+metrique continue -- nombre d'invocations pondere par le niveau -- discrimine
+la ou `max_level >= 2` ne dit plus rien. Elle est publiee a chaque resume.
+
+Elle ne remplace pas A : elle mesure l'EFFORT de deduction, pas la PROFONDEUR
+au sens d'une hierarchie de techniques. Un systeme qui demande 3 fois T2 n'est
+pas "plus profond" qu'un systeme qui en demande 2, il est plus laborieux. La
+distinction compte pour l'interpretation, pas pour le pouvoir discriminant.
+
+**Decouverte annexe, et elle est importante : T1 n'a JAMAIS ete invoquee.**
+Zero sur l'ensemble des enregistrements, toutes series confondues. La
+hierarchie effective en production est **T0/T2**, pas T0/T1/T2 -- le niveau
+intermediaire est vide. Cela explique en partie la saturation : il n'y a pas
+trois niveaux mais deux, et tout candidat qui depasse T0 tombe directement a
+T2. `canary6` montre pourtant que T1 se declenche sur un cas de reference
+(cages+sum), donc la technique n'est pas inerte au sens de T3 -- elle est
+simplement sans emploi dans l'espace reellement explore.
+
+A creuser avant tout chantier sur A : si le vrai probleme est un trou entre T0
+et T2, une technique intermediaire operante vaudrait mieux qu'une reecriture.
+
+Reouverture : si l'ecart continu reste sous le bruit une fois plusieurs
+centaines de candidats accumules par groupe, la question de A redevient
+frontale.
+
+
+## 2026-08-26 - les series non reproductibles sont marquees, pas purgees
+Cinq `dsl_hash` cohabitent, dont plusieurs designent un moteur dont la source
+n'existe plus -- 83 % des enregistrements a la date de cette entree.
+
+Choix : **conserver et etiqueter**, ne pas purger. Une serie non reproductible
+reste une donnee ; ce qui est dangereux n'est pas de la garder, c'est de la
+croire reproductible. `summarize.py` calcule desormais le `dsl_hash` de chaque
+version de `engine/` presente dans l'historique git et marque **NON
+REPRODUCTIBLE** tout hash absent de cet ensemble, avec le total et le
+pourcentage concernes.
+
+Si git est indisponible, le marquage est omis plutot que devine -- une absence
+de marque ne vaut donc pas certificat.
+
+
+## 2026-08-26 - le serveur ne tourne plus sur un arbre de travail
+Cause racine des series orphelines : `scheduler.py` relance `run.py` a chaque
+bloc, et `run.py` reimportait `engine/` depuis le repertoire de travail. Toute
+edition en cours etait donc captee a mi-chemin par le bloc qui demarrait.
+Constate quatre fois en une journee, dont une serie de 7172 enregistrements.
+
+Correction structurelle, qui supprime la cause au lieu d'exiger de la
+discipline :
+- `scheduler.py` fige `engine/` dans `.engine-run/` au debut de chaque cycle
+  (copie, puis bascule atomique par `os.rename`) et passe `RS_ENGINE` a
+  `run.py`.
+- `run.py` charge le moteur depuis `RS_ENGINE` s'il est defini, et **calcule
+  `dsl_hash` sur ce meme repertoire** -- le hash decrit donc le code
+  reellement charge, pas l'etat du disque au moment du calcul.
+- `run.py` purge le `__pycache__` du moteur au demarrage : un bytecode perime
+  ferait tourner un code different de la source que `dsl_hash` a hachee.
+
+Sans `RS_ENGINE`, le comportement est inchange : les executions manuelles et
+les canaris continuent de fonctionner depuis `engine/`.
+
+Verification faite sur les journaux : aucun `dsl_hash` ne porte deux formes de
+`level_uses`, donc rien n'indique qu'un hash ait jamais designe un code autre
+que le sien. L'invariant 2 a tenu. Le test est toutefois **incomplet** : il ne
+detecte que les melanges observables dans les enregistrements.

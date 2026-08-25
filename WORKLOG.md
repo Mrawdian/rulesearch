@@ -11,6 +11,104 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - T3 retire, engine gele par cycle, metrique continue
+
+**Demande** : retirer `apply_T3` ; marquer les series non reproductibles sans
+les purger ; purger `__pycache__` au demarrage ; faire tourner le serveur sur
+une copie figee de `engine/` ; sortir la distribution des niveaux.
+
+**Cause reelle (series orphelines)** : `scheduler.py` relance `run.py` a chaque
+bloc et `run.py` reimportait `engine/` **depuis le repertoire de travail**.
+Toute edition en cours etait donc captee a mi-chemin par le bloc qui demarrait.
+Six `dsl_hash` distincts en une journee, dont un -- `615abe43d6bc`, 7172
+enregistrements, 80 % des donnees -- dont la source n'existe nulle part. Un
+sixieme (`89c65c03c4ad`) est apparu **pendant la redaction de ce correctif**,
+ce qui confirme le diagnostic.
+
+**Correction** :
+- `engine/deduction.py` : `apply_T3` **retire** (code mort). La docstring
+  explique desormais pourquoi il n'y a pas de T3 et renvoie a DECISIONS.md.
+  `uses` revient a {0,1,2}.
+- `canary/canary3.py` : revient a T0/T1/T2.
+- `run.py` : le moteur est charge depuis `RS_ENGINE` si defini, sinon
+  `HERE/engine`. **`dsl_hash()` hache ce meme repertoire** -- le hash decrit
+  donc le code reellement charge. Purge du `__pycache__` du moteur au
+  demarrage. Canaris lances avec le meme `ENGINE`.
+- `scheduler.py` : `geler_engine()` copie `engine/` vers `.engine-run/` au
+  debut de chaque cycle (copie dans `.tmp` puis `os.rename`, bascule
+  atomique) et passe `RS_ENGINE` au sous-processus.
+- `.gitignore` : `.engine-run/`.
+- `summarize.py` : marquage **NON REPRODUCTIBLE** de tout `dsl_hash` absent de
+  l'historique git, avec total et pourcentage ; nouvelle section
+  **profondeur en continu**.
+
+**Verifie** (execute et observe) :
+- **Les six canaris passent depuis la racine ET depuis `engine/` : 12/12.**
+- `geler_engine()` produit bien `.engine-run/` avec les quatre modules.
+- `RS_ENGINE` de bout en bout : `run.py` charge depuis la copie figee et rend
+  le **meme hash** que depuis `engine/` quand les deux sont identiques
+  (`89c65c03c4ad`).
+- `summarize.py` marque 3 hashs sur 6 comme non reproductibles, soit 7483
+  enregistrements (83 %). Duree : 0,16 s -- le calcul des hashs git ne
+  ralentit pas le resume.
+- Comportement sans `RS_ENGINE` inchange.
+
+**AUCUN HASH NE MENT.** Test : un meme `dsl_hash` portant deux formes de
+`level_uses` (`0,1,2` avant T3, `0,1,2,3` apres) prouverait qu'il couvre deux
+versions de code. Chaque hash ne porte qu'**une seule** forme. L'invariant 2 a
+tenu, et rien de ce qui a ete conclu aujourd'hui ne s'effondre. `uses[3] > 0`
+sur **zero** enregistrement : T3 n'a jamais rien produit en production.
+
+**DISTRIBUTION DES NIVEAUX -- il existe une sortie sans reecrire le moteur.**
+Sur 1143 candidats, `max_level` vaut T2 pour **100 %**. Mais en continu :
+
+    serie 615abe43d6bc, 945 candidats
+      AVEC connectivite (397) : T0=12,99  T1=0,00  T2=2,95  pondere 5,90
+      SANS connectivite (548) : T0=15,85  T1=0,00  T2=2,67  pondere 5,34
+
+Plus de T2 et moins de T0 pour les systemes a connectivite : le sens predit par
+l'hypothese. Ecart faible, **meme sens sur 3 series sur 4** (la 4e, n=53,
+s'inverse). Une metrique continue discrimine donc la ou le seuil sature.
+
+**T1 N'A JAMAIS ETE INVOQUEE** -- zero sur 8991 enregistrements, toutes series.
+La hierarchie effective en production est **T0/T2**. Le niveau intermediaire
+est vide, ce qui explique en partie la saturation. T1 n'est pas inerte au sens
+de T3 (`canary6` la voit se declencher sur `cages+sum`) : elle est sans emploi
+dans l'espace explore. Piste : combler le trou T0-T2 couterait bien moins cher
+qu'une reecriture du moteur.
+
+**Non verifie / suppose** :
+- Le test "aucun hash ne ment" est **incomplet** : il ne detecte que les
+  melanges observables dans les enregistrements. L'episode du `__pycache__`
+  perime (`DEFAULT_MAX_LEVEL` 3 au lieu de 2) lui est structurellement
+  invisible -- sans consequence toutefois, T3 n'ayant jamais ete invoque, le
+  comportement execute etait identique a celui de la source etiquetee.
+- **Le gel n'a pas encore tourne en production** : le scheduler garde l'ancien
+  code en memoire. Verifie par appel direct de `geler_engine()`, pas par un
+  cycle reel.
+- L'ecart continu (5,90 contre 5,34) n'a fait l'objet d'**aucun test
+  statistique**. Il est faible et pourrait etre du bruit.
+- La metrique continue mesure l'**effort** de deduction, pas la profondeur au
+  sens d'une hierarchie de techniques.
+- Le cout du gel (copie de 4 fichiers par cycle) n'est pas chronometre.
+
+**Bloque sur** : `sudo` refuse. **Demande a Mrawdian :
+`sudo systemctl restart rulesearch`** -- c'est le redemarrage qui active le gel
+et **arrete la creation de nouveaux hashs orphelins**. Tant qu'il n'a pas eu
+lieu, toute edition d'`engine/` continue d'etre captee a mi-chemin.
+
+**Pour Claude chat** :
+- **Il n'y a pas de T3 et il ne faut pas en proposer un par elimination.** Deux
+  l'ont ete, retirees. Seules les techniques qui POSENT une valeur marchent.
+- **T1 est sans emploi en production.** Ne pas raisonner sur une hierarchie a
+  trois niveaux : elle en a deux, T0 et T2.
+- `max_level >= 2` **ne discrimine plus** (100 % partout). La mesure utilisable
+  est la section **profondeur en continu** de `summary.md`.
+- Un `dsl_hash` marque **NON REPRODUCTIBLE** designe une donnee valide mais non
+  rejouable. Ne pas la citer comme reproductible ; ne pas la purger non plus.
+- Le moteur tourne desormais depuis `.engine-run/`, copie figee. `RS_ENGINE`
+  pointe le moteur reellement charge, et c'est lui que `dsl_hash` hache.
+
 ## 2026-08-26 - AVERTISSEMENT : 7172 enregistrements produits sous un code jamais commite
 
 **Constat**, decouvert en verifiant l'etat de `runs/` apres le commit

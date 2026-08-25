@@ -12,7 +12,25 @@ import argparse, hashlib, json, os, random, signal, subprocess, sys, time
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "engine"))
+
+# Repertoire du moteur. `RS_ENGINE` permet a l'ordonnanceur de pointer une
+# COPIE FIGEE de engine/, prise au debut du cycle : une edition en cours ne
+# peut alors plus etre captee a mi-chemin par un bloc en train de demarrer.
+# Sans cette variable, comportement inchange.
+ENGINE = os.environ.get("RS_ENGINE") or os.path.join(HERE, "engine")
+
+# Un bytecode perime peut faire tourner un code different de la source, alors
+# que dsl_hash ne hache que les .py -- le journal porterait alors le hash d'une
+# source qui n'a pas tourne. Constate le 26/08/2026.
+for _d, _sd, _f in os.walk(ENGINE):
+    if os.path.basename(_d) == "__pycache__":
+        for _x in _f:
+            try:
+                os.remove(os.path.join(_d, _x))
+            except OSError:
+                pass
+
+sys.path.insert(0, ENGINE)
 
 from rulesearch import (UNASSIGNED, RuleSystem, rows, cols, diags, blocks,
                         Count, AllDiff, SumRange, NeqAdj, NoTriple, Mono,
@@ -26,10 +44,11 @@ from prefilter import is_dead
 # ---------- identite du DSL ----------
 
 def dsl_hash():
+    """Hash du moteur REELLEMENT charge (ENGINE), pas du repertoire de travail."""
     h = hashlib.sha256()
-    for fn in sorted(os.listdir(os.path.join(HERE, "engine"))):
+    for fn in sorted(os.listdir(ENGINE)):
         if fn.endswith(".py"):
-            with open(os.path.join(HERE, "engine", fn), "rb") as f:
+            with open(os.path.join(ENGINE, fn), "rb") as f:
                 h.update(f.read())
     return h.hexdigest()[:12]
 
@@ -37,13 +56,13 @@ def dsl_hash():
 def run_canaries():
     ok = True
     env = dict(os.environ)
-    env["PYTHONPATH"] = os.path.join(HERE, "engine") + os.pathsep + env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = ENGINE + os.pathsep + env.get("PYTHONPATH", "")
     for c in ("canary.py", "canary2.py", "canary3.py", "canary4.py",
               "canary5.py", "canary6.py"):
         p = os.path.join(HERE, "canary", c)
         if not os.path.exists(p):
             continue
-        r = subprocess.run([sys.executable, p], cwd=os.path.join(HERE, "engine"),
+        r = subprocess.run([sys.executable, p], cwd=ENGINE,
                            env=env, capture_output=True, text=True, timeout=1800)
         if r.returncode != 0:
             print("CANARI ECHOUE :", c, file=sys.stderr)
@@ -177,7 +196,7 @@ def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
     if total <= MIN_GRIDS:
         return {"verdict": "SUR-CONTRAINT", "total_grids": total}
 
-    fracs, levels, uses_acc = [], [], {0: 0, 1: 0, 2: 0, 3: 0}
+    fracs, levels, uses_acc = [], [], {0: 0, 1: 0, 2: 0}
     solved = 0
     for _ in range(n_instances):
         if time.time() - t0 > max_seconds:

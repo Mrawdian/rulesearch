@@ -5,10 +5,49 @@ C'est le SEUL fichier a lire en debut de session : il doit tenir en une
 page et repondre a la seule question qui compte -- qu'est-ce qui a survecu,
 et l'hypothese de fracture locale/non-locale tient-elle ?
 """
-import collections, glob, json, os
+import collections, glob, hashlib, json, os, subprocess
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def hashs_reproductibles(limite=80):
+    """
+    dsl_hash de chaque version de engine/ presente dans l'historique git.
+
+    Un hash absent de cet ensemble designe un moteur dont la SOURCE N'EXISTE
+    PLUS -- typiquement un etat de travail transitoire capte par la production.
+    La serie reste une donnee valide, mais elle n'est pas rejouable, et c'est
+    ce qui doit etre dit. Le danger n'est pas la serie non reproductible :
+    c'est la serie non reproductible qu'on croit reproductible.
+
+    Rend None si git est indisponible -- on s'abstient alors de marquer.
+    """
+    def git(args, binaire=False):
+        return subprocess.run(["git"] + args, cwd=HERE, timeout=30,
+                              capture_output=True, text=not binaire)
+    try:
+        r = git(["log", "--format=%H", "--", "engine"])
+        if r.returncode != 0:
+            return None
+        connus = set()
+        for commit in r.stdout.split()[:limite]:
+            t = git(["ls-tree", "--name-only", commit, "engine/"])
+            fichiers = sorted(f for f in t.stdout.split() if f.endswith(".py"))
+            if not fichiers:
+                continue
+            h = hashlib.sha256()
+            for f in fichiers:
+                b = git(["show", "%s:%s" % (commit, f)], binaire=True)
+                if b.returncode != 0:
+                    break
+                h.update(b.stdout)
+            else:
+                connus.add(h.hexdigest()[:12])
+        return connus
+    except Exception:
+        return None
+
 
 recs = []
 for f in glob.glob(os.path.join(HERE, "runs", "*", "results.jsonl")):
@@ -30,11 +69,27 @@ w("genere %s UTC — %d systemes evalues" %
 w("")
 
 by_hash = collections.Counter(r.get("dsl_hash") for r in recs)
+reproductibles = hashs_reproductibles()
 w("## versions du DSL presentes")
+orphelins = 0
 for h, c in by_hash.most_common():
-    w("- `%s` : %d systemes" % (h, c))
+    if reproductibles is not None and h not in reproductibles:
+        orphelins += c
+        w("- `%s` : %d systemes — **NON REPRODUCTIBLE** (aucun commit ne porte "
+          "ce moteur)" % (h, c))
+    else:
+        w("- `%s` : %d systemes" % (h, c))
 w("")
 w("Les lignes de dsl_hash differents ne sont pas comparables entre elles.")
+if reproductibles is None:
+    w("")
+    w("*(git indisponible : reproductibilite non verifiee)*")
+elif orphelins:
+    w("")
+    w("**%d enregistrements (%.0f%%) proviennent d'un moteur dont la source "
+      "n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non "
+      "rejouable : ne pas la citer comme reproductible." %
+      (orphelins, 100.0 * orphelins / max(1, len(recs))))
 w("")
 
 w("## verdicts par configuration")
@@ -117,6 +172,49 @@ if conn_censures:
     w("- Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. "
       "Il peut n'etre qu'un effet de la borne de temps.")
     w("")
+
+w("## profondeur en continu (le seuil binaire sature, pas ceci)")
+w("")
+w("`max_level >= 2` vaut 100 % partout : le seuil ne discrimine plus. Le")
+w("nombre d'invocations par niveau, lui, varie -- c'est une mesure continue")
+w("qui ne sature pas.")
+w("")
+
+
+def _uses(r, k):
+    return (r.get("level_uses") or {}).get(str(k), 0)
+
+
+def _moy(g, k):
+    return (sum(_uses(r, k) for r in g) / len(g)) if g else 0.0
+
+
+def _pondere(g):
+    """invocations ponderees par le niveau : un T2 pese plus qu'un T0"""
+    if not g:
+        return 0.0
+    return sum(sum(int(k) * v for k, v in (r.get("level_uses") or {}).items())
+               for r in g) / len(g)
+
+
+for _h, _n in by_hash.most_common():
+    _sous = [r for r in cands if r.get("dsl_hash") == _h]
+    if len(_sous) < 20:
+        continue
+    _a = [r for r in _sous if "CONNECTED" in r.get("sys", "")]
+    _b = [r for r in _sous if "CONNECTED" not in r.get("sys", "")]
+    w("- `%s` — %d candidats" % (_h, len(_sous)))
+    w("  - AVEC connectivite (%d) : T0=%.2f T1=%.2f T2=%.2f — pondere **%.2f**"
+      % (len(_a), _moy(_a, 0), _moy(_a, 1), _moy(_a, 2), _pondere(_a)))
+    w("  - SANS connectivite (%d) : T0=%.2f T1=%.2f T2=%.2f — pondere **%.2f**"
+      % (len(_b), _moy(_b, 0), _moy(_b, 1), _moy(_b, 2), _pondere(_b)))
+w("")
+_t1 = sum(_uses(r, 1) for r in recs)
+if not _t1:
+    w("**T1 n'a JAMAIS ete invoquee** sur l'ensemble des enregistrements. La")
+    w("hierarchie effective en production est T0/T2, pas T0/T1/T2. Le niveau")
+    w("intermediaire est vide, ce qui explique en partie que le seuil sature.")
+w("")
 
 w("## meilleurs candidats (niveau requis, puis indices les plus rares)")
 w("")

@@ -7,10 +7,16 @@ Aucune intervention humaine apres le premier demarrage.
 Modifier queue.json et pousser suffit a changer ce que le serveur cherche :
 l'ordonnanceur relit le fichier a chaque cycle et fait un git pull avant.
 """
-import json, os, subprocess, sys, time
+import json, os, shutil, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 QUEUE = os.path.join(HERE, "queue.json")
+# Copie figee du moteur, prise au debut de chaque cycle. Le serveur ne doit
+# pas tourner sur un arbre de travail : sans ce gel, une edition en cours
+# est captee a mi-chemin par le bloc qui demarre, et produit une serie sous
+# un dsl_hash dont la source ne sera jamais commitee. Arrive le 26/08/2026 :
+# 7172 enregistrements sous un code irrecuperable.
+SNAPSHOT = os.path.join(HERE, ".engine-run")
 PY = os.environ.get("RS_PYTHON", "pypy3")
 
 DEFAULT_QUEUE = {
@@ -38,6 +44,18 @@ def sh(cmd, **kw):
     return r
 
 
+def geler_engine():
+    """Fige engine/ pour la duree du cycle. Rend le chemin de la copie."""
+    src = os.path.join(HERE, "engine")
+    tmp = SNAPSHOT + ".tmp"
+    for d in (tmp, SNAPSHOT):
+        if os.path.isdir(d):
+            shutil.rmtree(d, ignore_errors=True)
+    shutil.copytree(src, tmp, ignore=shutil.ignore_patterns("__pycache__"))
+    os.rename(tmp, SNAPSHOT)          # bascule atomique
+    return SNAPSHOT
+
+
 def load_queue():
     if not os.path.exists(QUEUE):
         with open(QUEUE, "w") as f:
@@ -52,6 +70,9 @@ def main():
     while True:
         sh("git pull --rebase --autostash")
         q = load_queue()
+        engine = geler_engine()
+        env = dict(os.environ)
+        env["RS_ENGINE"] = engine
         for cfg in q["configs"]:
             seed += 1
             args = [PY, os.path.join(HERE, "run.py"),
@@ -62,7 +83,7 @@ def main():
             if canary_done:
                 args.append("--skip-canary")
             print("[sched]", " ".join(args), flush=True)
-            r = subprocess.run(args, cwd=HERE)
+            r = subprocess.run(args, cwd=HERE, env=env)
             if r.returncode != 0:
                 print("[sched] run en echec, arret", file=sys.stderr, flush=True)
                 return 1
