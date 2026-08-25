@@ -1,25 +1,25 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 22:48 UTC — 9165 systemes evalues
+genere 2026-08-25 22:48 UTC — 9180 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `89c65c03c4ad` : 191 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `89c65c03c4ad` : 206 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7657 enregistrements (84%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7672 enregistrements (84%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 4572 | 2304 | 285 | 162 | 444 | 364 | 479 | 480 | 10.5% |
+| connect | 4 | 3 | 4587 | 2309 | 286 | 163 | 446 | 364 | 481 | 484 | 10.6% |
 | ref | 4 | 3 | 4469 | 1084 | 1879 | 1 | 593 | 213 | 2 | 697 | 15.6% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -27,14 +27,14 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 483, dont T2 : 100%
+- candidats AVEC connectivite : 487, dont T2 : 100%
 - candidats SANS connectivite : 701, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
 ### censure de l'echantillon
 
-- **479 systemes avec CONNECTED sur 3811 (12.6%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **481 systemes avec CONNECTED sur 3824 (12.6%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -57,6 +57,9 @@ qui ne sature pas.
 - `12a0c0c5e34b` — 31 candidats
   - AVEC connectivite (13) : T0=13.31 T1=0.00 T2=3.08 — pondere **6.15**
   - SANS connectivite (18) : T0=15.83 T1=0.00 T2=2.94 — pondere **5.89**
+- `89c65c03c4ad` — 23 candidats
+  - AVEC connectivite (8) : T0=12.12 T1=0.00 T2=3.25 — pondere **6.50**
+  - SANS connectivite (15) : T0=16.33 T1=0.00 T2=3.40 — pondere **6.80**
 
 **T1 n'a JAMAIS ete invoquee** sur l'ensemble des enregistrements. La
 hierarchie effective en production est T0/T2, pas T0/T1/T2. Le niveau
@@ -92,8 +95,8 @@ intermediaire est vide, ce qui explique en partie que le seuil sature.
 
 ## cout
 - temps total 2.8 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 481 systemes abandonnes (5.2% des systemes), 96% du temps total
-  dont 479 avec CONNECTED, 2 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- TROP-CHER : 483 systemes abandonnes (5.3% des systemes), 96% du temps total
+  dont 481 avec CONNECTED, 2 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 12.8% sur 3754 systemes
-  - sans CONNECTED : 0.0% sur 818 systemes
+  - avec CONNECTED : 12.8% sur 3767 systemes
+  - sans CONNECTED : 0.0% sur 820 systemes
