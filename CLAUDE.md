@@ -3,24 +3,6 @@
 Lis ce fichier en entier avant toute action. Puis `summary.md`. Puis
 `DECISIONS.md`. Ne touche pas au code avant ces trois lectures.
 
-## Protocole de session
-
-A appliquer a chaque intervention, sans exception.
-
-1. **Lire avant d agir** : `CLAUDE.md`, puis `DECISIONS.md`, puis `WORKLOG.md`.
-   Aucune modification du depot avant ces trois lectures. `WORKLOG.md` donne
-   l etat reel du serveur et ce qui a deja ete tente.
-2. **Ecrire l entree `WORKLOG.md` avant le commit final**, pas apres. Entree la
-   plus recente en haut, au format defini dans le fichier. Le commit qui corrige
-   et l entree qui le documente vont ensemble.
-3. **Toujours distinguer verifie de suppose.** Ce qui a ete execute et observe
-   va dans **Verifie** ; tout le reste va dans **Non verifie / suppose**, meme
-   si c est probable. Ne jamais presenter une deduction comme une observation.
-4. **Commande refusee : consigner et s arreter.** Si un `sudo`, un acces
-   journal ou une dependance manque, l ecrire dans **Bloque sur**, le signaler
-   a l operateur humain, et s arreter sur ce point. **Ne pas contourner.**
-   Le reste de la tache, qui n en depend pas, doit etre mene a terme.
-
 ## Ce qu'on cherche
 
 L'espace des **systemes de regles** de puzzles, pas l'espace des instances.
@@ -83,9 +65,30 @@ fracture ailleurs.
 
 ## Prochaine tache, par priorite
 
-1. **Pre-filtre des systemes MORT.** 97 % du temps machine part a decouvrir
-   par solveur complet qu'un systeme n'a aucune solution. Facteur ~30 sur le
-   debit. Piste : propagation d'arc a cout borne avant d'appeler le solveur.
+1. **Debit.** ~70 % du temps machine part a decouvrir par solveur complet
+   qu'un systeme n'a aucune solution.
+
+   FAIT (25/08) : le pre-filtre par propagation est en place
+   (`engine/prefilter.py`, canari `canary/canary4.py`). Il attrape 15-30 %
+   des morts pour un cout negligeable, zero faux positif. Gain reel : de
+   l'ordre de 20 %, pas le facteur ~30 qui figurait ici. Cette estimation
+   etait fausse d'un ordre de grandeur.
+
+   MESURE ET ECARTE : renforcer le pre-filtre avec T2 attrape 52 % des morts
+   mais coute un tiers du temps qu'il economise. Ratio nettement moins bon
+   que T0 seul.
+
+   MESURE ET ECARTE : reordonner le solveur n'apporte rien. MRV dynamique
+   reduit les noeuds de 35 % mais DOUBLE le temps -- le calcul du domaine a
+   chaque noeud coute plus que les branches evitees. L'ordre statique par
+   degre gagne 5 %, dans le bruit. Les trois variantes donnent des comptes
+   de solutions identiques, donc la mesure est fiable.
+
+   GOULOT RESTANT, non traite : le cout par appel a `feasible`. Chaque
+   contrainte recalcule sa region entiere a chaque assignation. C'est la que
+   part le temps, et le rendre incrementiel demanderait de toucher au
+   solveur -- ce que la section suivante interdit. A rouvrir explicitement
+   dans DECISIONS.md si le debit reste bloquant.
 2. Etendre a n=5 et n=6 une fois le pre-filtre en place.
 3. Ajouter T3 (paires/triplets nus) si et seulement si T2 sature.
 
@@ -96,3 +99,30 @@ fracture ailleurs.
 - Ajouter des dependances. Stdlib seule, c'est un choix : le moteur doit
   tourner sur pypy3 sans installation.
 - Conclure sur des echantillons faibles parce que la tendance est jolie.
+
+## Protocole de session (Claude Code)
+
+Le depot est sur un serveur distant. Alias SSH : `rulesearch`, chemin
+`/home/rulesearch/rulesearch`.
+
+A chaque intervention, dans cet ordre :
+
+1. Lire `CLAUDE.md`, `DECISIONS.md`, puis `WORKLOG.md` (entree la plus
+   recente en haut) avant toute action.
+2. Verifier que le depot local du serveur est a jour : `git pull`.
+3. Faire le travail demande.
+4. Verifier reellement : les trois canaris doivent passer, et pour tout
+   probleme de service, l'observer demarrer et tourner -- pas seulement
+   constater que la commande n'a pas renvoye d'erreur.
+5. Ecrire l'entree dans `WORKLOG.md` selon le gabarit du fichier.
+6. Commit et push.
+
+Distinguer toujours ce qui a ete verifie de ce qui est suppose. Une cause
+plausible non testee s'ecrit comme telle.
+
+Si une commande est refusee (sudo, droits, reseau), le dire dans le
+WORKLOG et s'arreter la plutot que de contourner.
+
+Une decision structurante (changement de seuil, de metrique, d'hypothese,
+abandon d'une piste) s'ajoute a `DECISIONS.md` avec sa raison et son
+critere de reouverture. Ne jamais reecrire une entree existante.

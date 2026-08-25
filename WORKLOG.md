@@ -11,6 +11,105 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-25 18:25 - pre-filtre MORT (v3), correction canary4, file a domaine egal
+
+**Demande** : integrer cinq fichiers livres (`prefilter.py`, `canary4.py`,
+`run.py`, `CLAUDE.md`, `DECISIONS.md`), corriger la fragilite de chemin de
+`canary4.py`, et remplacer la file par deux configs comparables.
+
+**Cause reelle (echec de canary4)** : lance depuis la racine, `canary4.py`
+sortait en `ModuleNotFoundError: No module named 'run'`. Il faisait
+
+    sys.path.insert(0, "..")
+
+soit un chemin **relatif au repertoire courant, pas au script**. Python ajoute
+a `sys.path` le dossier **du script** (`canary/`), jamais le CWD : depuis la
+racine, `".."` designait `/home/rulesearch`, le parent du depot, ou `run.py`
+n existe pas. Le canari ne fonctionnait que lance depuis `engine/` -- ce que
+fait `run_canaries()` (`cwd=HERE/engine`), d ou l illusion qu il etait correct.
+
+C est **la meme classe de bug** que l aplatissement qui avait cause les 864
+boucles : un chemin qui depend d ou l on se trouve plutot que d ou le code est.
+
+`canary.py`, `canary2.py` et `canary3.py` ont ete verifies : ils **n ont pas**
+cette fragilite (aucune manipulation de `sys.path`, ils n importent que des
+modules d `engine/` via `PYTHONPATH`). Seul `canary4.py` etait touche.
+
+**Correction** :
+- `canary/canary4.py` : `sys.path.insert(0, "..")` remplace par
+  `sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))`,
+  et `os` ajoute aux imports. Le canari est desormais independant du CWD.
+- `engine/prefilter.py` (nouveau), `canary/canary4.py` (nouveau), `run.py`,
+  `CLAUDE.md`, `DECISIONS.md` transferes par scp **vers des chemins de
+  destination explicites**, jamais vers un repertoire, pour eviter tout
+  re-aplatissement. Arborescence verifiee avant toute autre action.
+- `queue.json` (non versionne) : `block_systems` 60 -> 15 ; les 5 configs
+  remplacees par exactement deux, `connect` et `static-ref`, toutes deux
+  n=4 **d=3**.
+- `DECISIONS.md` : entree datee sur la file a domaine egal.
+
+**Verifie** (execute et observe) :
+- **Les quatre canaris passent depuis la racine ET depuis `engine/`** : 8
+  executions, `exit=0` partout. `canary3` finit sur `OK : aucune divergence.`,
+  `canary4` sur `OK : aucun faux positif.`
+- Surete du pre-filtre, sur 150 systemes : **16 declares MORT, 16 confirmes,
+  0 FAUX POSITIF** ; 62 morts non attrapes (normal, le pre-filtre est
+  incomplet par conception).
+- Cout mesure : pre-filtre **0,02 s** contre solveur **36,1 s** sur le meme
+  echantillon.
+- Arborescence apres transfert : `engine/` contient deduction, dsl2,
+  prefilter, rulesearch ; `canary/` contient canary, canary2, canary3,
+  canary4 ; la racine ne contient que `run.py`, `scheduler.py`,
+  `summarize.py`. Rien d aplati.
+- `queue.json` relu : `block_systems=15`, tags `['connect', 'static-ref']`.
+
+**dsl_hash : `6680f7b47e6f` -> `0327bdc4c76a`.** Le seul ajout de
+`prefilter.py` dans `engine/` change le hash. **C est voulu.** Consequence
+directe (invariant 2 de CLAUDE.md) : les runs posterieurs ne sont **pas
+comparables** aux 124 systemes deja mesures. La serie repart de zero. Le hash
+a change des le depot des fichiers sur disque, avant tout commit.
+
+**Correction d une affirmation anterieure** : il avait ete ecrit qu un
+redemarrage du service etait necessaire pour prendre le nouveau code.
+**C est faux pour `run.py`.** `scheduler.py` relance `run.py` en
+sous-processus a chaque bloc : le nouveau `run.py` et le pre-filtre entrent en
+service au prochain bloc, sans redemarrage et independamment de tout commit.
+Seul `scheduler.py`, charge une fois en memoire, exige un redemarrage -- et il
+avait deja ete recharge. Le redemarrage demande ici a un **autre motif** :
+interrompre le bloc en cours et faire relire `queue.json`.
+
+**Non verifie / suppose** :
+- Le pre-filtre n a **pas encore tourne en production** : aucun bloc ne s est
+  execute avec le nouveau `run.py`. Le gain reel (annonce ~20 % dans
+  DECISIONS.md, apres correction du ~30x errone) n est pas mesure en
+  conditions reelles.
+- Aucun resultat n existe encore pour `connect` ni `static-ref` a d=3. La
+  question centrale reste ouverte.
+- L absence de faux positifs est etablie sur 150 systemes a n=4/d=4, pas a
+  d=3 ni au-dela.
+- La duree d un bloc de 15 systemes n est pas mesuree.
+
+**Bloque sur** : `sudo` toujours refuse (`rulesearch`). **Demande a Mrawdian :
+`sudo systemctl restart rulesearch`** -- necessaire pour interrompre le bloc
+`baseline` en cours (seed 80339, demarre a 17:52, toujours actif apres 30 min)
+et faire relire la nouvelle `queue.json`. Sans cela, le scheduler termine son
+bloc courant avant de reprendre la file.
+
+**Pour Claude chat** :
+- Ne jamais ecrire `sys.path.insert(0, "..")` ni aucun chemin relatif au CWD
+  dans ce depot. Toujours ancrer sur `__file__`. Deux pannes distinctes en ont
+  deja decoule.
+- Un canari doit passer **depuis la racine et depuis `engine/`**. Passer dans
+  un seul repertoire masque exactement ce type de bug.
+- Le `dsl_hash` courant est **`0327bdc4c76a`**. Toute ligne de journal portant
+  `6680f7b47e6f` appartient a la serie precedente et **ne se compare pas** aux
+  nouvelles.
+- `block_systems=15` et deux configs seulement : un `summary.md` sans
+  `baseline`, `cages` ni `big` est **normal**, ce sont des retraits
+  deliberes, pas des echecs.
+- `queue.json` n est pas dans le depot (ignore, local au serveur) : son
+  contenu n est pas lisible depuis GitHub.
+
 ## 2026-08-25 17:49 - regression .gitignore (summary.md) et garde sur sh()
 
 **Demande** : retirer `summary.md` du `.gitignore`, puis journaliser en ERROR

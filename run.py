@@ -20,6 +20,7 @@ from rulesearch import (UNASSIGNED, RuleSystem, rows, cols, diags, blocks,
 from dsl2 import (random_cages, adj_pairs, knight_pairs,
                   PairDiff, PairRatio, Connected, NoSquare)
 from deduction import solve_graded
+from prefilter import is_dead
 
 
 # ---------- identite du DSL ----------
@@ -37,7 +38,7 @@ def run_canaries():
     ok = True
     env = dict(os.environ)
     env["PYTHONPATH"] = os.path.join(HERE, "engine") + os.pathsep + env.get("PYTHONPATH", "")
-    for c in ("canary.py", "canary2.py", "canary3.py"):
+    for c in ("canary.py", "canary2.py", "canary3.py", "canary4.py"):
         p = os.path.join(HERE, "canary", c)
         if not os.path.exists(p):
             continue
@@ -137,6 +138,10 @@ MAX_CLUE_FRAC = 0.55
 
 def evaluate_system(rs, n_instances=6):
     n = rs.n; cells = n * n
+    # pre-filtre : propagation seule, sans backtracking. Ne peut produire
+    # que des vrais positifs (voir engine/prefilter.py et canary/canary4.py).
+    if is_dead(rs):
+        return {"verdict": "MORT", "total_grids": 0, "prefiltered": True}
     total = count_solutions(rs, [UNASSIGNED] * cells, cap=MIN_GRIDS + 1)
     if total is None:
         return {"verdict": "TIMEOUT"}
