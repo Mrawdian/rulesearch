@@ -90,9 +90,15 @@ def main():
             canary_done = True
 
             subprocess.run([sys.executable, os.path.join(HERE, "summarize.py")], cwd=HERE)
+            # Le pathspec en fin de commande est OBLIGATOIRE : sans lui,
+            # `git commit` valide TOUT l'index, donc aussi ce qu'une session
+            # humaine ou agent aurait mis en attente sur le meme arbre. Vu le
+            # 26/08/2026 : un commit de travail absorbe dans un "auto: resume",
+            # avec le mauvais message et le mauvais auteur.
             sh("git add -A summary.md found/ && "
                "git -c user.email=rulesearch@local -c user.name=rulesearch "
-               "commit -m 'auto: resume %s' --allow-empty" % cfg["tag"])
+               "commit -m 'auto: resume %s' --allow-empty "
+               "-- summary.md found/" % cfg["tag"])
             sh("git push origin HEAD")
 
 

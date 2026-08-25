@@ -11,6 +11,58 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - le scheduler absorbait les commits de travail
+
+**Constat** : apres avoir prepare le commit du tour precedent
+(`git add -A`), `git commit` a repondu *nothing to commit, working tree
+clean*. Les changements n'etaient pas perdus -- ils avaient ete **commites et
+pousses par le scheduler** sous `a5725ba auto: resume connect`, avec le mauvais
+message et l'auteur `rulesearch@local`.
+
+**Cause reelle** : `scheduler.py` faisait
+
+    git add -A summary.md found/ && git commit -m 'auto: resume <tag>'
+
+Le `git add` est bien restreint a ses chemins, mais le **`git commit` ne l'est
+pas** : sans pathspec, il valide **tout l'index**, donc aussi ce qu'une session
+concurrente y avait mis en attente. Le scheduler tournant sur le meme arbre de
+travail, tout `git add` d'une session agent devient sa propriete au bloc
+suivant.
+
+C'est la **meme classe de defaut** que les hashs orphelins corrigee plus haut :
+le serveur opere sur un arbre de travail partage. Le gel de `engine/` reglait
+la lecture du code ; celui-ci concerne l'index git.
+
+**Correction** : pathspec ajoute en fin de commande --
+`git commit ... -- summary.md found/`. Le scheduler ne peut plus valider que
+ses propres fichiers, quoi qu'il y ait d'autre dans l'index.
+
+**Verifie** :
+- `ast.parse` sur `scheduler.py`.
+- Le contenu du tour precedent est bien present dans `HEAD` et sur `origin`
+  (test de permutation dans `summarize.py`, entrees `DECISIONS.md` et
+  `WORKLOG.md`) : **rien n'a ete perdu**, seule l'attribution est fausse.
+
+**Non verifie / suppose** :
+- Le correctif n'a **pas encore tourne** : le scheduler garde l'ancien code en
+  memoire jusqu'au prochain redemarrage. D'ici la, le comportement d'absorption
+  persiste.
+- Combien de commits anterieurs ont absorbe du travail de la sorte n'a pas ete
+  recherche. `a5725ba` est le seul identifie.
+- L'historique n'est pas reecrit : `a5725ba` garde son message trompeur. Le
+  corriger demanderait une reecriture d'historique, non faite -- DECISIONS.md
+  et ce journal portent l'information.
+
+**Bloque sur** : `sudo` refuse. **Demande a Mrawdian : `sudo systemctl restart
+rulesearch`** pour activer le correctif.
+
+**Pour Claude chat** :
+- Un commit `auto: resume <tag>` **peut contenir du travail qui n'est pas du
+  scheduler**, pour les commits anterieurs au 26/08/2026. Ne pas se fier au
+  message pour dater un changement : croiser avec `git log -- <fichier>`.
+- Sur cet arbre partage, ne jamais laisser des fichiers en attente dans l'index
+  entre deux operations : commiter immediatement apres `git add`.
+
 ## 2026-08-26 - T1 est SANS DOMAINE, test de significativite, gel verifie
 
 **Demande** : confirmer la cause des 0 invocations de T1 avant de traiter le

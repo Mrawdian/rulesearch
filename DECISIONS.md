@@ -461,3 +461,26 @@ qu'elle annonce.
 
 Reouverture : reevaluer quand `89c65c03c4ad`, seule serie reproductible en
 croissance, aura plusieurs centaines de candidats par groupe.
+
+## 2026-08-26 - le scheduler ne commite plus que ses propres chemins
+Deuxieme manifestation du meme defaut : le serveur opere sur un arbre de
+travail partage. Le gel de `engine/` reglait la lecture du code ; celle-ci
+concerne l'index git.
+
+`git add -A summary.md found/ && git commit -m 'auto: resume <tag>'` : le
+`git add` est restreint, le `git commit` ne l'est pas. Sans pathspec, il valide
+**tout l'index**, y compris ce qu'une session concurrente y a mis en attente.
+Un commit de travail a ainsi ete absorbe dans `a5725ba auto: resume connect`,
+avec le mauvais message et l'auteur `rulesearch@local`.
+
+Correction : `git commit ... -- summary.md found/`. Le scheduler ne peut plus
+valider que ses propres fichiers.
+
+L'historique n'est pas reecrit -- `a5725ba` garde son message trompeur, et
+c'est ici qu'on le note. Consequence pour la lecture de l'historique : un
+commit `auto: resume` anterieur au 26/08/2026 peut contenir autre chose que ce
+que son message annonce.
+
+Reouverture : si d'autres interferences apparaissent (index, stash, branche),
+la vraie reponse est que le scheduler travaille sur un clone dedie plutot que
+sur l'arbre de developpement.
