@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 20:22 UTC — 2811 systemes evalues
+genere 2026-08-25 20:22 UTC — 2826 systemes evalues
 
 ## versions du DSL presentes
-- `615abe43d6bc` : 1834 systemes
+- `615abe43d6bc` : 1849 systemes
 - `0327bdc4c76a` : 853 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -15,7 +15,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 1373 | 696 | 99 | 54 | 145 | 105 | 126 | 132 | 9.6% |
-| ref | 4 | 3 | 1314 | 310 | 569 | 0 | 174 | 56 | 1 | 204 | 15.5% |
+| ref | 4 | 3 | 1329 | 314 | 572 | 0 | 178 | 56 | 1 | 208 | 15.7% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -23,7 +23,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 135, dont T2 : 100%
-- candidats SANS connectivite : 208, dont T2 : 100%
+- candidats SANS connectivite : 212, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -57,9 +57,9 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.22 — NEQADJ@cols + MONO@rows
 - `T2` indices=0.22 — PAIRSTEP(2)@knight + CONNECTED(v2) + COUNT(v2,2-3)@grid
 - `T2` indices=0.23 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,3-4)@grid + CONNECTED(v0) + COUNT(v0,2-3)@grid + PAIRDIFF(>=1)@knight
+- `T2` indices=0.23 — COUNT(v2,1-1)@cols + COUNT(v1,1-1)@diags + MONO@rows
 - `T2` indices=0.23 — CONNECTED(v2) + COUNT(v2,2-4)@grid + PAIRSTEP(2)@adj
 - `T2` indices=0.24 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-4)@grid + PAIRDIFF(>=1)@knight
-- `T2` indices=0.24 — MONO@rows + NEQADJ@cols
 
 ## cout
 - temps total 0.7 h, dont 3% brule sur des systemes MORT
