@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 19:30 UTC — 313 systemes evalues
+genere 2026-08-25 19:31 UTC — 328 systemes evalues
 
 ## versions du DSL presentes
-- `0327bdc4c76a` : 189 systemes
+- `0327bdc4c76a` : 204 systemes
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
@@ -13,7 +13,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 101 | 47 | 14 | 5 | 11 | 6 | 4 | 13 | 12.9% |
+| connect | 4 | 3 | 116 | 53 | 17 | 5 | 13 | 6 | 7 | 13 | 11.2% |
 | ref | 4 | 3 | 88 | 18 | 38 | 0 | 14 | 2 | 0 | 16 | 18.2% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -54,6 +54,6 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.50 — ALLDIFF@cages(3-5) + SUM@cages(3-5) + NOTRIPLE@diags
 
 ## cout
-- temps total 0.0 h, dont 11% brule sur des systemes MORT
-- TROP-CHER : 4 systemes abandonnes (1.3% des systemes), 79% du temps total
-  dont 4 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
+- temps total 0.0 h, dont 7% brule sur des systemes MORT
+- TROP-CHER : 7 systemes abandonnes (2.1% des systemes), 86% du temps total
+  dont 7 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
