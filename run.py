@@ -8,7 +8,7 @@ Runner de production. Tourne en boucle jusqu'a arret.
 Refuse de demarrer si les canaris ne passent pas.
 Journal append-only en JSONL. Un fichier par candidat retenu dans found/.
 """
-import argparse, hashlib, json, os, random, subprocess, sys, time
+import argparse, hashlib, json, os, random, signal, subprocess, sys, time
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -137,18 +137,37 @@ MAX_CLUE_FRAC = 0.55
 # budget de temps par systeme. count_solutions a un budget de noeuds,
 # random_solution et minimal_clues n'en avaient aucun : un systeme vivant
 # et couteux pouvait bloquer un bloc entier.
-MAX_SECONDS = 45
+MAX_SECONDS = 20
+
+
+class SystemeTropLent(Exception):
+    """Levee depuis le handler SIGALRM, donc potentiellement au milieu
+    de n'importe quel appel."""
+
+
+# Etape en cours, mise a jour avant chaque appel couteux. Quand l'alarme
+# tombe au milieu d'un appel, c'est la seule facon de savoir laquelle des
+# fonctions est pathologique.
+PHASE = "?"
+
+
+def _alarme(signum, frame):
+    raise SystemeTropLent()
 
 
 def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
     n = rs.n; cells = n * n
+    global PHASE
     t0 = time.time()
+    PHASE = "prefilter"
     # pre-filtre : propagation seule, sans backtracking. Ne peut produire
     # que des vrais positifs (voir engine/prefilter.py et canary/canary4.py).
     if is_dead(rs):
         return {"verdict": "MORT", "total_grids": 0, "prefiltered": True}
     if time.time() - t0 > max_seconds:
-        return {"verdict": "TROP-CHER", "elapsed_s": round(time.time() - t0, 1)}
+        return {"verdict": "TROP-CHER", "elapsed_s": round(time.time() - t0, 1),
+                "phase": PHASE}
+    PHASE = "count_solutions"
     total = count_solutions(rs, [UNASSIGNED] * cells, cap=MIN_GRIDS + 1)
     if total is None:
         return {"verdict": "TIMEOUT"}
@@ -163,12 +182,15 @@ def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
         if time.time() - t0 > max_seconds:
             return {"verdict": "TROP-CHER",
                     "elapsed_s": round(time.time() - t0, 1),
-                    "total_grids": total}
+                    "total_grids": total, "phase": PHASE}
+        PHASE = "random_solution"
         sol = random_solution(rs)
         if sol is None:
             return {"verdict": "MORT", "total_grids": total}
+        PHASE = "minimal_clues"
         puz = minimal_clues(rs, sol)
         fracs.append(sum(1 for x in puz if x != UNASSIGNED) / cells)
+        PHASE = "solve_graded"
         r = solve_graded(rs, puz)
         if r["solved"]:
             solved += 1
@@ -225,6 +247,8 @@ def main():
     random.seed(a.seed)
     jl = open(os.path.join(rundir, "results.jsonl"), "a", buffering=1)
 
+    signal.signal(signal.SIGALRM, _alarme)
+
     i = 0
     seen = set()
     while True:
@@ -236,10 +260,19 @@ def main():
             continue
         seen.add(rs.label)
         t0 = time.time()
+        # SIGALRM interrompt l'appel en cours ou qu'il en soit. Les gardes
+        # entre appels ne peuvent rien quand le blocage est DANS un appel.
+        signal.alarm(a.max_seconds)
         try:
             res = evaluate_system(rs, a.instances, a.max_seconds)
+        except SystemeTropLent:
+            res = {"verdict": "TROP-CHER",
+                   "elapsed_s": round(time.time() - t0, 1),
+                   "phase": PHASE, "interrompu": True}
         except Exception as e:
             res = {"verdict": "ERREUR", "err": repr(e)[:200]}
+        finally:
+            signal.alarm(0)
         rec = {"ts": time.time(), "dsl_hash": dh, "seed": a.seed, "idx": i,
                "n": a.n, "d": a.d, "sys": rs.label,
                "ms": int(1000 * (time.time() - t0)), **res}

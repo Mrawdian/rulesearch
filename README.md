@@ -38,10 +38,24 @@ un tas de lignes dont on ne sait plus lesquelles se comparent.
     PLAT           deductible mais la technique la plus faible suffit
     CANDIDAT       bien pose, deductible, peu d'indices, niveau >= T1
     TROP-CHER      budget de temps par systeme depasse (--max-seconds,
-                   45 s par defaut). A distinguer de TIMEOUT, qui est un
+                   20 s par defaut). A distinguer de TIMEOUT, qui est un
                    budget de NOEUDS epuise dans count_solutions. TROP-CHER
                    est une information de recherche : un systeme trop cher
                    a evaluer a n=4 est un fait sur le systeme.
+
+## Champ phase
+Present sur les records TROP-CHER. Indique l'etape en cours quand le
+budget a ete depasse, parmi :
+    prefilter        is_dead() dans engine/prefilter.py
+    count_solutions  comptage des grilles valides
+    random_solution  tirage d'une solution
+    minimal_clues    minimisation des indices
+    solve_graded     resolution graduee par techniques
+Sans ce champ on sait que le systeme est pathologique, pas quelle
+fonction l'est. L'interruption se fait par SIGALRM : un test place ENTRE
+les appels ne peut rien interrompre quand le blocage est DANS un appel.
+Le champ `interrompu` distingue une interruption par signal d'un
+depassement constate entre deux appels.
 
 ## Etat 24/08/2026
 - T1 (hidden single) corrige : n'est valide que sur un ALLDIFF de taille d.

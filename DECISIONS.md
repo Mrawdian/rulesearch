@@ -97,3 +97,37 @@ touches.
 Reouverture : si une part importante des systemes tombe en TROP-CHER a 45 s,
 le seuil est mal calibre ou le cout de `minimal_clues` doit etre attaque
 directement. A surveiller des le premier bloc complet.
+
+## 2026-08-25 - interruption par SIGALRM, champ phase, seuil a 20 s
+La borne de temps decidee plus haut etait **structurellement incapable
+d'interrompre le blocage**. Elle testait le depassement *entre* les appels
+couteux ; or le processus se bloquait *a l'interieur* d'un seul appel, qui ne
+rendait jamais la main. Aucun test place entre deux appels ne peut interrompre
+cela, quel que soit le seuil.
+
+Constate en production : bloc `connect` n=4 d=3 avec `max_seconds=45` bien
+actif dans son `config.json`, 11 systemes evalues en 0,4 s cumulee, puis **15
+minutes a 98 % CPU sur le 12e sans que TROP-CHER se declenche**.
+
+Correction : `signal.alarm(max_seconds)` autour de `evaluate_system`, handler
+levant `SystemeTropLent`, rattrape en TROP-CHER avec `elapsed_s`. Le signal
+interrompt le code ou qu'il en soit. Les gardes entre appels sont conservees :
+inutiles pour ce cas, gratuites, et elles etiquettent plus proprement quand
+elles suffisent -- le champ `interrompu` distingue les deux chemins.
+
+Champ **`phase`** : variable mise a jour avant chaque etape (`prefilter`,
+`count_solutions`, `random_solution`, `minimal_clues`, `solve_graded`). Savoir
+qu'un systeme est pathologique ne dit pas quelle fonction l'est ; sans ce
+champ, la mesure ne designe pas de coupable.
+
+Seuil abaisse de 45 s a **20 s** : a 45 s on paie tres cher des systemes de
+toute facon inexploitables.
+
+Limites connues : SIGALRM n'existe que sous Unix et ne se declenche que sur le
+thread principal. `run.py` tourne bien dans le thread principal, et le
+declenchement a ete verifie explicitement sous **python3 et sous pypy3** (un
+chemin de code jamais execute n'est pas un chemin de code). La resolution
+d'`alarm()` est la seconde, donc le seuil n'est pas fin -- sans importance ici.
+
+Reouverture : si un blocage survient dans du code qui masque les signaux, ou
+si le portage sort d'Unix, il faudra passer par un sous-processus avec timeout.

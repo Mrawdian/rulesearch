@@ -18,7 +18,9 @@ plus deux abandons a ne pas confondre :
 
 - **TIMEOUT** : budget de **noeuds** epuise dans `count_solutions`.
 - **TROP-CHER** : budget de **temps par systeme** depasse (`--max-seconds`,
-  45 s par defaut). `count_solutions` avait un budget de noeuds, mais
+  20 s par defaut), impose par **SIGALRM**. Le record porte alors un champ
+  `phase` disant quelle fonction consommait le temps.
+  `count_solutions` avait un budget de noeuds, mais
   `random_solution` et `minimal_clues` n'en avaient aucun : un systeme vivant
   et couteux pouvait bloquer un bloc entier.
 

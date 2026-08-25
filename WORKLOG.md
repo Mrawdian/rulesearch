@@ -11,6 +11,100 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-25 19:15 - interruption par SIGALRM, champ phase, seuil a 20 s
+
+**Demande** : remplacer la borne de temps par une interruption SIGALRM,
+ajouter un champ `phase`, abaisser le seuil a 20 s, et **verifier
+explicitement que l'alarme se declenche**.
+
+**Cause reelle** : la borne posee a l'intervention precedente etait
+**structurellement incapable** d'interrompre le blocage. Elle testait
+`time.time() - t0 > max_seconds` *entre* les appels couteux ; le processus se
+bloquait *a l'interieur* d'un seul appel, qui ne rendait jamais la main. Aucun
+test place entre deux appels ne peut interrompre cela, **quel que soit le
+seuil**.
+
+Preuve en production : le bloc `connect` n=4 d=3 avait bien `"max_seconds": 45`
+dans son `config.json`. Il a evalue 11 systemes en **0,4 s cumulee**, puis est
+reste **plus de 15 minutes a 98 % CPU sur le 12e** sans qu'aucun TROP-CHER ne
+soit emis. Le compteur affichait 0, ce qui se lisait a tort comme "aucun
+systeme trop cher".
+
+**Correction** (`run.py` uniquement) :
+- `signal.alarm(a.max_seconds)` arme avant `evaluate_system`, `signal.alarm(0)`
+  dans un `finally`. Handler `_alarme` levant `SystemeTropLent`, rattrapee en
+  TROP-CHER avec `elapsed_s`, `phase` et `interrompu: True`.
+- `signal.signal(SIGALRM, _alarme)` installe une seule fois avant la boucle.
+- variable module `PHASE`, mise a jour avant chaque etape : `prefilter`,
+  `count_solutions`, `random_solution`, `minimal_clues`, `solve_graded`.
+- **les gardes entre appels sont conservees**, comme demande : inutiles pour ce
+  cas, gratuites, et elles etiquettent plus proprement quand elles suffisent.
+  `interrompu` distingue les deux chemins -- present si l'arret vient du
+  signal, absent si le depassement a ete constate entre deux appels.
+- `MAX_SECONDS` 45 -> **20**.
+
+Ni le solveur, ni `engine/`, ni les seuils existants (`MIN_GRIDS`,
+`MAX_CLUE_FRAC`) ne sont touches.
+
+**Verifie** (execute et observe) :
+- **SIGALRM fonctionne sous pypy3.** C'etait la question ouverte, elle est
+  tranchee par l'execution, pas par lecture.
+- Test explicite : `minimal_clues` remplace par une boucle de calcul pur (aucun
+  appel systeme, aucun test d'heure) que seul un signal peut interrompre, sur
+  40 systemes avec `--max-seconds 3`.
+
+      cpython : 40 systemes, 16 TROP-CHER, phase=minimal_clues,
+                elapsed_s=3.0, interrompu=True, ms=3000
+      pypy3   : 40 systemes, 15 TROP-CHER, phase=minimal_clues,
+                elapsed_s=3.0, interrompu=True, ms=3000
+
+  Interruption a exactement 3,0 s dans les deux cas, phase correcte, drapeau
+  `interrompu` present. Le chemin de code est desormais **execute**, pas
+  seulement ecrit.
+- Observation de passage : certains systemes ont ete interrompus en
+  `phase=count_solutions`, sans que cette fonction ait ete truquee. Des
+  systemes bloquent donc reellement dans `count_solutions` malgre son budget
+  de noeuds -- a confirmer sur des donnees de production.
+- Les 4 canaris passent depuis la racine ET depuis `engine/` : 8/8, exit 0.
+- `dsl_hash` inchange : **`0327bdc4c76a`** (`run.py` n'est pas dans `engine/`).
+- Le repertoire de run du test et ses fichiers `found/` ont ete supprimes :
+  `runs/` ne contient que les 6 runs legitimes, aucun tag `alarmtest` ne
+  pollue `summary.md`.
+
+**Non verifie / suppose** :
+- **Aucun TROP-CHER n'a encore ete produit en conditions reelles.** Le
+  mecanisme est prouve sur un cas artificiel ; la distribution reelle des
+  phases sur de vrais systemes pathologiques est inconnue.
+- Le seuil de 20 s n'est pas calibre par la mesure, il est choisi a priori.
+- L'hypothese que la connectivite produise systematiquement des systemes trop
+  chers reste **ouverte**. Deux blocages observes portaient sur des systemes
+  `connect,relational`, ce qui ne constitue pas une mesure.
+- Le script de test n'a **pas ete verse au depot** (il vivait dans `/tmp` et a
+  ete supprime). Le chemin de code n'a donc pas de test de non-regression
+  permanent -- candidat naturel a un `canary5.py`.
+- `alarm()` a une resolution d'une seconde : le seuil n'est pas fin. Sans
+  importance a 20 s.
+
+**Bloque sur** : `sudo` toujours refuse. **Demande a Mrawdian :
+`sudo systemctl restart rulesearch`.** Le bloc `connect` seed 84008 est gele
+depuis 18:53 sur son 12e systeme, avec l'ancien `run.py` sans SIGALRM. Il ne
+s'arretera pas seul et bloque toute la rotation.
+
+**Pour Claude chat** :
+- Une garde de temps placee **entre** deux appels ne borne rien si le blocage
+  est **dans** un appel. C'est l'erreur commise ici, et elle a coute deux
+  interventions. Seul un signal, ou un sous-processus, interrompt de
+  l'exterieur.
+- `TROP-CHER : 0` dans `summary.md` est **ambigu** : cela peut vouloir dire
+  qu'aucun systeme n'est trop cher, ou que le mecanisme d'abandon ne se
+  declenche pas. C'est arrive. Croiser avec la date du run et l'etat du
+  processus avant de conclure.
+- Le champ `phase` designe la fonction qui consommait le temps. `interrompu:
+  True` signale une interruption par signal ; son absence signale un
+  depassement constate entre deux appels.
+- SIGALRM est **verifie fonctionnel sous pypy3**, qui est l'interpreteur de
+  production. Ne pas re-ouvrir cette question sans nouvelle mesure.
+
 ## 2026-08-25 18:52 - borne de temps par systeme, verdict TROP-CHER
 
 **Demande** : ajouter une borne de temps par systeme (`--max-seconds`, defaut
