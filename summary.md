@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 19:29 UTC — 194 systemes evalues
+genere 2026-08-25 19:29 UTC — 209 systemes evalues
 
 ## versions du DSL presentes
 - `6680f7b47e6f` : 124 systemes
-- `0327bdc4c76a` : 70 systemes
+- `0327bdc4c76a` : 85 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
@@ -13,7 +13,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 41 | 15 | 8 | 1 | 4 | 3 | 2 | 8 | 19.5% |
+| connect | 4 | 3 | 56 | 22 | 11 | 1 | 7 | 3 | 3 | 9 | 16.1% |
 | ref | 4 | 3 | 29 | 10 | 5 | 0 | 5 | 0 | 0 | 9 | 31.0% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -21,13 +21,14 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 11, dont T2 : 100%
+- candidats AVEC connectivite : 12, dont T2 : 100%
 - candidats SANS connectivite : 13, dont T2 : 100%
 - **echantillon trop faible pour conclure**
 
 ## meilleurs candidats (niveau requis, puis indices les plus rares)
 
 - `T2` indices=0.18 — PAIRDIFF(>=1)@knight + PAIRSTEP(1)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-6)@grid
+- `T2` indices=0.21 — PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-4)@grid + PAIRSTEP(1)@adj
 - `T2` indices=0.27 — MONO@cols + NEQADJ@rows
 - `T2` indices=0.31 — NEQADJ@cols + SUM(5+-0)@rows
 - `T2` indices=0.34 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@knight
@@ -53,6 +54,6 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.54 — MONO@cols + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,2-6)@grid + NOTRIPLE@blocks
 
 ## cout
-- temps total 0.0 h, dont 17% brule sur des systemes MORT
-- TROP-CHER : 2 systemes abandonnes (1.0% des systemes), 73% du temps total
-  dont 2 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
+- temps total 0.0 h, dont 14% brule sur des systemes MORT
+- TROP-CHER : 3 systemes abandonnes (1.4% des systemes), 79% du temps total
+  dont 3 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
