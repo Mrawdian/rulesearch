@@ -131,3 +131,36 @@ d'`alarm()` est la seconde, donc le seuil n'est pas fin -- sans importance ici.
 
 Reouverture : si un blocage survient dans du code qui masque les signaux, ou
 si le portage sort d'Unix, il faudra passer par un sous-processus avec timeout.
+
+## 2026-08-25 - la borne de 20 s est un filtre qui biaise l'echantillon
+La borne de temps par systeme n'est pas seulement une protection de debit.
+C'est un **critere de selection applique a l'echantillon**, et il n'est pas
+neutre : il exclut preferentiellement les systemes couteux a evaluer.
+
+Premiere mesure : 22 TROP-CHER sur 395 systemes (4,2 %), consommant **94 % du
+temps total**, et **tous** contenant CONNECTED. Phase unique : `solve_graded`.
+
+Consequence pour l'hypothese centrale. Si la connectivite cause les abandons,
+alors les systemes a connectivite les plus couteux sont exclus de la mesure.
+Ce sont vraisemblablement les plus profonds -- exactement ceux que l'hypothese
+predit comme atteignant T2. **L'echantillon est donc tronque du cote que
+l'hypothese predit, et la troncature joue CONTRE elle.**
+
+Il en decoule une regle de lecture, portee dans `summary.md` pour qu'on ne
+puisse pas l'oublier : tout ecart T2 favorable observe est une **borne
+inferieure**, jamais une estimation. Et surtout, **un ecart faible ou nul ne
+refute pas l'hypothese** -- il peut n'etre qu'un effet de la borne de temps.
+Sans cet avertissement, on lirait une non-difference comme une refutation.
+
+Le ratio global "TROP-CHER avec / sans CONNECTED" est **confondu** : seul le
+tag `connect` peut produire des systemes contenant CONNECTED, `static-ref`
+n'en produit aucun par construction. La comparaison valide est le taux de
+TROP-CHER **a l'interieur du seul tag `connect`**, ou les deux types de
+systemes coexistent. `summarize.py` publie desormais les deux, la ligne
+globale explicitement marquee comme confondue.
+
+Reouverture : **si la fraction de systemes CONNECTED abandonnes depasse 20 %
+des systemes CONNECTED**, la borne ne protege plus le debit, elle detruit la
+mesure. Il faudra alors la remonter, ou traiter ces systemes a part dans une
+file dediee a budget long, plutot que de les jeter. Le chiffre est publie a
+chaque resume dans la section "censure de l'echantillon".

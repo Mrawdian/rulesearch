@@ -11,6 +11,94 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-25 19:50 - ventilation intra-connect et censure de l'echantillon
+
+**Demande** : ventiler les TROP-CHER a l'interieur du seul tag `connect`,
+marquer la ligne globale comme confondue, et faire apparaitre dans le resume
+que la borne de temps **censure l'echantillon dans le sens qui defavorise
+l'hypothese**.
+
+**Cause reelle (du besoin)** : la ligne "22 TROP-CHER, dont 22 avec CONNECTED,
+0 sans" etait **confondue par construction**. `static-ref` ne tire que des
+familles `static` : aucun de ses systemes ne peut contenir CONNECTED. Le ratio
+melangeait donc l'effet de la connectivite et celui de la configuration, et
+n'etablissait rien.
+
+**Correction** (`summarize.py`) :
+- ligne globale conservee mais **explicitement marquee CONFONDUE**, avec le
+  motif et un renvoi vers la ventilation.
+- **ventilation a configuration egale** : taux de TROP-CHER dans le seul tag
+  `connect`, ou les deux types de systemes coexistent, avec et sans CONNECTED.
+  Avertissement automatique si l'un des groupes compte moins de 20 systemes.
+- nouvelle section **"censure de l'echantillon"** dans la partie hypothese :
+  nombre et fraction des systemes CONNECTED abandonnes, puis le raisonnement
+  en clair -- les abandonnes sont les plus couteux, donc vraisemblablement les
+  plus profonds, donc ceux que l'hypothese predit comme atteignant T2 ;
+  l'echantillon est tronque du cote que l'hypothese predit et la troncature
+  joue **contre** elle ; tout ecart favorable observe est une **borne
+  inferieure** ; **un ecart faible ou nul ne refute pas l'hypothese**.
+
+`DECISIONS.md` : entree posant que la borne de 20 s n'est pas qu'une protection
+de debit mais un **filtre qui biaise l'echantillon**, avec le critere de
+reouverture demande -- au-dela de **20 % de systemes CONNECTED abandonnes**, la
+borne detruit la mesure et devra etre remontee, ou ces systemes traites a part
+dans une file a budget long plutot que jetes.
+
+**Verifie** (execute et observe, sur 635 enregistrements) :
+- ventilation a configuration egale, dans le seul tag `connect` :
+  **avec CONNECTED 13,7 % sur 219 systemes, sans CONNECTED 0,0 % sur 47**.
+  Le signal survit donc au controle de configuration -- c'est la premiere
+  mesure non confondue sur cette question.
+- censure : **30 systemes CONNECTED sur 276 (10,9 %) abandonnes**. Sous le
+  seuil de reouverture de 20 %, mais du meme ordre de grandeur : a surveiller.
+- cout : 30 TROP-CHER, soit 4,7 % des systemes pour **95 % du temps total**.
+- part du temps sur les MORT tombee a **3 %** (contre 68 % avant le
+  pre-filtre).
+- `summarize.py` re-parse et tourne sans regression.
+
+**Reserve importante sur le verdict affiche** : le resume imprime
+"l'hypothese ne tient pas" alors que les deux groupes sont a **T2 100 %**
+(31 candidats avec connectivite, 50 sans). Le test compare `a < b + 0.05` ;
+avec a = b = 1,0 il conclut a l'absence d'ecart. Mais **100 % contre 100 %
+n'est pas une absence d'effet : c'est une saturation de l'indicateur**.
+`max_level >= 2` ne discrimine plus rien quand tous les candidats atteignent
+T2. Ce verdict ne doit pas etre lu comme une refutation. Non corrige :
+l'utilisateur a demande de laisser tourner sans rien changer. **A trancher
+plus tard** -- il faudra un indicateur qui ne sature pas (T3, ou une mesure
+continue de profondeur).
+
+**Non verifie / suppose** :
+- Les 13,7 % contre 0,0 % reposent sur 47 systemes seulement dans le groupe
+  sans CONNECTED. L'ecart est net mais l'echantillon du groupe temoin est
+  mince.
+- Le lien "couteux donc profond" est une **hypothese de travail**, pas un fait
+  mesure : rien ne prouve que les systemes abandonnes auraient atteint T2.
+  C'est precisement pourquoi le resume parle de borne inferieure et non
+  d'estimation.
+- Aucun des 30 systemes abandonnes n'a ete evalue avec un budget long pour
+  verifier ce qu'il aurait donne.
+
+**Bloque sur** : rien de nouveau. `sudo` reste refuse ; un redemarrage reste
+souhaitable pour que `run_canaries()` joue `canary5`, sans quoi rien n'est
+casse.
+
+**Pour Claude chat** :
+- **Ne jamais lire la ligne globale "TROP-CHER dont N avec CONNECTED" comme un
+  resultat.** Elle est confondue et marquee comme telle. La seule comparaison
+  valide est la ventilation dans le tag `connect`.
+- La section **"censure de l'echantillon"** doit etre lue avant tout verdict
+  sur l'hypothese. Un ecart T2 faible ou nul **ne refute rien** tant que des
+  systemes CONNECTED sont abandonnes : la borne de temps retire de
+  l'echantillon precisement les cas favorables a l'hypothese.
+- Surveiller la fraction de CONNECTED abandonnes. **Au-dela de 20 %**, la
+  mesure n'est plus exploitable (critere inscrit dans `DECISIONS.md`).
+  Actuellement 10,9 %.
+- Le verdict automatique "l'hypothese ne tient pas" est **actuellement
+  trompeur** : il se declenche aussi quand les deux groupes saturent a 100 %
+  de T2, ce qui est le cas. Saturation n'est pas absence d'effet.
+- Consigne de l'utilisateur : **laisser tourner sans rien changer** jusqu'a
+  plusieurs centaines de systemes par groupe.
+
 ## 2026-08-25 19:35 - canary5, garde permanente de l'interruption par alarme
 
 **Demande** : verser au depot le test du declenchement de l'alarme, avec en
