@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 23:29 UTC — 11051 systemes evalues
+genere 2026-08-25 23:29 UTC — 11065 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `89c65c03c4ad` : 2077 systemes
+- `89c65c03c4ad` : 2091 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
@@ -12,7 +12,7 @@ genere 2026-08-25 23:29 UTC — 11051 systemes evalues
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7466 enregistrements (68%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7466 enregistrements (67%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 5531 | 2777 | 355 | 203 | 532 | 455 | 575 | 572 | 10.3% |
-| ref | 4 | 3 | 5396 | 1309 | 2249 | 1 | 713 | 265 | 2 | 857 | 15.9% |
+| ref | 4 | 3 | 5410 | 1312 | 2256 | 1 | 716 | 265 | 2 | 858 | 15.9% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 575, dont T2 : 100%
-- candidats SANS connectivite : 861, dont T2 : 100%
+- candidats SANS connectivite : 862, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -55,10 +55,10 @@ qui ne sature pas.
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
   - test de permutation : **p = 0.0060** — ecart significatif au seuil 0.05
-- `89c65c03c4ad` — 271 candidats
+- `89c65c03c4ad` — 272 candidats
   - AVEC connectivite (96) : T0=13.19 T1=0.00 T2=2.83 — pondere **5.67**
-  - SANS connectivite (175) : T0=16.03 T1=0.00 T2=2.63 — pondere **5.27**
-  - test de permutation : **p = 0.3133** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
+  - SANS connectivite (176) : T0=16.04 T1=0.00 T2=2.62 — pondere **5.25**
+  - test de permutation : **p = 0.2864** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
 - `0327bdc4c76a` — 107 candidats
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
