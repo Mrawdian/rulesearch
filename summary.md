@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 19:29 UTC — 239 systemes evalues
+genere 2026-08-25 19:29 UTC — 254 systemes evalues
 
 ## versions du DSL presentes
+- `0327bdc4c76a` : 130 systemes
 - `6680f7b47e6f` : 124 systemes
-- `0327bdc4c76a` : 115 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
@@ -14,7 +14,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 71 | 32 | 12 | 1 | 9 | 3 | 3 | 10 | 14.1% |
-| ref | 4 | 3 | 44 | 13 | 12 | 0 | 7 | 0 | 0 | 12 | 27.3% |
+| ref | 4 | 3 | 59 | 15 | 21 | 0 | 10 | 0 | 0 | 13 | 22.0% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -22,7 +22,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 13, dont T2 : 100%
-- candidats SANS connectivite : 16, dont T2 : 100%
+- candidats SANS connectivite : 17, dont T2 : 100%
 - **echantillon trop faible pour conclure**
 
 ## meilleurs candidats (niveau requis, puis indices les plus rares)
@@ -34,6 +34,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.33 — SUM(2+-1)@blocks + NEQADJ@diags + SUM(2+-0)@blocks
 - `T2` indices=0.34 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@knight
 - `T2` indices=0.39 — SUM(2+-0)@diags + MONO@cols
+- `T2` indices=0.39 — MONO@rows + MONO@diags
 - `T2` indices=0.39 — COUNT(v2,1-2)@cols + MONO@rows
 - `T2` indices=0.40 — MONO@blocks + PAIRSTEP(1)@adj
 - `T2` indices=0.41 — CONNECTED(v1) + COUNT(v1,8-9)@grid + PAIRSTEP(1)@adj
@@ -51,9 +52,8 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.51 — COUNT(v2,2-2)@blocks + SUM(5+-1)@rows
 - `T2` indices=0.51 — SUM(6+-1)@rows + MONO@diags
 - `T2` indices=0.52 — MONO@blocks
-- `T2` indices=0.53 — SUM@cages(3-5) + NEQADJ@blocks
 
 ## cout
 - temps total 0.0 h, dont 14% brule sur des systemes MORT
-- TROP-CHER : 3 systemes abandonnes (1.3% des systemes), 75% du temps total
+- TROP-CHER : 3 systemes abandonnes (1.2% des systemes), 75% du temps total
   dont 3 avec CONNECTED, 0 sans (un systeme trop cher a evaluer est un fait sur le systeme, pas seulement un incident)
