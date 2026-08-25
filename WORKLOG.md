@@ -11,6 +11,119 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - T1 est SANS DOMAINE, test de significativite, gel verifie
+
+**Demande** : confirmer la cause des 0 invocations de T1 avant de traiter le
+symptome ; evaluer sans coder une technique intermediaire ; ajouter un test de
+significativite a la mesure continue ; verifier le gel de `engine/` en cycle
+reel.
+
+**1. Cause confirmee, plus radicale que le diagnostic initial.**
+
+    connect     n=4 d=3   0 systeme sur 600 avec region T1 eligible, 0 ALLDIFF
+    static-ref  n=4 d=3   0 systeme sur 590,                          0 ALLDIFF
+    baseline    n=4 d=4   126 sur 600 (21 %), 1308 ALLDIFF dont 322 de taille d
+
+Sur les enregistrements : `connect` 0 %, `ref` 0 %, `baseline` 38,7 % citant
+ALLDIFF.
+
+Ce n'est pas "quasiment aucun" mais **exactement zero**, et pas seulement zero
+region *eligible* : **zero contrainte ALLDIFF generee**, y compris par la
+famille `static`. La raison est le principe des tiroirs et elle precede la
+restriction de `t1_regions()` : a n=4, les regions structurelles ont 4 cases ;
+avec d=3, un ALLDIFF sur 4 cases et 3 valeurs est infaisable, le generateur
+n'en produit donc aucun. Et meme s'il en produisait, `t1_regions()` exige une
+taille exactement d=3 que ces regions n'ont pas.
+
+**T1 n'est ni fausse ni inerte : elle est SANS DOMAINE** dans l'espace que la
+file explore. Elle redevient utile des que d egale la taille des regions --
+cas de `baseline` a d=4. C'est le passage de la file a d=3 qui l'a eliminee.
+
+**2. Technique proposee evaluee, NON codee : elle serait REDONDANTE.**
+
+La proposition -- supposer v, saturer **T0 seul** au lieu de T0+T1, eliminer
+sur contradiction -- part de l'idee que ce serait un T2 affaibli. Or
+`apply_T1` parcourt `t1_regions(rs)` qui est **vide** : la boucle ne s'execute
+jamais, la fonction rend `(False, False)`. Donc `saturate_low()` **est deja
+exactement T0 seul** dans cet espace.
+
+La technique proposee est donc **T2 a l'identique**, pas une version affaiblie.
+Elle se declencherait aux memes endroits, sur les memes systemes. Inseree comme
+palier intermediaire, elle reclasserait tous les T2 actuels et laisserait T2
+vide : un renommage, pas un palier. Et **`canary6` la validerait** puisqu'elle
+s'invoque bien -- piege plus retors que l'inertie, parce qu'elle aurait l'air
+de marcher.
+
+Piste proposee a la place, non codee : **contradiction a propagation bornee** --
+supposer v, appliquer **une seule passe** de T0 au lieu d'iterer jusqu'au point
+fixe. Strictement plus faible que T2 (les contradictions n'apparaissant qu'apres
+plusieurs passes lui echappent), strictement plus forte que T0, et sans
+dependance a une structure de region.
+
+**Manque outillage** : `canary6` verifie qu'une technique se declenche, pas
+qu'elle **discrimine**. Une technique redondante passe le canari. Il faudrait y
+ajouter une comparaison de la distribution de `max_level` avant/apres.
+
+**3. Test de significativite (test de permutation, stdlib seule).**
+
+    615abe43d6bc  945 candidats  p = 0.0060  significatif
+    89c65c03c4ad  213 candidats  p = 0.7586  NON SIGNIFICATIF
+    0327bdc4c76a  107 candidats  p = 0.1569  NON SIGNIFICATIF
+    12564867381b   75 candidats  p = 0.8296  NON SIGNIFICATIF
+    12a0c0c5e34b   31 candidats  groupes trop petits, aucun test
+
+**Une seule serie sur quatre est significative.** Mon "meme sens sur trois
+series sur quatre" du tour precedent etait exactement la lecture que CLAUDE.md
+interdit : une tendance jolie prise pour un resultat.
+
+**Et la seule serie significative est `615abe43d6bc`, marquee NON
+REPRODUCTIBLE.** Le seul resultat statistiquement solide provient du moteur
+dont la source n'existe plus. Il n'est pas rejouable.
+
+**Verifie** (execute et observe) :
+- **Les six canaris passent depuis la racine ET depuis `engine/` : 12/12.**
+- **Le gel a tourne en cycle reel** : `.engine-run/` cree a 23:18 au demarrage
+  du cycle, et `RS_ENGINE=/home/rulesearch/rulesearch/.engine-run` lu
+  directement dans `/proc/<pid>/environ` du `run.py` en cours.
+- **Aucun nouveau hash orphelin** depuis le redemarrage : toujours six, pas de
+  septieme. L'hemorragie est arretee.
+- `89c65c03c4ad` est desormais **reproductible** (commit `d8f541a`) : c'est la
+  serie de production courante, 1602 systemes et en croissance.
+- Part non reproductible retombee de 83 % a **71 %**, par dilution.
+- `summarize.py` : 0,52 s avec 2000 permutations par serie.
+
+**Non verifie / suppose** :
+- La mesure du domaine de T1 porte sur des systemes **regeneres** avec les
+  memes familles et graine fixe, pas sur les systemes exactement journalises --
+  les objets `RuleSystem` ne sont pas conserves dans les journaux. Le taux
+  observe sur les etiquettes (0 % d'ALLDIFF cite) concorde.
+- La redondance de la technique proposee est **demontree par lecture du code**
+  (`t1_regions` vide donc `apply_T1` no-op), pas mesuree.
+- La contradiction a propagation bornee est une **piste**, ni implementee ni
+  testee. Rien ne garantit qu'elle cree un palier plutot qu'un renommage.
+- Le test de permutation suppose l'echangeabilite sous H0. Les candidats d'une
+  meme serie ne sont pas independants (memes graines, meme generateur) : le p
+  est indicatif, pas une garantie formelle.
+- Aucune correction pour tests multiples n'est appliquee : quatre series
+  testees, un p a 0,006 -- une correction de Bonferroni le laisserait
+  significatif, mais ce n'est pas calcule.
+
+**Bloque sur** : rien. `sudo` reste refuse mais aucun redemarrage n'est requis
+par ce tour -- `summarize.py` et la documentation sont relus a chaque bloc, et
+`engine/` n'a pas change.
+
+**Pour Claude chat** :
+- **T1 est sans domaine, pas cassee.** Ne pas la "reparer" : elle fonctionne
+  des que d egale la taille des regions. C'est la file a d=3 qui l'exclut.
+- **`saturate_low()` = T0 seul** dans l'espace explore. Toute technique definie
+  comme "T2 avec T0 seul" est identique a T2. Ne pas la proposer.
+- Une technique peut passer `canary6` **en etant redondante** : se declencher
+  n'est pas discriminer. Le canari ne couvre pas ce cas.
+- **L'ecart de la mesure continue n'est significatif que sur une serie sur
+  quatre**, et c'est la serie non reproductible. Ne pas le citer comme
+  resultat acquis.
+- Le gel de `engine/` est actif et verifie en production.
+
 ## 2026-08-26 - T3 retire, engine gele par cycle, metrique continue
 
 **Demande** : retirer `apply_T3` ; marquer les series non reproductibles sans

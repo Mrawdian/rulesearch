@@ -166,9 +166,42 @@ solution d'origine. Ne jamais entreprendre ce chantier sans l'etendre d'abord.
   connectivite demandent plus de T2 et moins de T0. Ecart faible, dans le sens
   de l'hypothese, sur trois series sur quatre.
 
-Cette mesure continue evalue l'**effort** de deduction, pas la profondeur au
-sens d'une hierarchie. Ne pas ecrire qu'un systeme est "plus profond" parce
-qu'il demande plus d'invocations : il est plus laborieux.
+**EFFORT N'EST PAS PROFONDEUR.** La mesure continue compte des invocations :
+elle dit qu'un systeme est plus **laborieux**, pas qu'il est plus **profond**.
+La profondeur au sens du projet est le niveau de technique requis -- une
+propriete structurelle -- alors que le nombre d'invocations depend aussi de la
+taille du systeme, du nombre de cellules libres et de l'ordre de parcours.
+Ecrire "plus profond" a partir de ce chiffre serait la **cinquieme** metrique
+du projet a mesurer autre chose que ce qu'elle annonce. L'avertissement figure
+aussi dans `summary.md`, a cote du chiffre.
+
+Et tant qu'un test de significativite ne tranche pas, cet ecart **n'est pas un
+resultat** : `summarize.py` applique un test de permutation et refuse de
+conclure au-dessus de p = 0,05, exactement comme il refuse sous 20 candidats
+par groupe.
+
+## Pourquoi T1 n'a aucun domaine d'application
+
+Mesure du 26/08/2026, qui explique les 0 invocations de T1 :
+
+    connect     n=4 d=3   0 systeme sur 600 avec une region T1 eligible
+                          0 contrainte ALLDIFF generee, tout court
+    static-ref  n=4 d=3   0 systeme sur 590, 0 ALLDIFF
+    baseline    n=4 d=4   126 systemes sur 600 (21 %), 322 ALLDIFF de taille d
+
+`t1_regions()` n'accepte qu'un ALLDIFF de taille **exactement d** -- restriction
+correcte, c'est elle qui corrige le bug T1. Or a n=4 et d=3, les regions
+structurelles (lignes, colonnes, blocs) sont de taille 4, donc ni de taille d,
+ni meme porteuses d'un ALLDIFF : un ALLDIFF sur 4 cases avec 3 valeurs est
+infaisable par principe des tiroirs, et le generateur n'en produit pas.
+
+T1 n'est donc ni fausse ni inerte : elle est **sans domaine** dans l'espace que
+la file explore actuellement. Elle redevient utile des que d = taille de region,
+ce qui est le cas de `baseline` a d=4.
+
+Consequence a ne pas manquer : `saturate_low()` (T0+T1) se reduit a **T0 seul**
+dans cet espace. Toute technique definie comme "T2 mais avec T0 seul au lieu de
+T0+T1" y est donc **exactement identique a T2**, pas une version affaiblie.
 
 ## Hypothese en cours
 

@@ -5,7 +5,7 @@ C'est le SEUL fichier a lire en debut de session : il doit tenir en une
 page et repondre a la seule question qui compte -- qu'est-ce qui a survecu,
 et l'hypothese de fracture locale/non-locale tient-elle ?
 """
-import collections, glob, hashlib, json, os, subprocess
+import collections, glob, hashlib, json, os, random, subprocess
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -175,6 +175,12 @@ if conn_censures:
 
 w("## profondeur en continu (le seuil binaire sature, pas ceci)")
 w("")
+w("**Cette mesure evalue l'EFFORT de deduction, pas la PROFONDEUR.** Un")
+w("systeme qui demande trois fois T2 est plus laborieux, pas plus profond")
+w("qu'un systeme qui en demande deux. Confondre les deux serait la")
+w("cinquieme metrique du projet a mesurer autre chose que ce qu'elle")
+w("annonce.")
+w("")
 w("`max_level >= 2` vaut 100 % partout : le seuil ne discrimine plus. Le")
 w("nombre d'invocations par niveau, lui, varie -- c'est une mesure continue")
 w("qui ne sature pas.")
@@ -197,9 +203,49 @@ def _pondere(g):
                for r in g) / len(g)
 
 
+MIN_GROUPE = 20
+N_PERM = 2000
+SEUIL_P = 0.05
+
+
+def _score(r):
+    """invocations ponderees par le niveau, pour un enregistrement"""
+    return sum(int(k) * v for k, v in (r.get("level_uses") or {}).items())
+
+
+def _test_permutation(a, b, n_iter=N_PERM, graine=20260826):
+    """
+    Test de permutation bilateral, stdlib seule (pas de scipy : invariant
+    "stdlib seule" de CLAUDE.md).
+
+    H0 : les deux groupes sont tires de la meme distribution. On melange les
+    etiquettes n_iter fois et on compte la fraction des melanges dont l'ecart
+    de moyennes egale ou depasse l'ecart observe.
+
+    Rend None si un groupe est trop petit -- on s'abstient plutot que de
+    produire un p ininterpretable.
+    """
+    if len(a) < MIN_GROUPE or len(b) < MIN_GROUPE:
+        return None
+    va = [_score(r) for r in a]
+    vb = [_score(r) for r in b]
+    obs = abs(sum(va) / len(va) - sum(vb) / len(vb))
+    pool = va + vb
+    na = len(va)
+    rng = random.Random(graine)
+    au_moins = 0
+    for _ in range(n_iter):
+        rng.shuffle(pool)
+        m1 = sum(pool[:na]) / na
+        m2 = sum(pool[na:]) / (len(pool) - na)
+        if abs(m1 - m2) >= obs:
+            au_moins += 1
+    return (au_moins + 1.0) / (n_iter + 1.0)
+
+
 for _h, _n in by_hash.most_common():
     _sous = [r for r in cands if r.get("dsl_hash") == _h]
-    if len(_sous) < 20:
+    if len(_sous) < MIN_GROUPE:
         continue
     _a = [r for r in _sous if "CONNECTED" in r.get("sys", "")]
     _b = [r for r in _sous if "CONNECTED" not in r.get("sys", "")]
@@ -208,6 +254,20 @@ for _h, _n in by_hash.most_common():
       % (len(_a), _moy(_a, 0), _moy(_a, 1), _moy(_a, 2), _pondere(_a)))
     w("  - SANS connectivite (%d) : T0=%.2f T1=%.2f T2=%.2f — pondere **%.2f**"
       % (len(_b), _moy(_b, 0), _moy(_b, 1), _moy(_b, 2), _pondere(_b)))
+    _p = _test_permutation(_a, _b)
+    if _p is None:
+        w("  - *groupes trop petits (< %d) — aucun test, aucune conclusion*"
+          % MIN_GROUPE)
+    elif _p < SEUIL_P:
+        w("  - test de permutation : **p = %.4f** — ecart significatif au seuil "
+          "%.2f" % (_p, SEUIL_P))
+    else:
+        w("  - test de permutation : **p = %.4f** — **NON SIGNIFICATIF**, "
+          "l'ecart est compatible avec le bruit. Ne pas conclure." % (_p, ))
+w("")
+w("*Test de permutation bilateral, %d melanges, stdlib seule. Un ecart non*" % N_PERM)
+w("*significatif ne dit pas qu'il n'y a pas d'effet : il dit que ces donnees*")
+w("*ne permettent pas de le distinguer du hasard.*")
 w("")
 _t1 = sum(_uses(r, 1) for r in recs)
 if not _t1:

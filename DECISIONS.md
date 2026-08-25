@@ -395,3 +395,69 @@ Verification faite sur les journaux : aucun `dsl_hash` ne porte deux formes de
 `level_uses`, donc rien n'indique qu'un hash ait jamais designe un code autre
 que le sien. L'invariant 2 a tenu. Le test est toutefois **incomplet** : il ne
 detecte que les melanges observables dans les enregistrements.
+
+## 2026-08-26 - T1 est sans domaine, et la technique de repli serait redondante
+Mesure demandee avant de traiter le symptome. `t1_regions()` n'accepte qu'un
+ALLDIFF de taille exactement d. Dans l'espace reellement explore :
+
+    connect     n=4 d=3   0 systeme sur 600 eligible, 0 ALLDIFF generee
+    static-ref  n=4 d=3   0 systeme sur 590,          0 ALLDIFF generee
+    baseline    n=4 d=4   126 sur 600 (21 %), 322 ALLDIFF de taille d
+
+Zero, pas "quasiment zero" -- et zero ALLDIFF **tout court**, y compris pour la
+famille `static`. La cause precede la restriction de `t1_regions()` : a n=4 les
+regions structurelles ont 4 cases, et un ALLDIFF sur 4 cases avec d=3 valeurs
+est infaisable par principe des tiroirs. Le generateur n'en produit donc aucune.
+
+**T1 n'est ni fausse ni inerte : elle est SANS DOMAINE.** Elle redevient utile
+des que d egale la taille des regions -- `baseline` a d=4. C'est le passage de
+la file a d=3 qui l'a eliminee, pas un defaut de la technique.
+
+**Consequence a ne pas manquer** : `apply_T1` parcourant une liste vide rend
+`(False, False)`, donc `saturate_low()` -- censee saturer T0+T1 -- **est
+exactement T0 seul** dans cet espace.
+
+La technique de repli envisagee -- supposer v, saturer T0 seul au lieu de
+T0+T1, eliminer sur contradiction -- serait donc **T2 a l'identique**, pas un
+T2 affaibli. Inseree comme palier intermediaire elle reclasserait tous les T2
+existants et laisserait T2 vide : un renommage, aucun pouvoir discriminant
+supplementaire. Ecartee sans etre codee.
+
+Piste retenue a la place, non implementee : **contradiction a propagation
+bornee** -- supposer v, appliquer une seule passe de T0 au lieu d'iterer
+jusqu'au point fixe. Strictement entre T0 et T2, sans dependance a une
+structure de region.
+
+**Lacune d'outillage identifiee** : `canary6` verifie qu'une technique se
+DECLENCHE, pas qu'elle DISCRIMINE. Une technique redondante le passe sans
+broncher. Avant d'implementer la piste ci-dessus, y ajouter une comparaison de
+la distribution de `max_level` avant/apres.
+
+
+## 2026-08-26 - la mesure continue exige un test, et il change la lecture
+La mesure continue est conservee mais n'est plus interpretable sans test.
+`summarize.py` applique un test de permutation bilateral (2000 melanges,
+stdlib seule -- l'invariant "pas de dependances" tient) et refuse de conclure
+sous 20 candidats par groupe ou au-dessus de p = 0,05.
+
+    615abe43d6bc  945 candidats  p = 0.0060  significatif
+    89c65c03c4ad  213 candidats  p = 0.7586  non significatif
+    0327bdc4c76a  107 candidats  p = 0.1569  non significatif
+    12564867381b   75 candidats  p = 0.8296  non significatif
+
+**Une seule serie sur quatre est significative**, et c'est
+**`615abe43d6bc`, marquee NON REPRODUCTIBLE** : le seul resultat solide vient
+du moteur dont la source n'existe plus, et il n'est pas rejouable.
+
+Le "meme sens sur trois series sur quatre" avance au tour precedent etait une
+tendance jolie prise pour un resultat -- precisement ce que CLAUDE.md
+interdit. Le test etait la bonne exigence.
+
+Reserve permanente, portee dans CLAUDE.md et dans `summary.md` a cote du
+chiffre : cette mesure evalue l'**EFFORT** de deduction, pas la **PROFONDEUR**.
+Un systeme qui demande trois T2 est plus laborieux, pas plus profond. Les
+confondre serait la cinquieme metrique du projet a mesurer autre chose que ce
+qu'elle annonce.
+
+Reouverture : reevaluer quand `89c65c03c4ad`, seule serie reproductible en
+croissance, aura plusieurs centaines de candidats par groupe.
