@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 23:38 UTC — 11401 systemes evalues
+genere 2026-08-25 23:38 UTC — 11416 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `89c65c03c4ad` : 2427 systemes
+- `89c65c03c4ad` : 2442 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 5710 | 2876 | 364 | 205 | 549 | 465 | 595 | 589 | 10.3% |
-| ref | 4 | 3 | 5567 | 1352 | 2324 | 1 | 742 | 270 | 2 | 876 | 15.7% |
+| ref | 4 | 3 | 5582 | 1355 | 2329 | 1 | 743 | 270 | 2 | 882 | 15.8% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 592, dont T2 : 100%
-- candidats SANS connectivite : 880, dont T2 : 100%
+- candidats SANS connectivite : 886, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -55,10 +55,10 @@ qui ne sature pas.
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
   - test de permutation : **p = 0.0060** — ecart significatif au seuil 0.05
-- `89c65c03c4ad` — 307 candidats
+- `89c65c03c4ad` — 313 candidats
   - AVEC connectivite (113) : T0=13.18 T1=0.00 T2=2.73 — pondere **5.47**
-  - SANS connectivite (194) : T0=16.02 T1=0.00 T2=2.61 — pondere **5.23**
-  - test de permutation : **p = 0.4793** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
+  - SANS connectivite (200) : T0=15.96 T1=0.00 T2=2.66 — pondere **5.32**
+  - test de permutation : **p = 0.6787** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
 - `0327bdc4c76a` — 107 candidats
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
@@ -99,6 +99,7 @@ intermediaire est vide, ce qui explique en partie que le seuil sature.
 - `T2` indices=0.14 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-3)@grid + PAIRSTEP(2)@adj
 - `T2` indices=0.14 — PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-5)@grid + PAIRSTEP(1)@adj
 - `T2` indices=0.14 — SUM(1+-1)@cols + MONO@rows
+- `T2` indices=0.15 — COUNT(v1,0-1)@cols + SUM(7+-1)@blocks + MONO@rows
 - `T2` indices=0.15 — PAIRSTEP(1)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-6)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.16 — MONO@blocks + SUM(6+-0)@cols
 - `T2` indices=0.16 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,2-3)@grid + PAIRSTEP(2)@adj
@@ -106,7 +107,6 @@ intermediaire est vide, ce qui explique en partie que le seuil sature.
 - `T2` indices=0.17 — PAIRSTEP(2)@adj + CONNECTED(v2) + COUNT(v2,1-3)@grid + PAIRSTEP(2)@knight
 - `T2` indices=0.17 — PAIRSTEP(2)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-3)@grid + PAIRSTEP(2)@adj
 - `T2` indices=0.17 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,2-3)@grid + PAIRSTEP(2)@adj + PAIRSTEP(2)@adj
-- `T2` indices=0.18 — PAIRDIFF(>=1)@knight + PAIRSTEP(1)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,3-6)@grid
 
 ## cout
 - temps total 3.5 h, dont 2% brule sur des systemes MORT
