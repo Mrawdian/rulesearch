@@ -164,3 +164,128 @@ des systemes CONNECTED**, la borne ne protege plus le debit, elle detruit la
 mesure. Il faudra alors la remonter, ou traiter ces systemes a part dans une
 file dediee a budget long, plutot que de les jeter. Le chiffre est publie a
 chaque resume dans la section "censure de l'echantillon".
+
+## 2026-08-26 - T2 a sature, T3 est inerte, et le motif se repete
+Deux constats distincts, une meme racine.
+
+**T2 a sature.** Sur 8146 enregistrements, 437 candidats avec connectivite et
+621 sans, la fraction atteignant T2 vaut **100 % dans les deux groupes**.
+L'indicateur ne discrimine plus. Pire, le verdict automatique de
+`summarize.py` imprimait alors "l'hypothese ne tient pas" : la regle
+`a < b + 0.05` est satisfaite par 1,0 < 1,05. Le resume **affirmait une
+refutation qu'il n'avait pas etablie**. Corrige : il imprime desormais
+INDICATEUR SATURE et refuse explicitement de conclure, dans les deux sens.
+Un resume muet vaut mieux qu'un resume qui ment.
+
+**T3 est correct et inerte.** La paire nue a ete implementee, restreinte a
+`t1_regions()` pour ne pas refaire le bug T1, et verifiee par `canary3` sur les
+cinq familles : aucune divergence. Elle ne s'est jamais declenchee -- 0
+invocation sur 30 instances de reference, puis 0 sur les cas de `canary6`.
+
+La cause est **structurelle, pas un bug** : T3 est une technique d'ELIMINATION
+de candidats, et le moteur n'a aucune representation des candidats.
+`candidates()` les recalcule a chaque appel. Une elimination ne peut donc se
+materialiser que si elle reduit une cellule a une seule valeur -- cas que T0
+traite deja. Aucun reglage ne peut la rendre operante.
+
+**C'est le quatrieme cas d'une metrique qui ne mesure pas ce qu'elle
+annonce** (T1 faux ; profondeur v1 saturante ; T2 sature ; T3 inerte), et le
+**deuxieme ou une metrique a ete livree sans avoir ete testee dans son regime
+d'usage** -- survenu immediatement apres que cette regle ait ete ecrite dans
+CLAUDE.md. Ecrire la regle n'a pas suffi.
+
+Elle devient donc un **invariant dur** (CLAUDE.md 6 et 7) et surtout un
+**canari** : `canary6` exige que toute technique de niveau <=
+`DEFAULT_MAX_LEVEL` s'invoque au moins une fois sur les cas de reference.
+Verifie dans les deux sens : le canari passe a `DEFAULT_MAX_LEVEL = 2`, et
+**echoue** si on le porte a 3 sans rendre T3 operante. Une regle n'est acquise
+que lorsqu'un canari echoue quand elle cesse d'etre respectee.
+
+`DEFAULT_MAX_LEVEL` reste a **2**. T3 reste dans le code, correct et desactive.
+
+Reouverture : le choix entre donner au moteur un etat de candidats explicite
+(A) et remplacer T3 par une technique qui pose des valeurs (B) n'est pas
+tranche. Tant qu'il ne l'est pas, la mesure de profondeur est saturee et
+**aucune conclusion sur l'hypothese centrale n'est possible** -- ni pour, ni
+contre.
+
+## 2026-08-26 - aucune technique d'ELIMINATION ne peut fonctionner sur ce moteur
+Deux tentatives, deux echecs identiques, et la cause n'est pas le choix de la
+technique.
+
+**Paire nue** : deux cellules d'une region ALLDIFF de taille d ayant exactement
+les deux memes candidats se reservent ces deux valeurs, qui sont eliminees des
+autres cellules. Implementee, restreinte a `t1_regions()`, verifiee correcte
+par `canary3` sur les cinq familles. **0 invocation.**
+
+**Paire cachee** : deux valeurs n'ayant chacune que les deux memes cases
+possibles se reservent ces cases, dont toute autre valeur est eliminee.
+Implementee, meme restriction, meme verification. **0 invocation.**
+
+La cause est **structurelle et demontrable**. Le moteur n'a aucune
+representation des candidats : `candidates()` les recalcule depuis
+`feasible()`. Il n'existe nulle part ou inscrire une elimination. Une technique
+d'elimination ne peut donc produire d'effet que si elle reduit une cellule a
+une seule valeur -- et ce cas est deja traite par T0.
+
+Pour la paire cachee la demonstration est directe : si les valeurs u et v n'ont
+que les cases {i,j}, alors u et v sont candidats en i comme en j ; l'elimination
+laisse donc exactement deux candidats dans chacune, jamais un. Et le cas ou il
+n'en resterait qu'un est precisement un hidden single, deja capture par T1.
+
+**Regle qui en decoule** : seules les techniques qui POSENT une valeur ("la
+case k vaut v") peuvent fonctionner sur ce moteur. T0, T1 et T2 en sont. Cette
+propriete doit etre verifiee AVANT d'implementer, pas apres -- `canary6` la
+verifie apres, ce qui est un filet, pas une methode.
+
+`DEFAULT_MAX_LEVEL` reste a **2**. La mesure de profondeur reste saturee, donc
+**aucune conclusion sur l'hypothese centrale n'est possible**, ni pour ni
+contre.
+
+Reouverture : elle passe par l'option A ci-dessous, ou par une technique de
+POSE moins couteuse que la contradiction a profondeur 2. Aucune n'est connue a
+ce jour.
+
+
+## 2026-08-26 - etat de candidats explicite : bonne architecture, mauvais moment
+Donner au moteur un domaine par cellule, propage et reduit, est ce que fait
+tout solveur de contraintes serieux. C'est ce qui rendrait operante toute la
+classe des techniques d'elimination -- paires nues et cachees, triplets,
+X-Wing -- au lieu de les laisser inertes. C'est la bonne architecture.
+
+**Differee.** Deux raisons.
+
+D'abord le perimetre : `feasible()` est aujourd'hui l'unique oracle. Passer a
+des domaines propages veut dire ecrire une propagation par type de contrainte,
+`Connected` compris -- celle qui n'est pas decomposable localement, donc la
+plus difficile. C'est reecrire le coeur du moteur pour debloquer une metrique.
+
+Ensuite, et surtout, le **risque asymetrique** : un bug de propagation ne
+plante pas. Il retire un candidat de trop, la deduction remplit quand meme la
+grille, et rend une solution FAUSSE. C'est le mode de defaillance du bug T1
+deja paye, mais reparti sur tout le moteur au lieu d'une fonction. `canary3`
+l'attraperait -- c'est sa raison d'etre -- au prix d'une mise au point longue
+pendant laquelle la recherche est a l'arret.
+
+**Critere de reouverture** : quand le **debit**, et non la metrique, sera le
+probleme -- typiquement a n=5 ou n=6, ou le recalcul integral de
+`candidates()` a chaque appel deviendra le goulot. A ce moment le chantier se
+justifie par lui-meme et ne sera plus un detour.
+
+Condition prealable non negociable : etendre `canary3` avant d'ecrire la
+premiere ligne de propagation, pas apres.
+
+
+## 2026-08-26 - bytecode perime : le code execute peut differer de la source
+Constate en verifiant `canary6` : la source portait `DEFAULT_MAX_LEVEL = 2`,
+`grep` le confirmait, et l'import rendait **3**. Un `engine/__pycache__`
+perime, produit lors d'un test ou la constante valait 3, continuait d'etre
+servi -- la taille du fichier etant inchangee, seul le chiffre differant.
+
+C'est une atteinte directe a l'integrite des mesures : `dsl_hash` hache les
+fichiers `.py`, donc un journal peut porter le hash d'une source qui n'est pas
+celle qui a tourne. Exactement ce que `dsl_hash` est cense empecher.
+
+Ajoute a l'invariant 1 : purger `__pycache__` apres toute modification de
+`engine/`. Non automatise a ce stade -- candidat a une purge systematique au
+demarrage de `run.py`, non fait car cela touche au chemin de production.

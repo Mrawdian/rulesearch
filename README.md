@@ -64,6 +64,13 @@ Ils doivent passer depuis la racine ET depuis `engine/`.
     canary2.py  niveaux de technique requis par famille
     canary3.py  correction de T1 : aucune divergence avec la solution
     canary4.py  surete du pre-filtre : aucun faux positif
+    canary6.py  declenchement : toute technique de deduction ACTIVEE
+                (niveau <= DEFAULT_MAX_LEVEL) doit s'invoquer au moins
+                une fois sur les cas de reference. Une technique correcte
+                mais inerte fait croire que la hierarchie discrimine sur
+                un niveau qui n'existe pas en pratique. Relever
+                DEFAULT_MAX_LEVEL sans rendre la technique operante fait
+                echouer ce canari, donc bloque le run.
     canary5.py  surete de l'interruption par alarme, dans les deux sens :
                 faux negatif (l'alarme ne se declenche pas, un systeme
                 pathologique gele un bloc -- c'est arrive) et faux positif
@@ -71,6 +78,15 @@ Ils doivent passer depuis la racine ET depuis `engine/`.
                 candidats, comme un faux positif du pre-filtre).
                 Tourne dans un repertoire temporaire : ne touche ni
                 `runs/`, ni `found/`, ni `summary.md`.
+
+## Niveaux de deduction
+    T0  naked single   une seule valeur reste possible pour une cellule
+    T1  hidden single  dans une region, une valeur n'a qu'une case possible
+    T2  contradiction a profondeur 1
+    T3  paire nue      PRESENT MAIS INERTE, non activee. Correct (canary3)
+                       et jamais declenche : technique d'ELIMINATION alors
+                       que le moteur n'a pas d'etat de candidats.
+`DEFAULT_MAX_LEVEL` dans engine/deduction.py fixe le niveau en service.
 
 ## Etat 24/08/2026
 - T1 (hidden single) corrige : n'est valide que sur un ALLDIFF de taille d.

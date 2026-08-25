@@ -11,6 +11,119 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - T2 sature, T3 inerte deux fois, canary6, verdict neutralise
+
+**Demande** : neutraliser le verdict quand l'indicateur sature ; implementer T3
+(paire nue, puis paire cachee) ; en faire un canari de declenchement ;
+consigner le motif.
+
+**Trois causes reelles distinctes.**
+
+**1. T2 a sature et le resume mentait.** Sur 8146 enregistrements, 437
+candidats avec connectivite et 621 sans : la fraction atteignant T2 vaut
+**100 % dans les deux groupes**. La regle `a < b + 0.05` etant satisfaite par
+1,0 < 1,05, `summarize.py` imprimait **"l'hypothese ne tient pas"** -- une
+refutation jamais etablie. Saturation n'est pas absence d'effet. Corrige :
+INDICATEUR SATURE, et refus explicite de conclure dans les deux sens.
+
+**2. T3 est inerte, DEUX FOIS, et la cause est un theoreme.** Paire nue puis
+paire cachee : les deux implementees, restreintes a `t1_regions()` pour ne pas
+refaire le bug T1, les deux verifiees correctes par `canary3` sur les cinq
+familles -- et les deux a **0 invocation**.
+
+Le moteur n'a aucune representation des candidats : `candidates()` les
+recalcule depuis `feasible()`. Il n'existe nulle part ou inscrire une
+elimination. Une technique d'elimination ne peut donc produire d'effet que si
+elle reduit une cellule a une seule valeur, cas deja traite par T0. Pour la
+paire cachee la demonstration est directe : si u et v n'ont que les cases
+{i,j}, alors u et v sont candidats en i comme en j, donc l'elimination laisse
+exactement deux candidats, jamais un ; et le cas a un seul est un hidden
+single, deja capture par T1.
+
+**Erreur de ma part, a consigner comme telle** : l'utilisateur avait identifie
+cette cause pour la paire nue, et j'ai recommande une seconde technique
+d'ELIMINATION. La distinction que j'avais faite -- "le hidden pair pose de
+l'information sur les valeurs" -- etait verbale, pas structurelle. Sa
+conclusion operationnelle reste une elimination.
+
+**Regle qui en decoule** : seules les techniques qui POSENT une valeur ("la
+case k vaut v") peuvent fonctionner sur ce moteur. T0, T1, T2 en sont.
+
+**3. Bytecode perime.** La source portait `DEFAULT_MAX_LEVEL = 2`, `grep` le
+confirmait, l'import rendait **3**. Un `engine/__pycache__` produit pendant un
+test ou la constante valait 3 continuait d'etre servi -- taille de fichier
+identique, seul le chiffre differant. `dsl_hash` ne hache que les `.py` : un
+journal peut donc porter le hash d'une source qui n'a pas tourne. C'est
+exactement ce que `dsl_hash` existe pour empecher.
+
+**Correction** :
+- `summarize.py` : INDICATEUR SATURE quand les deux groupes sont a 100 % ou a
+  0 %.
+- `engine/deduction.py` : `DEFAULT_MAX_LEVEL = 2` (constante nommee),
+  `solve_graded` l'utilise par defaut. `apply_T3` = paire cachee, correcte,
+  restreinte a `t1_regions()`, **desactivee**.
+- `canary/canary6.py` (nouveau) : exige que toute technique de niveau <=
+  `DEFAULT_MAX_LEVEL` s'invoque au moins une fois sur trois cas de reference.
+  Les niveaux au-dela sont mesures a titre informatif sans faire echouer.
+- `canary/canary3.py` : etendu a T3.
+- `run.py` : `canary6.py` enregistre ; `uses_acc` etendu a T3.
+- `CLAUDE.md` : invariants 6 et 7, section sur l'impossibilite des techniques
+  d'elimination, section sur le risque asymetrique de l'option A, purge de
+  `__pycache__` ajoutee a l'invariant 1.
+- `DECISIONS.md` : quatre entrees.
+
+**Verifie** (execute et observe) :
+- **Les six canaris passent depuis la racine ET depuis `engine/` : 12/12.**
+- `canary6` verifie **dans les deux sens** : il passe a
+  `DEFAULT_MAX_LEVEL = 2`, et **echoue** (exit 1) si on le porte a 3 sans
+  rendre T3 operante. L'invariant mord donc reellement.
+- Invocations sur les cas de reference : T0 = 73, T1 = 2, T2 = 8, **T3 = 0**.
+- `canary3` : DIVERGENCES=0 sur les cinq familles, avec la paire cachee active
+  dans la boucle -- elle est correcte, elle est seulement inerte.
+- Le resume imprime desormais INDICATEUR SATURE au lieu de la fausse
+  refutation.
+- Le `__pycache__` perime a ete reproduit puis purge ; apres purge l'import
+  rend bien 2.
+
+**dsl_hash : `0327bdc4c76a` -> `12564867381b`.** `engine/deduction.py` a
+change, donc la serie repart. **A noter : le comportement a
+`DEFAULT_MAX_LEVEL = 2` est INCHANGE** -- T3 est desactive. Les 8146
+enregistrements deviennent donc incomparables aux suivants pour un changement
+sans effet observable. `dsl_hash` hachant les fichiers entiers, un commentaire
+suffit a rompre la comparabilite. Cout reel, non signale ailleurs.
+
+**Non verifie / suppose** :
+- Le repli (contradiction a profondeur 2) n'a **pas** ete code, sur consigne
+  explicite. Son cout multiplicatif estime -- T2 imbrique dans T2, facteur
+  anticipe 50 a 200 -- est un **raisonnement, pas une mesure**.
+- La regle "seules les techniques de POSE fonctionnent" est demontree pour les
+  deux techniques essayees ; elle est enoncee en general sans preuve generale.
+- `canary6` repose sur trois cas de reference. T1 n'y est invoquee que 2 fois :
+  deterministe (graines fixes) mais mince.
+- La purge de `__pycache__` n'est **pas automatisee** : elle touche au chemin
+  de production, non fait sans accord.
+- Aucune conclusion sur l'hypothese centrale n'est possible tant que la mesure
+  sature.
+
+**Bloque sur** : `sudo` refuse ; redemarrage a demander a Mrawdian. Deux
+questions en attente de l'utilisateur : retirer ou non `apply_T3` desormais
+inerte, et automatiser ou non la purge de `__pycache__`.
+
+**Pour Claude chat** :
+- **Ne jamais proposer de technique de deduction par ELIMINATION.** Elle sera
+  inerte, quelle que soit sa correction. Deux l'ont deja ete. Seules les
+  techniques qui POSENT une valeur fonctionnent sur ce moteur.
+- Un verdict "l'hypothese ne tient pas" produit alors que les deux groupes sont
+  a 100 % est un **artefact de saturation**, pas un resultat. Le resume le dit
+  desormais lui-meme.
+- Apres toute modification de `engine/`, **purger `__pycache__`** avant de
+  mesurer quoi que ce soit.
+- `dsl_hash` = `12564867381b`. Les 8146 enregistrements precedents portent
+  `0327bdc4c76a` et **ne se comparent pas** aux nouveaux.
+- L'option A (etat de candidats explicite) est la seule voie connue vers une
+  metrique non saturee, et elle est **differee, pas abandonnee**. Lire la
+  section sur le risque asymetrique avant de la rouvrir.
+
 ## 2026-08-25 19:50 - ventilation intra-connect et censure de l'echantillon
 
 **Demande** : ventiler les TROP-CHER a l'interieur du seul tag `connect`,

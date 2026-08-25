@@ -39,7 +39,7 @@ def run_canaries():
     env = dict(os.environ)
     env["PYTHONPATH"] = os.path.join(HERE, "engine") + os.pathsep + env.get("PYTHONPATH", "")
     for c in ("canary.py", "canary2.py", "canary3.py", "canary4.py",
-              "canary5.py"):
+              "canary5.py", "canary6.py"):
         p = os.path.join(HERE, "canary", c)
         if not os.path.exists(p):
             continue
@@ -177,7 +177,7 @@ def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
     if total <= MIN_GRIDS:
         return {"verdict": "SUR-CONTRAINT", "total_grids": total}
 
-    fracs, levels, uses_acc = [], [], {0: 0, 1: 0, 2: 0}
+    fracs, levels, uses_acc = [], [], {0: 0, 1: 0, 2: 0, 3: 0}
     solved = 0
     for _ in range(n_instances):
         if time.time() - t0 > max_seconds:

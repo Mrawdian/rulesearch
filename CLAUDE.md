@@ -44,6 +44,9 @@ est "bon" ou "amusant" : il est bien pose, c'est tout.
 
 1. Les canaris tournent avant tout run. `--skip-canary` est reserve au debug.
    Un banc casse produit du bruit indistinguable de vrais resultats.
+   **Purger `__pycache__` apres toute modification de `engine/`** : un
+   bytecode perime peut faire tourner un code different de la source, alors
+   que `dsl_hash` ne hache que les `.py`. Constate le 26/08/2026.
 2. Ne jamais comparer des lignes de `dsl_hash` differents. Le hash change des
    qu'un fichier de `engine/` change.
 3. Toute nouvelle technique de deduction exige un canari de CORRECTION avant
@@ -52,6 +55,18 @@ est "bon" ou "amusant" : il est bien pose, c'est tout.
 4. Ne conclure sur aucune hypothese sous 20 candidats par groupe compare.
 5. La tache nocturne headless n'ecrit que des analyses. Elle ne modifie pas
    `engine/`, ne change pas les seuils, ne supprime aucun journal.
+6. **Toute technique de deduction doit prouver qu'elle se declenche.** Une
+   technique correcte mais inerte est du code mort deguise en mesure : elle
+   laisse croire que la hierarchie discrimine sur un niveau qui n'existe
+   pas en pratique. `canary6` l'exige pour tout niveau <= 
+   `DEFAULT_MAX_LEVEL` ; relever cette constante sans rendre la technique
+   operante fait echouer les canaris, donc bloque le run.
+7. **Toute nouvelle metrique doit etre testee dans le regime ou on compte
+   l'utiliser**, pas seulement sur un cas ou elle discrimine. Une metrique
+   validee sur un cas facile puis deployee sur un regime saturant ne
+   mesure plus rien, et le pire est qu'elle continue d'imprimer des
+   chiffres. Voir la liste ci-dessous : c'est l'erreur la plus repetee du
+   projet.
 
 ## Erreurs deja payees — ne pas les refaire
 
@@ -62,9 +77,80 @@ est "bon" ou "amusant" : il est bien pose, c'est tout.
 - **DSL v1 trop pauvre.** Regions statiques seules (lignes, colonnes, blocs,
   diagonales) : l'espace ne pouvait produire que des variantes de sudoku. Ce
   n'etait pas un probleme de solveur mais de langage.
+- **T2 a sature (26/08/2026).** Tous les candidats atteignant T2, la
+  fraction "atteint T2" valait 100 % dans les deux groupes compares. Le
+  verdict automatique de `summarize.py` imprimait alors
+  "l'hypothese ne tient pas" -- une **refutation jamais etablie**, produite
+  par un `a < b + 0.05` satisfait par 1,0 < 1,05. Saturation n'est pas
+  absence d'effet. Corrige : le resume imprime desormais INDICATEUR SATURE
+  et refuse de conclure.
+- **T3 correct mais inerte, DEUX FOIS (26/08/2026).** Paire nue, puis paire
+  cachee : les deux implementees, les deux verifiees correctes par
+  `canary3` sur les cinq familles, les deux **jamais declenchees**. La
+  cause n'est pas le choix de la technique mais le moteur lui-meme -- voir
+  la section sur les techniques d'elimination. Chercher une troisieme
+  technique d'elimination serait la troisieme fois. D'ou `canary6`.
 - **Mesure de profondeur vide.** Compter les passes d'une technique unique
   sature vers 2-3 pour tout, sudoku compris. La profondeur ne veut dire
   quelque chose que relativement a une hierarchie de techniques.
+
+## Le motif qui revient : des metriques qui mesurent autre chose
+
+**Quatre fois** le projet a produit un chiffre qui ne mesurait pas ce qu'il
+annoncait :
+
+1. **T1 faux** : remplissait la grille et se trompait de solution.
+2. **Profondeur v1** : saturait vers 2-3 pour tout, sudoku compris.
+3. **T2 sature** : 100 % contre 100 %, et le verdict automatique imprimait
+   une refutation non etablie.
+4. **T3 inerte** : correct, verifie, et jamais declenche.
+
+Les cas 3 et 4 partagent une cause precise : **une metrique livree sans
+avoir ete testee dans le regime ou elle allait servir**. Le cas 4 est
+survenu immediatement apres que cette regle ait ete ecrite -- l'ecrire ne
+suffit donc pas, d'ou son passage en invariant dur (6 et 7) et sa mise en
+canari (`canary6`).
+
+Regle operationnelle : une metrique n'est acquise que lorsqu'un canari
+echoue quand elle cesse de mesurer. Un document ne l'a jamais garantie.
+
+## Pourquoi le moteur ne peut pas porter de technique d'ELIMINATION
+
+Le moteur n'a **aucune representation des candidats** : `candidates()` les
+recalcule a chaque appel a partir de `feasible()`. Il n'existe aucun endroit ou
+inscrire "la valeur v n'est plus possible en case k".
+
+Consequence, et c'est un **theoreme, pas une observation** : une technique dont
+la conclusion est "eliminer des candidats" ne peut produire d'effet que si
+l'elimination reduit une cellule a une seule valeur -- cas que T0 traite deja.
+Toute technique d'elimination est donc **inerte par construction**, quelle que
+soit sa correction.
+
+Deux l'ont confirme, l'une apres l'autre :
+- **paire nue** : deux cellules aux memes deux candidats. Elimine ces valeurs
+  ailleurs dans la region. 0 invocation.
+- **paire cachee** : deux valeurs n'ayant que les deux memes cases. Reserve ces
+  cases, elimine le reste. 0 invocation. La demonstration est directe : si u et
+  v n'ont que les cases {i,j}, alors u et v sont tous deux candidats en i comme
+  en j, donc l'elimination laisse exactement deux candidats, jamais un seul.
+  Et le cas ou il n'en resterait qu'un est deja capture par T1.
+
+**Regle : seules les techniques qui POSENT une valeur ("la case k vaut v")
+peuvent fonctionner sur ce moteur.** T0, T1 et T2 en sont. Avant d'implementer
+toute nouvelle technique, verifier cette propriete -- pas apres.
+
+## Si quelqu'un rouvre l'option d'un etat de candidats explicite
+
+Le risque est **asymetrique, et c'est le point qui doit etre lu avant de
+commencer**. Un bug de propagation ne plante pas : il retire un candidat de
+trop, la deduction remplit quand meme la grille, et rend une solution FAUSSE.
+C'est exactement le mode de defaillance du bug T1 -- mais reparti sur tout le
+moteur au lieu d'une seule fonction, et sur chaque type de contrainte, y
+compris `Connected` qui est la plus difficile a propager correctement puisque
+non decomposable localement.
+
+`canary3` reste le filet : il exige que la deduction retrouve EXACTEMENT la
+solution d'origine. Ne jamais entreprendre ce chantier sans l'etendre d'abord.
 
 ## Hypothese en cours
 
@@ -129,7 +215,20 @@ Ne pas toucher au solveur avant d'avoir cette distribution.
    solveur -- ce que la section suivante interdit. A rouvrir explicitement
    dans DECISIONS.md si le debit reste bloquant.
 2. Etendre a n=5 et n=6 une fois le pre-filtre en place.
-3. Ajouter T3 (paires/triplets nus) si et seulement si T2 sature.
+3. **T2 a sature, donc T3 est requis -- mais T3 tel qu'implemente est
+   inerte.** Choix a trancher, non tranche :
+   - **A.** donner au moteur un etat de candidats explicite (un domaine par
+     cellule, propage et reduit). Rend operantes T3 et toute technique
+     d'elimination. Touche `engine/` en profondeur.
+   - **B.** une technique qui POSE des valeurs au lieu d'en eliminer.
+     Compatible avec le moteur actuel. La seule famille connue qui
+     convienne est la contradiction (comme T2), mais a profondeur 2 le
+     cout est **multiplicatif** et non additif : T2 imbrique dans T2. Elle
+     censurerait davantage de systemes profonds -- donc detruirait la
+     mesure qu'elle permet. Non retenue en l'etat.
+   Tant que ce n'est pas tranche, `DEFAULT_MAX_LEVEL` reste a 2 et la
+   mesure de profondeur est saturee -- donc aucune conclusion sur
+   l'hypothese centrale n'est possible.
 
 ## Ce qu'il ne faut pas faire
 

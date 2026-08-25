@@ -10,12 +10,25 @@ v2 : trois niveaux, du moins cher au plus cher.
   T1 hidden single : dans une region, une valeur ne peut aller qu'en une cellule
   T2 contradiction a profondeur 1 : supposer v, saturer T0+T1, si contradiction
      alors eliminer v
+  T3 paire cachee : dans une region ALLDIFF de taille exactement d, si deux
+     valeurs n'ont chacune que les deux memes cases possibles, ces deux cases
+     leur sont reservees et toute autre valeur en est eliminee
 
-La METRIQUE devient le niveau MAXIMAL necessaire, et le nombre de fois ou
-chaque niveau a du etre invoque. Un puzzle qui ne tombe qu'a T2 est
+La METRIQUE est le niveau MAXIMAL necessaire (T0..T3), et le nombre de fois ou
+chaque niveau a du etre invoque. Un puzzle qui ne tombe qu'a T3 est
 structurellement plus profond qu'un puzzle resolu par T0 seul.
+
+T3 a ete ajoute parce que T2 avait SATURE : tous les candidats atteignaient T2,
+donc "atteint T2" ne discriminait plus rien. Une metrique saturee ne mesure
+pas l'absence d'effet, elle mesure sa propre cecite.
 """
 from rulesearch import UNASSIGNED
+
+# Niveau maximal effectivement utilise en production.
+# canary6 exige que TOUTE technique <= a ce niveau se declenche au moins une
+# fois sur les cas de reference : relever cette constante sans rendre la
+# technique operante fait echouer les canaris, par construction.
+DEFAULT_MAX_LEVEL = 2
 
 
 def candidates(rs, g, i):
@@ -113,13 +126,50 @@ def apply_T2(rs, g):
     return prog, False
 
 
-def solve_graded(rs, puzzle, max_level=2):
+def apply_T3(rs, g):
+    """
+    paire cachee (hidden pair). Si deux valeurs d'une meme region n'ont chacune
+    que les deux memes cases possibles, ces deux cases leur sont reservees :
+    toute autre valeur en est eliminee.
+
+    VALIDITE : comme T1, exige une region ou chaque valeur DOIT apparaitre --
+    un ALLDIFF de taille exactement d. On reutilise donc `t1_regions()`.
+    Appliquee a une region quelconque, elle eliminerait des valeurs a tort :
+    c'est exactement le bug T1 deja paye.
+    """
+    prog = False
+    for R in t1_regions(rs):
+        free = [i for i in R if g[i] == UNASSIGNED]
+        if len(free) < 3:
+            continue
+        cand = {i: candidates(rs, g, i) for i in free}
+        if any(not c for c in cand.values()):
+            return prog, True
+        places = {v: [i for i in free if v in cand[i]] for v in range(rs.d)}
+        paires = [v for v in range(rs.d) if len(places[v]) == 2]
+        for a in range(len(paires)):
+            u = paires[a]
+            for b in range(a + 1, len(paires)):
+                v = paires[b]
+                if places[v] != places[u]:
+                    continue
+                for k in places[u]:
+                    reste = [x for x in cand[k] if x in (u, v)]
+                    if not reste:
+                        return prog, True
+                    if len(reste) == 1 and len(cand[k]) > 1:
+                        g[k] = reste[0]
+                        return True, False
+    return prog, False
+
+
+def solve_graded(rs, puzzle, max_level=DEFAULT_MAX_LEVEL):
     """
     Retourne dict : solved, max_level, uses par niveau.
     max_level = -1 si non resolu sans devinette.
     """
     g = list(puzzle)
-    uses = {0: 0, 1: 0, 2: 0}
+    uses = {0: 0, 1: 0, 2: 0, 3: 0}
     top = -1
     while True:
         p0, c0 = apply_T0(rs, g)
@@ -143,6 +193,14 @@ def solve_graded(rs, puzzle, max_level=2):
             if p2:
                 uses[2] += 1
                 top = max(top, 2)
+                continue
+        if max_level >= 3:
+            p3, c3 = apply_T3(rs, g)
+            if c3:
+                return {"solved": False, "contradiction": True, "max_level": top, "uses": uses}
+            if p3:
+                uses[3] += 1
+                top = max(top, 3)
                 continue
         break
     solved = all(x != UNASSIGNED for x in g)

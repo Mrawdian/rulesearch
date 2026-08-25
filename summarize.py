@@ -76,7 +76,17 @@ w("- candidats AVEC connectivite : %d, dont T2 : %s" %
 w("- candidats SANS connectivite : %d, dont T2 : %s" %
   (len(without), "%.0f%%" % (100 * b) if b is not None else "n/a"))
 if a is not None and b is not None:
-    if len(with_conn) < 20 or len(without) < 20:
+    # Un indicateur saturé ne mesure pas l'absence d'effet : il mesure sa
+    # propre cecite. Imprimer une refutation dans ce cas serait affirmer
+    # ce qu'on n'a pas etabli -- pire qu'un resume muet.
+    if (a == 1.0 and b == 1.0) or (a == 0.0 and b == 0.0):
+        w("- **INDICATEUR SATURE — la mesure ne discrimine plus, verdict "
+          "impossible**")
+        w("  Les deux groupes sont a %.0f%%. `max_level >= 2` ne separe "
+          "plus rien : ce n'est pas une absence d'effet, c'est un "
+          "instrument aveugle. Aucune conclusion, ni pour ni contre "
+          "l'hypothese, ne peut etre tiree de cette ligne." % (100 * a))
+    elif len(with_conn) < 20 or len(without) < 20:
         w("- **echantillon trop faible pour conclure**")
     elif a > b + 0.20:
         w("- **l'hypothese tient sur ces donnees**")
