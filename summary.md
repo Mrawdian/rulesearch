@@ -1,18 +1,18 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 22:56 UTC — 9507 systemes evalues
+genere 2026-08-25 22:56 UTC — 9522 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
-- `89c65c03c4ad` : 533 systemes
+- `89c65c03c4ad` : 548 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7466 enregistrements (79%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7466 enregistrements (78%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 4752 | 2398 | 293 | 166 | 462 | 384 | 498 | 497 | 10.5% |
-| ref | 4 | 3 | 4631 | 1130 | 1946 | 1 | 608 | 221 | 2 | 723 | 15.6% |
+| ref | 4 | 3 | 4646 | 1134 | 1952 | 1 | 609 | 224 | 2 | 724 | 15.6% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 500, dont T2 : 100%
-- candidats SANS connectivite : 727, dont T2 : 100%
+- candidats SANS connectivite : 728, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -51,9 +51,9 @@ qui ne sature pas.
 - `0327bdc4c76a` — 107 candidats
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
-- `89c65c03c4ad` — 62 candidats
+- `89c65c03c4ad` — 63 candidats
   - AVEC connectivite (21) : T0=12.86 T1=0.00 T2=3.10 — pondere **6.19**
-  - SANS connectivite (41) : T0=16.05 T1=0.00 T2=3.00 — pondere **6.00**
+  - SANS connectivite (42) : T0=16.12 T1=0.00 T2=2.98 — pondere **5.95**
 - `12564867381b` — 75 candidats
   - AVEC connectivite (28) : T0=12.82 T1=0.00 T2=2.79 — pondere **5.57**
   - SANS connectivite (47) : T0=15.09 T1=0.00 T2=2.68 — pondere **5.36**
