@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 19:29 UTC — 269 systemes evalues
+genere 2026-08-25 19:29 UTC — 283 systemes evalues
 
 ## versions du DSL presentes
-- `0327bdc4c76a` : 145 systemes
+- `0327bdc4c76a` : 159 systemes
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
@@ -14,7 +14,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 86 | 37 | 14 | 5 | 9 | 5 | 3 | 12 | 14.0% |
-| ref | 4 | 3 | 59 | 15 | 21 | 0 | 10 | 0 | 0 | 13 | 22.0% |
+| ref | 4 | 3 | 73 | 17 | 29 | 0 | 11 | 1 | 0 | 15 | 20.5% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -22,7 +22,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 15, dont T2 : 100%
-- candidats SANS connectivite : 17, dont T2 : 100%
+- candidats SANS connectivite : 19, dont T2 : 100%
 - **echantillon trop faible pour conclure**
 
 ## meilleurs candidats (niveau requis, puis indices les plus rares)
@@ -45,13 +45,13 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.46 — MONO@blocks + SUM(2+-1)@diags
 - `T2` indices=0.47 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,4-6)@grid + PAIRSTEP(1)@adj
 - `T2` indices=0.47 — SUM(7+-1)@cols + COUNT(v1,2-2)@cols + NOTRIPLE@blocks
+- `T2` indices=0.47 — NEQADJ@rows + SUM(2+-0)@diags
 - `T2` indices=0.48 — CONNECTED(v0) + COUNT(v0,7-8)@grid + CONNECTED(v2) + COUNT(v2,2-4)@grid
 - `T2` indices=0.49 — CONNECTED(v1) + COUNT(v1,7-8)@grid + CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,7-11)@grid + CONNECTED(v2) + COUNT(v2,1-2)@grid
 - `T2` indices=0.49 — CONNECTED(v0) + COUNT(v0,7-9)@grid + PAIRSTEP(2)@knight
 - `T2` indices=0.50 — ALLDIFF@cages(3-5) + SUM@cages(3-5) + NOTRIPLE@diags
 - `T2` indices=0.50 — COUNT(v2,1-1)@cols + MONO@blocks
 - `T2` indices=0.50 — CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,8-10)@grid + SUM(5+-1)@blocks
-- `T2` indices=0.51 — COUNT(v2,2-2)@blocks + SUM(5+-1)@rows
 
 ## cout
 - temps total 0.0 h, dont 14% brule sur des systemes MORT
