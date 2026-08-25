@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-25 20:05 UTC — 1951 systemes evalues
+genere 2026-08-25 20:05 UTC — 1966 systemes evalues
 
 ## versions du DSL presentes
-- `615abe43d6bc` : 974 systemes
+- `615abe43d6bc` : 989 systemes
 - `0327bdc4c76a` : 853 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -15,7 +15,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 938 | 480 | 70 | 34 | 109 | 58 | 86 | 89 | 9.5% |
-| ref | 4 | 3 | 889 | 211 | 393 | 0 | 116 | 31 | 1 | 137 | 15.4% |
+| ref | 4 | 3 | 904 | 213 | 403 | 0 | 118 | 31 | 1 | 138 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -23,7 +23,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 92, dont T2 : 100%
-- candidats SANS connectivite : 141, dont T2 : 100%
+- candidats SANS connectivite : 142, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -49,6 +49,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.21 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-3)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@knight
 - `T2` indices=0.21 — PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-4)@grid + PAIRSTEP(1)@adj
 - `T2` indices=0.22 — MONO@rows + COUNT(v1,1-1)@blocks
+- `T2` indices=0.22 — SUM(7+-1)@cols + COUNT(v2,2-2)@diags
 - `T2` indices=0.22 — CONNECTED(v2) + COUNT(v2,1-3)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.22 — PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,2-3)@grid
 - `T2` indices=0.22 — NEQADJ@cols + MONO@rows
@@ -59,11 +60,10 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 - `T2` indices=0.25 — MONO@blocks + MONO@rows + COUNT(v2,0-0)@diags
 - `T2` indices=0.25 — NEQADJ@rows + MONO@cols
 - `T2` indices=0.25 — PAIRSTEP(1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,5-6)@grid
-- `T2` indices=0.25 — SUM(2+-0)@diags + SUM(0+-1)@blocks
 
 ## cout
 - temps total 0.5 h, dont 3% brule sur des systemes MORT
-- TROP-CHER : 87 systemes abandonnes (4.5% des systemes), 94% du temps total
+- TROP-CHER : 87 systemes abandonnes (4.4% des systemes), 94% du temps total
   dont 86 avec CONNECTED, 1 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
   - avec CONNECTED : 11.3% sur 764 systemes
