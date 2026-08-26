@@ -1,11 +1,11 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 11:37 UTC — 41695 systemes evalues
+genere 2026-08-26 11:38 UTC — 41710 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `e3baecf8377b` : 3102 systemes
+- `e3baecf8377b` : 3117 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 17977 | 8986 | 1168 | 621 | 1782 | 1428 | 1959 | 1809 | 10.1% |
+| connect | 4 | 3 | 17992 | 8993 | 1168 | 626 | 1782 | 1428 | 1960 | 1810 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
 | ref | 4 | 3 | 17603 | 4144 | 7425 | 12 | 2410 | 896 | 7 | 2709 | 15.4% |
 
@@ -33,13 +33,13 @@ ci-dessous.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 1936, dont T2 : 100%
+- candidats AVEC connectivite : 1937, dont T2 : 100%
 - candidats SANS connectivite : 3019, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
 
-- **2233 systemes avec CONNECTED sur 17182 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **2234 systemes avec CONNECTED sur 17197 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -55,14 +55,14 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*665 candidats sur 4955 portent les champs bruts (13%).*
+*666 candidats sur 4956 portent les champs bruts (13%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
   - SANS connectivite (158) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `e3baecf8377b` — 401 candidats
-  - AVEC connectivite (153) : resistance **44.4%**
+- `e3baecf8377b` — 402 candidats
+  - AVEC connectivite (154) : resistance **44.3%**
   - SANS connectivite (248) : resistance **21.3%**
   - test de permutation : **p = 0.0005** — significatif.
 
@@ -86,10 +86,10 @@ qui ne sature pas.
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
   - test de permutation : p = 0.0060 — **A NE PAS RETENIR** : serie NON REPRODUCTIBLE. Un ecart significatif issu d'un moteur dont la source n'existe plus n'est pas un resultat, il n'est pas rejouable.
-- `e3baecf8377b` — 401 candidats
-  - AVEC connectivite (153) : T0=12.99 T1=0.00 T2=3.25 — pondere **6.50**
+- `e3baecf8377b` — 402 candidats
+  - AVEC connectivite (154) : T0=12.94 T1=0.00 T2=3.23 — pondere **6.47**
   - SANS connectivite (248) : T0=16.03 T1=0.00 T2=2.67 — pondere **5.35**
-  - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
+  - test de permutation : **p = 0.0010** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `0327bdc4c76a` — 107 candidats
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
@@ -105,7 +105,7 @@ qui ne sature pas.
 
 ### ce que les series reproductibles etablissent
 
-**2 serie(s) reproductible(s) sur 4 etablissent l'ecart** : `89c65c03c4ad` (p=0.0005), `e3baecf8377b` (p=0.0005).
+**2 serie(s) reproductible(s) sur 4 etablissent l'ecart** : `89c65c03c4ad` (p=0.0005), `e3baecf8377b` (p=0.0010).
 
 *Test de permutation bilateral, 2000 melanges, stdlib seule. Un ecart non*
 *significatif ne dit pas qu'il n'y a pas d'effet : il dit que ces donnees*
@@ -142,8 +142,8 @@ qui ne sature pas.
 
 ## cout
 - temps total 13.1 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 2250 systemes abandonnes (5.4% des systemes), 96% du temps total
-  dont 2233 avec CONNECTED, 17 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- TROP-CHER : 2251 systemes abandonnes (5.4% des systemes), 96% du temps total
+  dont 2234 avec CONNECTED, 17 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 13.3% sur 14681 systemes
+  - avec CONNECTED : 13.3% sur 14696 systemes
   - sans CONNECTED : 0.0% sur 3296 systemes
