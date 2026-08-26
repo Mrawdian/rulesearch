@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 01:46 UTC — 16771 systemes evalues
+genere 2026-08-26 01:47 UTC — 16786 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 7797 systemes
+- `89c65c03c4ad` : 7812 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -12,14 +12,14 @@ genere 2026-08-26 01:46 UTC — 16771 systemes evalues
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7466 enregistrements (45%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7466 enregistrements (44%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 8416 | 4239 | 547 | 286 | 798 | 676 | 897 | 872 | 10.4% |
+| connect | 4 | 3 | 8431 | 4244 | 548 | 286 | 799 | 679 | 900 | 872 | 10.3% |
 | ref | 4 | 3 | 8231 | 1989 | 3453 | 2 | 1102 | 402 | 3 | 1280 | 15.6% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -34,7 +34,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 ### censure de l'echantillon
 
-- **897 systemes avec CONNECTED sur 6968 (12.9%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **900 systemes avec CONNECTED sur 6980 (12.9%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -110,8 +110,8 @@ intermediaire est vide, ce qui explique en partie que le seuil sature.
 
 ## cout
 - temps total 5.2 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 900 systemes abandonnes (5.4% des systemes), 96% du temps total
-  dont 897 avec CONNECTED, 3 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- TROP-CHER : 903 systemes abandonnes (5.4% des systemes), 96% du temps total
+  dont 900 avec CONNECTED, 3 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 13.0% sur 6911 systemes
-  - sans CONNECTED : 0.0% sur 1505 systemes
+  - avec CONNECTED : 13.0% sur 6923 systemes
+  - sans CONNECTED : 0.0% sur 1508 systemes
