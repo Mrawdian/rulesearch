@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 04:03 UTC — 22497 systemes evalues
+genere 2026-08-26 04:03 UTC — 22511 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 13523 systemes
+- `89c65c03c4ad` : 13537 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 11311 | 5676 | 747 | 389 | 1090 | 907 | 1219 | 1141 | 10.1% |
-| ref | 4 | 3 | 11062 | 2632 | 4663 | 6 | 1490 | 566 | 4 | 1701 | 15.4% |
+| ref | 4 | 3 | 11076 | 2636 | 4666 | 6 | 1493 | 568 | 4 | 1703 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1144, dont T2 : 100%
-- candidats SANS connectivite : 1705, dont T2 : 100%
+- candidats SANS connectivite : 1707, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -51,10 +51,10 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 1684 candidats
+- `89c65c03c4ad` — 1686 candidats
   - AVEC connectivite (665) : T0=13.36 T1=0.00 T2=2.84 — pondere **5.68**
-  - SANS connectivite (1019) : T0=15.83 T1=0.00 T2=2.66 — pondere **5.32**
-  - test de permutation : **p = 0.0190** — ecart significatif au seuil 0.05
+  - SANS connectivite (1021) : T0=15.83 T1=0.00 T2=2.66 — pondere **5.33**
+  - test de permutation : **p = 0.0220** — ecart significatif au seuil 0.05
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
