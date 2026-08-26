@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 08:25 UTC — 33461 systemes evalues
+genere 2026-08-26 08:25 UTC — 33476 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 24487 systemes
+- `89c65c03c4ad` : 24502 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 15031 | 7509 | 981 | 519 | 1470 | 1196 | 1640 | 1523 | 10.1% |
-| d4 | 4 | 4 | 3578 | 1634 | 919 | 20 | 256 | 242 | 178 | 244 | 6.8% |
+| d4 | 4 | 4 | 3593 | 1639 | 928 | 20 | 257 | 242 | 178 | 244 | 6.8% |
 | ref | 4 | 3 | 14728 | 3484 | 6182 | 9 | 2029 | 750 | 6 | 2268 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -111,7 +111,7 @@ qui ne sature pas.
 
 ## cout
 - temps total 10.6 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 1824 systemes abandonnes (5.5% des systemes), 96% du temps total
+- TROP-CHER : 1824 systemes abandonnes (5.4% des systemes), 96% du temps total
   dont 1813 avec CONNECTED, 11 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
   - avec CONNECTED : 13.3% sur 12304 systemes
