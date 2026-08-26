@@ -965,3 +965,35 @@ Attention particuliere pour `AllDiff` : la region peut avoir une taille
 tiroirs) ; si `|R| < d`, elle est satisfaisable mais **aucun raisonnement du
 type "chaque valeur doit apparaitre" n'y est valide**. C'est exactement la
 configuration ou T1 s'etait trompee. Le canari construit ces cas a la main.
+
+## 2026-08-26 - la duplication deliberee est un invariant, pas une dette
+Note ecrite sans qu'elle soit demandee, le risque etant actif des maintenant.
+
+Le gel de T0-historique cree une situation qu'un lecteur ultérieur lira
+naturellement comme un defaut : `engine/t0_legacy.py` contient des copies
+quasi identiques de `candidates` et `apply_T0`, qui vivent aussi dans
+`deduction.py`. Le reflexe d'un developpeur competent est de factoriser.
+
+**Factoriser detruirait le gel**, et surtout : **rien ne planterait**. Le
+moteur continuerait de tourner, les journaux continueraient de se remplir, et
+la metrique de resistance suivrait silencieusement le propagateur en cours
+d'evolution au lieu de la reference figee. Seul `canary8` crierait -- et la
+tentation immediate serait de regenerer son corpus pour le faire taire, ce qui
+achèverait la destruction.
+
+C'est exactement la forme de defaillance que le projet paie depuis le debut :
+correct au sens du code, sans prise sur ce qu'il pretend garantir.
+
+**Le meme piege se reproduira a chaque propagateur.** La decision d'architecture
+de A impose que chaque contrainte porte `feasible()` **et** `propagate(dom)`,
+soit la meme logique deux fois. Ce n'est pas une dette technique a resorber :
+c'est le **prix de l'independance de l'oracle**, paye volontairement, sans
+lequel `canary3` compare une erreur a elle-meme.
+
+**Regle** (invariant 10) : une duplication documentee comme deliberee est un
+invariant. Avant de factoriser deux fonctions semblables dans `engine/`,
+verifier qu'aucune n'est declaree gelee.
+
+Signal a surveiller : si `canary8` echoue apres un commit dont le message parle
+de "nettoyage", "simplification", "factorisation" ou "DRY", c'est
+vraisemblablement ce piege. Regarder le diff avant de toucher au corpus.

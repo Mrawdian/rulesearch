@@ -106,6 +106,19 @@ ete identifies ainsi.
    est dans le journal, a cote. La "resistance a T0" normalisee sur la grille
    affichait 74 % contre 98 % ; l'ecart etait entierement du a la densite
    d'indices, visible dans la colonne voisine du meme tableau.
+10. **Certaines duplications sont DELIBEREES. Ne jamais les factoriser.**
+   `engine/t0_legacy.py` duplique `candidates` et `apply_T0` depuis
+   `deduction.py`, et les deux copies vont **diverger volontairement** : l'une
+   est l'instrument de mesure gele, l'autre le moteur qui evolue. Les
+   factoriser detruirait le gel **sans que rien ne plante** -- `canary8`
+   crierait, et la tentation serait de regenerer son corpus.
+   Meme regle a venir pour `feasible()` et `propagate()` : la duplication de la
+   logique de chaque contrainte est le **prix de l'independance de l'oracle**,
+   pas une dette technique.
+   Regle generale : **une duplication documentee comme deliberee est un
+   invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
+   dans `engine/`, verifier qu'aucune n'est declaree gelee.
+
 8. **Tout canari de correction construit ses cas limites A LA MAIN.** Le
    generateur sert a couvrir le cas ordinaire, **jamais les bords**. Un canari
    qui attend ses cas du generateur ne teste que ce que le generateur produit
