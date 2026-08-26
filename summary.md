@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 18:09 UTC — 57615 systemes evalues
+genere 2026-08-26 18:09 UTC — 57629 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -16,21 +16,21 @@ genere 2026-08-26 18:09 UTC — 57615 systemes evalues
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `e8a1f930f7b9` : 207 systemes
 - `84fba70921e0` : 206 systemes
-- `e80bc1b2b437` : 191 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `e80bc1b2b437` : 205 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (13873 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `84fba70921e0`, `b71bb0907fb5`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (13887 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `84fba70921e0`, `b71bb0907fb5`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
 
 *45054 enregistrements sont anterieurs au champ `engine_active_hash` et ne peuvent etre regroupes avec aucun autre.*
 
-**7657 enregistrements (13%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7671 enregistrements (13%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -39,7 +39,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 26028 | 12966 | 1773 | 881 | 2578 | 2059 | 2780 | 2669 | 10.3% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 25472 | 5873 | 10794 | 15 | 3549 | 1298 | 10 | 3933 | 15.4% |
+| ref | 4 | 3 | 25486 | 5876 | 10798 | 15 | 3554 | 1299 | 10 | 3934 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -51,7 +51,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2796, dont T2 : 100%
-- candidats SANS connectivite : 4243, dont T2 : 100%
+- candidats SANS connectivite : 4244, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -72,7 +72,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*2749 candidats sur 7039 portent les champs bruts (39%).*
+*2750 candidats sur 7040 portent les champs bruts (39%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -110,9 +110,9 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (11) : resistance **45.2%**
   - SANS connectivite (22) : resistance **19.3%**
   - *groupes trop petits (< 20) — aucun test*
-- `e80bc1b2b437` — 20 candidats (**NON REPRODUCTIBLE**)
+- `e80bc1b2b437` — 21 candidats (**NON REPRODUCTIBLE**)
   - AVEC connectivite (11) : resistance **34.4%**
-  - SANS connectivite (9) : resistance **22.6%**
+  - SANS connectivite (10) : resistance **23.3%**
   - *groupes trop petits (< 20) — aucun test*
 
 ## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)
@@ -179,9 +179,9 @@ qui ne sature pas.
   - AVEC connectivite (11) : T0=13.27 T1=0.00 T2=3.09 — pondere **6.18**
   - SANS connectivite (22) : T0=15.36 T1=0.00 T2=2.82 — pondere **5.64**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
-- `e80bc1b2b437` — 20 candidats
+- `e80bc1b2b437` — 21 candidats
   - AVEC connectivite (11) : T0=12.64 T1=0.00 T2=2.18 — pondere **4.36**
-  - SANS connectivite (9) : T0=15.22 T1=0.00 T2=3.11 — pondere **6.22**
+  - SANS connectivite (10) : T0=15.20 T1=0.00 T2=3.00 — pondere **6.00**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
 
 ### ce que les series reproductibles etablissent
