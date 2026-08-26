@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 03:26 UTC — 20799 systemes evalues
+genere 2026-08-26 03:26 UTC — 20814 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 11825 systemes
+- `89c65c03c4ad` : 11840 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -19,7 +19,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 10448 | 5258 | 687 | 360 | 998 | 830 | 1135 | 1049 | 10.0% |
+| connect | 4 | 3 | 10463 | 5266 | 688 | 363 | 999 | 830 | 1136 | 1049 | 10.0% |
 | ref | 4 | 3 | 10227 | 2453 | 4316 | 5 | 1362 | 514 | 4 | 1573 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -34,7 +34,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 ### censure de l'echantillon
 
-- **1135 systemes avec CONNECTED sur 8633 (13.1%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **1136 systemes avec CONNECTED sur 8647 (13.1%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -110,8 +110,8 @@ intermediaire est vide, ce qui explique en partie que le seuil sature.
 
 ## cout
 - temps total 6.6 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 1139 systemes abandonnes (5.5% des systemes), 96% du temps total
-  dont 1135 avec CONNECTED, 4 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- TROP-CHER : 1140 systemes abandonnes (5.5% des systemes), 96% du temps total
+  dont 1136 avec CONNECTED, 4 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 13.2% sur 8576 systemes
-  - sans CONNECTED : 0.0% sur 1872 systemes
+  - avec CONNECTED : 13.2% sur 8590 systemes
+  - sans CONNECTED : 0.0% sur 1873 systemes
