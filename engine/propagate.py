@@ -354,6 +354,54 @@ def propager_mono(cn, dom):
     return (p1 or p2), c2
 
 
+# ---------- contraintes BINAIRES : PAIRDIFF ----------
+#
+# `PairDiff(pairs, k, n)` : pour chaque paire (a, b), `|v_a - v_b| >= k`.
+#
+# Regle unique : la **coherence d'arc**. Une valeur `v` survit dans `dom[a]`
+# s'il existe au moins un **support** `w` dans `dom[b]` avec `|v - w| >= k`.
+# Sinon elle est impossible et part.
+#
+# AUDIT DE FORME (invariant 14) : aucune lecture de forme. Le support se teste
+# par **appartenance**, valeur par valeur. Sur par construction, comme `Mono`.
+#
+# La regle s'applique aux deux bouts de chaque paire ; ce n'est pas « deux
+# sens » au sens de `Count` ou `SumRange` -- c'est **une seule regle** appliquee
+# symetriquement, donc elle ne releve pas de la condition de commit separe.
+
+
+def _arc_consistance(pairs, compatible, dom):
+    """Coherence d'arc sur une relation binaire quelconque.
+
+    Ce helper est PARTAGE par `PairDiff` et `PairRatio`, et ce partage est
+    volontaire : seule la relation differe. Il ne tombe pas sous l'invariant 10
+    (duplications delibrees), qui protege la separation entre `feasible()` et
+    la propagation, pas l'ecriture deux fois d'un meme parcours de paires.
+    Le risque -- un bug du helper touche les deux propagateurs -- est couvert
+    par les croisements, qui les testent l'un contre l'autre.
+    """
+    prog = False
+    for a, b in pairs:
+        for x, y in ((a, b), (b, a)):
+            if not dom[x] or not dom[y]:
+                return prog, True
+            sans = [v for v in dom[x]
+                    if not any(compatible(v, w) for w in dom[y])]
+            if not sans:
+                continue
+            for v in sans:
+                dom[x].discard(v)
+            prog = True
+            if not dom[x]:
+                return prog, True
+    return prog, False
+
+
+def propager_pairdiff(cn, dom):
+    k = cn.k
+    return _arc_consistance(cn.pairs, lambda v, w: abs(v - w) >= k, dom)
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
@@ -362,6 +410,7 @@ PROPAGATEURS = {
     "SUM": propager_sum,
     "NEQADJ": propager_neqadj,
     "MONO": propager_mono,
+    "PAIRDIFF": propager_pairdiff,
 }
 
 

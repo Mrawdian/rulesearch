@@ -51,7 +51,7 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_sum_plafond, propager_sum_plancher,
                        propager_neqadj, propager_mono,
                        propager_mono_avant, propager_mono_arriere,
-                       PROPAGATEURS)
+                       propager_pairdiff, PROPAGATEURS)
 
 random.seed(23)
 n = 4
@@ -874,6 +874,93 @@ for etiquette, faux in (
 
 
 # ==========================================================================
+# PairDiff -- coherence d'arc sur une relation binaire.
+# ==========================================================================
+
+# P : k = 1 -- la contrainte la plus faible, equivaut a « differentes ».
+casP = RuleSystem(2, 3, [PairDiff([(0, 1)], 1, 2)], "P k=1")
+# Q : k = d-1 -- la plus tendue, seuls les extremes se supportent.
+casQ = RuleSystem(2, 3, [PairDiff([(0, 1)], 2, 2)], "Q k=d-1")
+# R : k = 0 -- VACUOUS. Toute paire est compatible : LE PIEGE, aucun retrait
+#     n'y est jamais justifie.
+casR = RuleSystem(2, 3, [PairDiff([(0, 1)], 0, 2)], "R k=0")
+# S : chaine de deux paires -- la propagation doit passer de proche en proche.
+casS = RuleSystem(2, 3, [PairDiff([(0, 1), (1, 2)], 1, 2)], "S chaine")
+
+PD_CAS = (("P k = 1", casP), ("Q k = d-1", casQ),
+          ("R k = 0 vacuous", casR), ("S chaine", casS))
+
+print()
+print("-- PairDiff : surete --")
+for nom, rs in PD_CAS:
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- PairDiff : la regle doit etre INVOQUEE --")
+_inv = 0
+for nom, rs in PD_CAS:
+    rnd5 = random.Random(47)
+    for sol in (toutes_solutions(rs) or [])[:40]:
+        for k in (1, 2):
+            dom = domaines(rs, indices(sol, k, rnd5))
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) == "PAIRDIFF":
+                    pp, _ = propager_pairdiff(cn, dom)
+                    if pp:
+                        _inv += 1
+print("  declenchements = %d" % _inv)
+if not _inv:
+    print("  ECHEC : PairDiff est inerte.")
+    echecs += 1
+else:
+    print("  OK : la regle est operante.")
+
+
+# ---- test negatif : la contrainte lue comme DIRIGEE ---------------------
+# Bug injecte : oublier la valeur absolue, donc exiger `v - w >= k` au lieu de
+# `|v - w| >= k`. C'est l'erreur naturelle sur une contrainte de distance, et
+# elle rend la relation asymetrique alors qu'elle ne l'est pas.
+
+def _pairdiff_dirige(cn, dom):
+    k = cn.k
+    return _arc_local(cn.pairs, lambda v, w: v - w >= k, dom)
+
+
+def _arc_local(pairs, compatible, dom):
+    prog = False
+    for a, b in pairs:
+        for x, y in ((a, b), (b, a)):
+            if not dom[x] or not dom[y]:
+                return prog, True
+            sans = [v for v in dom[x]
+                    if not any(compatible(v, w) for w in dom[y])]
+            if sans:
+                for v in sans:
+                    dom[x].discard(v)
+                prog = True
+                if not dom[x]:
+                    return prog, True
+    return prog, False
+
+
+print()
+print("-- test negatif PairDiff : valeur absolue oubliee --")
+_det = False
+for nom, rs in PD_CAS:
+    v = cas_surete("dirige " + nom, rs,
+                   prop=_moteur_simple({"PAIRDIFF": _pairdiff_dirige}))
+    if v:
+        _det = True
+if _det:
+    print("  OK : le canari mord.")
+else:
+    print("  ECHEC : une PairDiff dirigee passe le canari.")
+    echecs += 1
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -1238,6 +1325,52 @@ echecs += _paire(
     RuleSystem(2, 3, [NeqAdj([0, 1]), Mono([1, 2])], "M4c"),
     RuleSystem(2, 3, [NeqAdj([0, 1]), Mono([2, 3])], "M4d"),
     _bug_mono)
+
+
+# ---- paires impliquant PairDiff -----------------------------------------
+#
+# `propager_pairdiff` ne fait AUCUNE lecture de forme : il est sur par
+# construction (invariant 14), comme `Mono`. Le bug injecte doit donc, la
+# encore, en introduire une DELIBEREMENT.
+
+def _pairdiff_bugue_forme(d):
+    """BUG D'INTERACTION : « domaine deja rogne = cellule decidee », donc on
+    cherche le support dans {min(dom[y])} seulement au lieu de tout `dom[y]`.
+    Exige qu'un autre propagateur ait rogne partiellement `y`."""
+    def f(cn, dom):
+        k = cn.k
+        prog = False
+        for a, b in cn.pairs:
+            for x, y in ((a, b), (b, a)):
+                if not dom[x] or not dom[y]:
+                    return prog, True
+                supports = ({min(dom[y])} if 1 < len(dom[y]) < d
+                            else dom[y])          # LE BUG
+                sans = [v for v in dom[x]
+                        if not any(abs(v - w) >= k for w in supports)]
+                if sans:
+                    for v in sans:
+                        dom[x].discard(v)
+                    prog = True
+                    if not dom[x]:
+                        return prog, True
+        return prog, False
+    return f
+
+
+_bug_pd = _moteur({"PAIRDIFF": _pairdiff_bugue_forme(3)})
+
+for _titre, _autre in (
+        ("AllDiff |R|<d", AllDiff([0, 1])),
+        ("Count lo=hi=1", Count([0, 1], 1, 1, 1)),
+        ("SumRange", SumRange([0, 1], 0, 2, 3)),
+        ("NeqAdj", NeqAdj([0, 1])),
+        ("Mono", Mono([0, 1]))):
+    echecs += _paire(
+        "%s  x  PairDiff" % _titre,
+        RuleSystem(2, 3, [_autre, PairDiff([(2, 1)], 1, 2)], "PDc"),
+        RuleSystem(2, 3, [_autre, PairDiff([(3, 2)], 1, 2)], "PDd"),
+        _bug_pd)
 
 
 print()

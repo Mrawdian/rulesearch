@@ -1372,3 +1372,82 @@ qu'il rogne **LA cellule que l'inference injectee LIT**.
 La croissance est visible mais reste sans effet pratique. A remesurer apres
 PairRatio, et surtout apres NoSquare et Connected dont les regions sont bien
 plus grandes.
+
+## 2026-08-26 - 14bis : generalisation candidate, NON TRANCHEE
+
+Formulation a ecrire maintenant, a trancher a l'etape 10 :
+
+> **14** couvre les inferences dont l'entree est **l'appartenance d'une valeur
+> a un domaine**. Il ne couvre **pas** les inferences dont l'entree est une
+> **propriete d'un objet construit a partir de plusieurs domaines et non
+> monotone sous retrecissement**. Pour celles-la, la surete doit etre prouvee
+> separement -- ou l'inference ecartee.
+
+### Le critere operatoire qui en decoule
+Formule ainsi, 14bis se teste en une question par propagateur :
+
+> **l'objet sur lequel porte l'inference est-il FIXE par la contrainte, ou
+> INDUIT par les domaines courants ?**
+
+Un objet **fixe** -- une region, une fenetre geometrique, une liste de paires --
+ne bouge pas quand les domaines retrecissent. Les lectures faites dessus sont
+des appartenances cellule par cellule, et 14 s'applique tel quel.
+
+Un objet **induit** -- le graphe des cases passables de `Connected` -- change
+avec les domaines, et **une propriete de cet objet peut ne pas etre monotone**
+meme si chaque domaine ne fait que retrecir. C'est precisement le cas des
+points d'articulation : le graphe ne fait que **perdre** des sommets, mais
+l'ensemble de ses points d'articulation peut **grossir**.
+
+### Consequence agreable, a VERIFIER et non a supposer
+Sur les six propagateurs ecrits (`AllDiff`, `Count`, `SumRange`, `NeqAdj`,
+`Mono`, `PairDiff`), l'objet est toujours **fixe** : la region ou la liste de
+paires, donnees a la construction. 14bis ne change donc rien pour eux.
+
+**A verifier a l'ecriture, pas maintenant** : `NoTriple` et `NoSquare`
+raisonnent sur des **fenetres**, donc sur des objets multi-cellules. Lecture
+preliminaire, **non verifiee dans le code** : leurs fenetres sont
+**geometriques et statiques** -- les triplets consecutifs d'une region, les
+carres 2x2 d'une grille -- donc **fixes**, et 14 devrait suffire. Si l'un des
+deux fait une inference sur une fenetre **induite** par les domaines, la
+question Connected arrive a l'etape 8 ou 9 au lieu de 10, et il vaut mieux le
+savoir la.
+
+
+## 2026-08-26 - PairDiff : coherence d'arc, et un helper partage assume
+
+Regle unique, la **coherence d'arc** : une valeur `v` survit dans `dom[a]` s'il
+existe un **support** `w` dans `dom[b]` avec `|v - w| >= k`.
+
+**AUDIT DE FORME : aucune.** Le support se teste par appartenance, valeur par
+valeur. `PairDiff` est donc, comme `Mono`, **sur par construction**, et le bug
+d'interaction des croisements a du -- la encore -- introduire deliberement une
+lecture de forme.
+
+**La regle s'applique aux deux bouts de chaque paire, mais ce ne sont PAS
+« deux sens »** au sens de `Count` ou `SumRange` : c'est une seule regle
+appliquee symetriquement. La condition de commit separe ne s'applique pas.
+
+**Helper partage, et pourquoi c'est assume** : `_arc_consistance` sera reutilise
+par `PairRatio` ; seule la relation differe. Il **ne tombe pas** sous
+l'invariant 10, qui protege la separation entre `feasible()` et la propagation,
+pas l'ecriture deux fois d'un meme parcours de paires. Le risque -- un bug du
+helper touche les deux propagateurs a la fois -- est couvert par les
+croisements, qui les testeront l'un contre l'autre.
+
+### Test negatif : la valeur absolue oubliee
+    dirige P (k=1)   : 270 violations
+    dirige Q (k=d-1) :  90
+    dirige R (k=0)   :  90
+    dirige S (chaine): 180
+
+**Le cas vacuous ne donne PAS zero ici, contrairement aux autres propagateurs,
+et c'est normal** : le bug ne confond pas une borne, il **change la relation**.
+Avec `k = 0` la relation correcte est universellement vraie tandis que
+`v - w >= 0` ne l'est pas. Le signal de discrimination n'est donc pas au meme
+endroit -- il faut le lire, pas l'attendre.
+
+### Cinq croisements de plus : quinze paires
+    AllDiff  x PairDiff : 42 / 0      NeqAdj x PairDiff : 42 / 0
+    Count    x PairDiff : 12 / 0      Mono   x PairDiff : 12 / 0
+    SumRange x PairDiff : 18 / 0      (chevauchant / temoin disjoint)

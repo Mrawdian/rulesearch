@@ -11,6 +11,52 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - PairDiff, sixieme propagateur, + 14bis ecrit
+
+**Fait** : `propager_pairdiff`, coherence d'arc sur une relation binaire.
+Cinq croisements de plus : **quinze paires**. `14bis` ecrit dans DECISIONS.md
+comme generalisation candidate **non tranchee**.
+
+**14bis, et le critere operatoire qui en decoule** : l'invariant 14 couvre les
+inferences dont l'entree est l'appartenance d'une valeur a un domaine ; pas
+celles dont l'entree est une propriete d'un objet construit a partir de
+plusieurs domaines et **non monotone sous retrecissement**. Reformule en une
+question par propagateur :
+
+    l'objet sur lequel porte l'inference est-il FIXE par la contrainte,
+    ou INDUIT par les domaines courants ?
+
+Fixe (region, fenetre geometrique, liste de paires) -> 14 s'applique tel quel.
+Induit (le graphe des cases passables de Connected) -> une propriete peut ne
+pas etre monotone meme si chaque domaine ne fait que retrecir.
+
+**Lecture preliminaire sur NoTriple et NoSquare, NON VERIFIEE DANS LE CODE** :
+leurs fenetres sont **geometriques et statiques** -- triplets consecutifs,
+carres 2x2 -- donc **fixes**. 14 devrait suffire, et 14bis n'isolerait bien que
+Connected. **A verifier a l'ecriture, aux etapes 8 et 9.**
+
+**Verifie** : les six propagateurs ecrits raisonnent tous sur un objet fixe.
+`PairDiff` ne fait **aucune** lecture de forme : sur par construction, comme
+`Mono`.
+
+    dirige (valeur absolue oubliee) : 270 / 90 / 90 / 180 violations
+    AllDiff  x PairDiff : 42 / 0     NeqAdj x PairDiff : 42 / 0
+    Count    x PairDiff : 12 / 0     Mono   x PairDiff : 12 / 0
+    SumRange x PairDiff : 18 / 0
+
+**A SIGNALER** : le cas vacuous (`k = 0`) ne donne **pas** zero sous le bug,
+contrairement a tous les autres propagateurs. Ce n'est pas une anomalie : le
+bug ne confond pas une borne, il **change la relation**. Le signal de
+discrimination n'est donc pas au meme endroit, et il faut le lire plutot que
+l'attendre au meme endroit qu'ailleurs.
+
+**Helper `_arc_consistance` partage avec PairRatio** : assume, hors invariant
+10 (qui protege `feasible()` vs propagation, pas un parcours de paires). Le
+risque qu'un bug du helper touche les deux est couvert par le croisement
+`PairDiff x PairRatio`, qui viendra au commit suivant.
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - Mono, cinquieme propagateur, + quatre croisements
 
 **Fait** : `propager_mono_avant` / `propager_mono_arriere`, coherence aux
