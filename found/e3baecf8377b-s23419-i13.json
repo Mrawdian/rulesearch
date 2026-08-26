@@ -1,0 +1,23 @@
+{
+  "ts": 1787740216.6754117,
+  "dsl_hash": "e3baecf8377b",
+  "seed": 23419,
+  "idx": 13,
+  "inst_seed": 23419013,
+  "n": 4,
+  "d": 3,
+  "sys": "CONNECTED(v0) + COUNT(v0,8-10)@grid + PAIRSTEP(2)@adj + PAIRSTEP(2)@knight",
+  "ms": 10,
+  "total_grids": 13,
+  "clue_frac": 0.417,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 9,
+    "1": 0,
+    "2": 5
+  },
+  "t0_unknown": 56,
+  "t0_left": 48,
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
