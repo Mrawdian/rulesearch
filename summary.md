@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 21:29 UTC — 65129 systemes evalues
+genere 2026-08-26 21:29 UTC — 65144 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -17,7 +17,7 @@ genere 2026-08-26 21:29 UTC — 65129 systemes evalues
 - `8f22f0d2d442` : 507 systemes
 - `b71bb0907fb5` : 381 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `ab89a63b01ef` : 222 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `ab89a63b01ef` : 237 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `e8a1f930f7b9` : 207 systemes
 - `84fba70921e0` : 206 systemes
 - `6680f7b47e6f` : 124 systemes
@@ -27,14 +27,14 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (21387 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (21402 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
 
 *45054 enregistrements sont anterieurs au champ `engine_active_hash` et ne peuvent etre regroupes avec aucun autre.*
 
-**7748 enregistrements (12%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7763 enregistrements (12%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -43,7 +43,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 29830 | 14818 | 2036 | 999 | 2986 | 2367 | 3183 | 3063 | 10.3% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 29184 | 6730 | 12386 | 16 | 4043 | 1506 | 12 | 4491 | 15.4% |
+| ref | 4 | 3 | 29199 | 6733 | 12396 | 16 | 4044 | 1506 | 12 | 4492 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -55,7 +55,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 3190, dont T2 : 100%
-- candidats SANS connectivite : 4801, dont T2 : 100%
+- candidats SANS connectivite : 4802, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -76,7 +76,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*3701 candidats sur 7991 portent les champs bruts (46%).*
+*3702 candidats sur 7992 portent les champs bruts (46%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -118,9 +118,9 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (22) : resistance **42.1%**
   - SANS connectivite (31) : resistance **15.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `ab89a63b01ef` — 24 candidats (**NON REPRODUCTIBLE**)
+- `ab89a63b01ef` — 25 candidats (**NON REPRODUCTIBLE**)
   - AVEC connectivite (10) : resistance **54.4%**
-  - SANS connectivite (14) : resistance **23.1%**
+  - SANS connectivite (15) : resistance **22.4%**
   - *groupes trop petits (< 20) — aucun test*
 - `e8a1f930f7b9` — 28 candidats
   - AVEC connectivite (11) : resistance **46.0%**
@@ -199,9 +199,9 @@ qui ne sature pas.
   - AVEC connectivite (13) : T0=13.31 T1=0.00 T2=3.08 — pondere **6.15**
   - SANS connectivite (18) : T0=15.83 T1=0.00 T2=2.94 — pondere **5.89**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
-- `ab89a63b01ef` — 24 candidats
+- `ab89a63b01ef` — 25 candidats
   - AVEC connectivite (10) : T0=14.10 T1=0.00 T2=3.70 — pondere **7.40**
-  - SANS connectivite (14) : T0=15.71 T1=0.00 T2=3.07 — pondere **6.14**
+  - SANS connectivite (15) : T0=15.87 T1=0.00 T2=3.07 — pondere **6.13**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
 - `e8a1f930f7b9` — 28 candidats
   - AVEC connectivite (11) : T0=13.45 T1=0.00 T2=3.55 — pondere **7.09**
