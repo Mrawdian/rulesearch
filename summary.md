@@ -1,11 +1,11 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 12:17 UTC — 43430 systemes evalues
+genere 2026-08-26 12:17 UTC — 43445 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `e3baecf8377b` : 4837 systemes
+- `e3baecf8377b` : 4852 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
@@ -22,7 +22,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 18860 | 9415 | 1232 | 653 | 1878 | 1500 | 2043 | 1906 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 18455 | 4335 | 7774 | 13 | 2538 | 955 | 7 | 2833 | 15.4% |
+| ref | 4 | 3 | 18470 | 4339 | 7780 | 13 | 2540 | 956 | 7 | 2835 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -34,7 +34,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2033, dont T2 : 100%
-- candidats SANS connectivite : 3143, dont T2 : 100%
+- candidats SANS connectivite : 3145, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -55,15 +55,15 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*886 candidats sur 5176 portent les champs bruts (17%).*
+*888 candidats sur 5178 portent les champs bruts (17%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
   - SANS connectivite (158) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `e3baecf8377b` — 622 candidats
+- `e3baecf8377b` — 624 candidats
   - AVEC connectivite (250) : resistance **42.1%**
-  - SANS connectivite (372) : resistance **21.0%**
+  - SANS connectivite (374) : resistance **21.0%**
   - test de permutation : **p = 0.0005** — significatif.
 
 ## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)
@@ -86,9 +86,9 @@ qui ne sature pas.
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
   - test de permutation : p = 0.0060 — **A NE PAS RETENIR** : serie NON REPRODUCTIBLE. Un ecart significatif issu d'un moteur dont la source n'existe plus n'est pas un resultat, il n'est pas rejouable.
-- `e3baecf8377b` — 622 candidats
+- `e3baecf8377b` — 624 candidats
   - AVEC connectivite (250) : T0=13.10 T1=0.00 T2=3.10 — pondere **6.20**
-  - SANS connectivite (372) : T0=15.95 T1=0.00 T2=2.61 — pondere **5.23**
+  - SANS connectivite (374) : T0=15.95 T1=0.00 T2=2.61 — pondere **5.22**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `0327bdc4c76a` — 107 candidats
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
@@ -116,6 +116,7 @@ qui ne sature pas.
 
 - `T2` indices=0.06 — PAIRSTEP(1)@knight + CONNECTED(v0) + COUNT(v0,1-4)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.06 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-2)@grid + PAIRSTEP(1)@adj + PAIRDIFF(>=1)@knight
+- `T2` indices=0.12 — SUM(1+-1)@cols + MONO@rows
 - `T2` indices=0.12 — SUM(7+-1)@cols + MONO@blocks + MONO@rows
 - `T2` indices=0.12 — PAIRDIFF(>=1)@knight + PAIRSTEP(1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid
 - `T2` indices=0.12 — PAIRSTEP(1)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,4-5)@grid + PAIRDIFF(>=1)@knight
@@ -138,7 +139,6 @@ qui ne sature pas.
 - `T2` indices=0.12 — PAIRDIFF(>=1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid + PAIRDIFF(>=1)@adj
 - `T2` indices=0.12 — PAIRSTEP(1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-2)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.12 — PAIRDIFF(>=1)@adj + CONNECTED(v0) + COUNT(v0,1-2)@grid + PAIRDIFF(>=1)@knight
-- `T2` indices=0.12 — PAIRDIFF(>=1)@knight + CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,1-2)@grid + PAIRDIFF(>=1)@adj
 
 ## cout
 - temps total 13.6 h, dont 2% brule sur des systemes MORT
