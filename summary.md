@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 09:43 UTC — 36955 systemes evalues
+genere 2026-08-26 09:44 UTC — 36970 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 27981 systemes
+- `89c65c03c4ad` : 27996 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 15913 | 7932 | 1039 | 549 | 1583 | 1269 | 1736 | 1604 | 10.1% |
-| d4 | 4 | 4 | 5332 | 2456 | 1354 | 28 | 379 | 353 | 254 | 374 | 7.0% |
+| d4 | 4 | 4 | 5347 | 2464 | 1356 | 28 | 382 | 355 | 254 | 374 | 7.0% |
 | ref | 4 | 3 | 15586 | 3664 | 6571 | 11 | 2141 | 792 | 7 | 2400 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -38,7 +38,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 ### censure de l'echantillon
 
-- **1980 systemes avec CONNECTED sur 15236 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **1980 systemes avec CONNECTED sur 15246 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
