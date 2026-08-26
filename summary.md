@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 17:39 UTC — 56404 systemes evalues
+genere 2026-08-26 17:39 UTC — 56419 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -14,13 +14,13 @@ genere 2026-08-26 17:39 UTC — 56404 systemes evalues
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `e8a1f930f7b9` : 207 systemes
 - `6680f7b47e6f` : 124 systemes
-- `b71bb0907fb5` : 104 systemes
+- `b71bb0907fb5` : 119 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (12662 systemes) : `06fe04a859f1`, `23303c299f39`, `b71bb0907fb5`, `e40600351a72`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (12677 systemes) : `06fe04a859f1`, `23303c299f39`, `b71bb0907fb5`, `e40600351a72`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -36,7 +36,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 25415 | 12685 | 1729 | 855 | 2517 | 2004 | 2718 | 2594 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 24874 | 5746 | 10530 | 15 | 3478 | 1262 | 10 | 3833 | 15.4% |
+| ref | 4 | 3 | 24889 | 5749 | 10538 | 15 | 3479 | 1263 | 10 | 3835 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -48,7 +48,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2721, dont T2 : 100%
-- candidats SANS connectivite : 4143, dont T2 : 100%
+- candidats SANS connectivite : 4145, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -69,7 +69,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*2574 candidats sur 6864 portent les champs bruts (38%).*
+*2576 candidats sur 6866 portent les champs bruts (38%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
