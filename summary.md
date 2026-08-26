@@ -1,19 +1,19 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 10:39 UTC — 39291 systemes evalues
+genere 2026-08-26 10:39 UTC — 39306 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
-- `e3baecf8377b` : 698 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `e3baecf8377b` : 713 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**8164 enregistrements (21%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**8179 enregistrements (21%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -22,7 +22,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 16767 | 8371 | 1079 | 579 | 1667 | 1335 | 1831 | 1694 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 16409 | 3866 | 6946 | 11 | 2240 | 827 | 7 | 2512 | 15.3% |
+| ref | 4 | 3 | 16424 | 3870 | 6953 | 11 | 2242 | 827 | 7 | 2514 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -34,7 +34,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1821, dont T2 : 100%
-- candidats SANS connectivite : 2822, dont T2 : 100%
+- candidats SANS connectivite : 2824, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -55,15 +55,15 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*353 candidats sur 4643 portent les champs bruts (8%).*
+*355 candidats sur 4645 portent les champs bruts (8%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
   - SANS connectivite (158) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `e3baecf8377b` — 89 candidats (**NON REPRODUCTIBLE**)
+- `e3baecf8377b` — 91 candidats (**NON REPRODUCTIBLE**)
   - AVEC connectivite (38) : resistance **36.6%**
-  - SANS connectivite (51) : resistance **18.5%**
+  - SANS connectivite (53) : resistance **19.3%**
   - p = 0.0005 — **A NE PAS RETENIR** : serie non reproductible.
 
 ## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)
@@ -90,10 +90,10 @@ qui ne sature pas.
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
   - test de permutation : **p = 0.1569** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
-- `e3baecf8377b` — 89 candidats
+- `e3baecf8377b` — 91 candidats
   - AVEC connectivite (38) : T0=13.55 T1=0.00 T2=2.66 — pondere **5.32**
-  - SANS connectivite (51) : T0=15.90 T1=0.00 T2=2.41 — pondere **4.82**
-  - test de permutation : **p = 0.4988** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
+  - SANS connectivite (53) : T0=15.77 T1=0.00 T2=2.43 — pondere **4.87**
+  - test de permutation : **p = 0.5432** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
 - `12564867381b` — 75 candidats
   - AVEC connectivite (28) : T0=12.82 T1=0.00 T2=2.79 — pondere **5.57**
   - SANS connectivite (47) : T0=15.09 T1=0.00 T2=2.68 — pondere **5.36**
