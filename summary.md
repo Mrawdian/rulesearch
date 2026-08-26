@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 00:49 UTC — 14544 systemes evalues
+genere 2026-08-26 00:49 UTC — 14559 systemes evalues
 
 ## versions du DSL presentes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `89c65c03c4ad` : 5570 systemes
+- `89c65c03c4ad` : 5585 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
@@ -19,7 +19,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 7292 | 3673 | 481 | 252 | 687 | 594 | 761 | 763 | 10.5% |
+| connect | 4 | 3 | 7307 | 3679 | 483 | 252 | 690 | 597 | 761 | 764 | 10.5% |
 | ref | 4 | 3 | 7128 | 1722 | 2968 | 1 | 956 | 354 | 2 | 1125 | 15.8% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -27,14 +27,14 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 766, dont T2 : 100%
+- candidats AVEC connectivite : 767, dont T2 : 100%
 - candidats SANS connectivite : 1129, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
 ### censure de l'echantillon
 
-- **761 systemes avec CONNECTED sur 6039 (12.6%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **761 systemes avec CONNECTED sur 6047 (12.6%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -55,10 +55,10 @@ qui ne sature pas.
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
   - test de permutation : **p = 0.0060** — ecart significatif au seuil 0.05
-- `89c65c03c4ad` — 730 candidats
-  - AVEC connectivite (287) : T0=13.24 T1=0.00 T2=2.94 — pondere **5.88**
+- `89c65c03c4ad` — 731 candidats
+  - AVEC connectivite (288) : T0=13.24 T1=0.00 T2=2.94 — pondere **5.88**
   - SANS connectivite (443) : T0=15.79 T1=0.00 T2=2.64 — pondere **5.28**
-  - test de permutation : **p = 0.0155** — ecart significatif au seuil 0.05
+  - test de permutation : **p = 0.0090** — ecart significatif au seuil 0.05
 - `0327bdc4c76a` — 107 candidats
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
@@ -113,5 +113,5 @@ intermediaire est vide, ce qui explique en partie que le seuil sature.
 - TROP-CHER : 763 systemes abandonnes (5.2% des systemes), 96% du temps total
   dont 761 avec CONNECTED, 2 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 12.7% sur 5982 systemes
-  - sans CONNECTED : 0.0% sur 1310 systemes
+  - avec CONNECTED : 12.7% sur 5990 systemes
+  - sans CONNECTED : 0.0% sur 1317 systemes
