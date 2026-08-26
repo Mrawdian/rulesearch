@@ -11,6 +11,53 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - PairRatio, septieme propagateur : 21 paires, sept faciles finis
+
+**Fait** : `propager_pairstep`, meme helper que `PairDiff`, autre relation.
+Six croisements de plus : **vingt et une paires**. Les **sept propagateurs
+faciles sont finis**.
+
+**LE POINT DU COMMIT** : la relation de `PairDiff` est **monotone en `w`**, donc
+un test **aux bornes** y serait exact. Celle de `PairRatio` ne l'est pas -- le
+seul support d'une valeur peut etre une valeur **interieure**. Recopier le test
+aux bornes d'un propagateur a l'autre est **exact pour l'un et faux pour
+l'autre**, alors qu'ils partagent leur helper. C'est l'erreur que le partage
+invite, et c'est le test negatif :
+
+    support aux bornes : 0 / 28 / 24 / 0 violations
+                         (delta=1 / delta=d-1 / delta>=d / chaine)
+
+Zero sur `delta = 1`, ou les bornes suffisent effectivement : le canari
+discrimine sur la **structure de la relation**.
+
+**Le croisement PairDiff x PairRatio** -- celui qui couvre le risque du helper
+partage, assume au commit precedent -- mord : 30 contre 0.
+
+**QUATRIEME FORME DE LA MEME LECON.** `Mono x PairRatio` a echoue : la cellule
+partagee etait bien rognee, mais **du mauvais cote**. `Mono([0, 1])` ne peut que
+relever le plancher, et `dom[1] = {1, 2}` a pour minimum 1, qui supporte tout a
+`delta = 1`. Il fallait `Mono([1, 0])`, qui abaisse le plafond et produit
+`{0, 1}`. Enonce complet desormais dans l'invariant 13 : il faut que l'autre
+propagateur puisse produire **le domaine partiel PARTICULIER que l'inference
+injectee lit de travers**.
+
+**COUT REMESURE** : 0,20 / 0,21 / 0,27 / 0,32 / **0,42 s** a 3, 6, 10, 15, 21
+paires. Croissance reelle, sans consequence.
+
+**Non verifie / suppose** :
+- `propagate.py` toujours pas branche ; `engine_active_hash` inchange depuis le
+  debut de A.
+- Les croisements restent a n=2, pour l'exhaustivite.
+- **14bis reste NON TRANCHE.** La lecture preliminaire sur NoTriple et NoSquare
+  (fenetres geometriques, donc objets FIXES) n'est toujours pas verifiee dans
+  le code -- c'est le premier travail de l'etape 8.
+
+**Bloque sur** : rien.
+
+**Pour Claude chat** : restent NoTriple et NoSquare (moyens), puis Connected.
+NoSquare doit etre **decompose en (n-1)^2 fenetres 2x2** -- il est actuellement
+mal modelise avec la grille entiere pour region (voir PERIMETRE-A.md).
+
 ## 2026-08-26 - PairDiff, sixieme propagateur, + 14bis ecrit
 
 **Fait** : `propager_pairdiff`, coherence d'arc sur une relation binaire.

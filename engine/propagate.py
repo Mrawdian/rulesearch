@@ -402,6 +402,30 @@ def propager_pairdiff(cn, dom):
     return _arc_consistance(cn.pairs, lambda v, w: abs(v - w) >= k, dom)
 
 
+# ---------- contraintes BINAIRES : PAIRSTEP ----------
+#
+# `PairRatio(pairs, delta)` (kind `PAIRSTEP`) : pour chaque paire,
+# `|v_a - v_b|` vaut 0 ou `delta`.
+#
+# Meme coherence d'arc que `PairDiff`, meme helper, autre relation.
+#
+# CE QUI CHANGE, ET C'EST LE POINT : la relation de `PairDiff` est **monotone**
+# en `w` -- le meilleur support est toujours `min(dom[b])` ou `max(dom[b])` --
+# donc un test aux bornes y serait exact. Celle-ci ne l'est **pas** : le seul
+# support d'une valeur peut etre une valeur **interieure** du domaine. Tester
+# aux bornes serait donc correct pour l'un et FAUX pour l'autre, alors que les
+# deux propagateurs se ressemblent au point de partager leur helper.
+# C'est exactement l'erreur que le partage invite, et `canary3` l'injecte.
+#
+# AUDIT DE FORME (invariant 14) : aucune. Sur par construction.
+
+
+def propager_pairstep(cn, dom):
+    delta = cn.delta
+    return _arc_consistance(
+        cn.pairs, lambda v, w: abs(v - w) in (0, delta), dom)
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
@@ -411,6 +435,7 @@ PROPAGATEURS = {
     "NEQADJ": propager_neqadj,
     "MONO": propager_mono,
     "PAIRDIFF": propager_pairdiff,
+    "PAIRSTEP": propager_pairstep,
 }
 
 

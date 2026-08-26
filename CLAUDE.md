@@ -173,6 +173,14 @@ ete identifies ainsi.
      dans sa propre region.
    - `Count/SumRange x Mono` : l'autre propagateur rognait le `a` de la paire
      alors que le bug lit le `b`. Corrige en inversant l'ordre de la region.
+   - `Mono x PairRatio` : la cellule partagee etait bien rognee, mais **du
+     mauvais cote**. `Mono([0, 1])` ne peut que RELEVER le plancher, et le
+     domaine partiel obtenu ne trompait pas l'inference injectee ; il fallait
+     `Mono([1, 0])`, qui ABAISSE le plafond.
+   Enonce complet, apres quatre echecs : il faut que l'autre propagateur
+   puisse produire **le domaine partiel PARTICULIER que l'inference injectee
+   lit de travers** -- pas seulement rogner, pas seulement rogner la bonne
+   cellule.
    Un croisement qui ne peut rien declencher est un canari vide de plus.
    Cout quadratique, **assume** : c'est la seule couverture qui ne depende pas
    du generateur.

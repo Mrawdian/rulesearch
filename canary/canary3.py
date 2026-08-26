@@ -51,7 +51,8 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_sum_plafond, propager_sum_plancher,
                        propager_neqadj, propager_mono,
                        propager_mono_avant, propager_mono_arriere,
-                       propager_pairdiff, PROPAGATEURS)
+                       propager_pairdiff, propager_pairstep,
+                       PROPAGATEURS)
 
 random.seed(23)
 n = 4
@@ -961,6 +962,90 @@ else:
 
 
 # ==========================================================================
+# PairRatio (PAIRSTEP) -- meme helper que PairDiff, relation NON monotone.
+# ==========================================================================
+
+# T : delta = 1 -- egales ou adjacentes.
+casT = RuleSystem(2, 3, [PairRatio([(0, 1)], 1)], "T delta=1")
+# U : delta = d-1 -- egales ou extremes. C'EST LE CAS QUI COMPTE : le support
+#     d'une valeur interieure n'est ni min ni max du domaine d'en face.
+casU = RuleSystem(2, 3, [PairRatio([(0, 1)], 2)], "U delta=d-1")
+# V : delta >= d -- inatteignable, la contrainte se reduit a l'egalite.
+casV = RuleSystem(2, 3, [PairRatio([(0, 1)], 3)], "V delta>=d")
+# W : chaine de deux paires.
+casW = RuleSystem(2, 3, [PairRatio([(0, 1), (1, 2)], 1)], "W chaine")
+
+PR_CAS = (("T delta = 1", casT), ("U delta = d-1", casU),
+          ("V delta >= d", casV), ("W chaine", casW))
+
+print()
+print("-- PairRatio : surete --")
+for nom, rs in PR_CAS:
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- PairRatio : la regle doit etre INVOQUEE --")
+_inv = 0
+for nom, rs in PR_CAS:
+    rnd6 = random.Random(53)
+    for sol in (toutes_solutions(rs) or [])[:40]:
+        for k in (1, 2):
+            dom = domaines(rs, indices(sol, k, rnd6))
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) == "PAIRSTEP":
+                    pp, _ = propager_pairstep(cn, dom)
+                    if pp:
+                        _inv += 1
+print("  declenchements = %d" % _inv)
+if not _inv:
+    print("  ECHEC : PairRatio est inerte.")
+    echecs += 1
+else:
+    print("  OK : la regle est operante.")
+
+
+# ---- test negatif : LE SUPPORT CHERCHE AUX BORNES -----------------------
+# C'est l'erreur que le helper partage invite : recopier de `PairDiff` un test
+# aux bornes, EXACT pour lui parce que sa relation est monotone en `w`, et FAUX
+# ici parce que le seul support peut etre une valeur INTERIEURE du domaine.
+
+def _pairstep_aux_bornes(cn, dom):
+    delta = cn.delta
+    prog = False
+    for a, b in cn.pairs:
+        for x, y in ((a, b), (b, a)):
+            if not dom[x] or not dom[y]:
+                return prog, True
+            bornes = (min(dom[y]), max(dom[y]))          # LE BUG
+            sans = [v for v in dom[x]
+                    if not any(abs(v - w) in (0, delta) for w in bornes)]
+            if sans:
+                for v in sans:
+                    dom[x].discard(v)
+                prog = True
+                if not dom[x]:
+                    return prog, True
+    return prog, False
+
+
+print()
+print("-- test negatif PairRatio : support cherche aux BORNES --")
+_det = False
+for nom, rs in PR_CAS:
+    v = cas_surete("bornes " + nom, rs,
+                   prop=_moteur_simple({"PAIRSTEP": _pairstep_aux_bornes}))
+    if v:
+        _det = True
+if _det:
+    print("  OK : le canari mord -- ce qui est exact pour PairDiff est faux ici.")
+else:
+    print("  ECHEC : le test aux bornes passe le canari.")
+    echecs += 1
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -1371,6 +1456,60 @@ for _titre, _autre in (
         RuleSystem(2, 3, [_autre, PairDiff([(2, 1)], 1, 2)], "PDc"),
         RuleSystem(2, 3, [_autre, PairDiff([(3, 2)], 1, 2)], "PDd"),
         _bug_pd)
+
+
+# ---- paires impliquant PairRatio ----------------------------------------
+
+def _pairstep_bugue_forme(d):
+    """BUG D'INTERACTION : support cherche dans {min(dom[y])} quand `y` est
+    partiellement rogne. Exige qu'un AUTRE propagateur ait fait ce rognage."""
+    def f(cn, dom):
+        delta = cn.delta
+        prog = False
+        for a, b in cn.pairs:
+            for x, y in ((a, b), (b, a)):
+                if not dom[x] or not dom[y]:
+                    return prog, True
+                supports = ({min(dom[y])} if 1 < len(dom[y]) < d
+                            else dom[y])          # LE BUG
+                sans = [v for v in dom[x]
+                        if not any(abs(v - w) in (0, delta) for w in supports)]
+                if sans:
+                    for v in sans:
+                        dom[x].discard(v)
+                    prog = True
+                    if not dom[x]:
+                        return prog, True
+        return prog, False
+    return f
+
+
+_bug_pr = _moteur({"PAIRSTEP": _pairstep_bugue_forme(3)})
+
+# La derniere paire est la plus interessante : PairDiff x PairRatio, les deux
+# propagateurs qui PARTAGENT `_arc_consistance`. C'est le croisement qui couvre
+# le risque assume au commit precedent.
+for _titre, _autre in (
+        ("AllDiff |R|<d", AllDiff([0, 1])),
+        ("Count lo=hi=1", Count([0, 1], 1, 1, 1)),
+        ("SumRange", SumRange([0, 1], 0, 2, 3)),
+        ("NeqAdj", NeqAdj([0, 1])),
+        # ORDRE INVERSE, ET C'EST LA QUATRIEME FORME DE LA MEME LECON.
+        # `Mono([0, 1])` ne peut que RELEVER le plancher de `dom[1]`, qui vaut
+        # alors {1, 2} : son minimum, 1, supporte toutes les valeurs a delta=1,
+        # donc le bug ne retire rien. Il faut `Mono([1, 0])`, qui ABAISSE le
+        # plafond et produit `dom[1] = {0, 1}` -- le minimum 0 ne supporte plus
+        # la valeur 2, et le bug mord.
+        # Il ne suffit donc pas que l'autre propagateur rogne LA cellule lue :
+        # il faut qu'il puisse produire le domaine partiel PARTICULIER que
+        # l'inference injectee lit de travers.
+        ("Mono", Mono([1, 0])),
+        ("PairDiff (helper partage)", PairDiff([(0, 1)], 1, 2))):
+    echecs += _paire(
+        "%s  x  PairRatio" % _titre,
+        RuleSystem(2, 3, [_autre, PairRatio([(2, 1)], 1)], "PRc"),
+        RuleSystem(2, 3, [_autre, PairRatio([(3, 2)], 1)], "PRd"),
+        _bug_pr)
 
 
 print()

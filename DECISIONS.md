@@ -1451,3 +1451,54 @@ endroit -- il faut le lire, pas l'attendre.
     AllDiff  x PairDiff : 42 / 0      NeqAdj x PairDiff : 42 / 0
     Count    x PairDiff : 12 / 0      Mono   x PairDiff : 12 / 0
     SumRange x PairDiff : 18 / 0      (chevauchant / temoin disjoint)
+
+## 2026-08-26 - PairRatio : ce qui est exact pour le voisin y est FAUX
+
+Meme coherence d'arc que `PairDiff`, meme helper, autre relation. Et c'est la
+que le partage se paie -- de la bonne facon, parce qu'on l'a teste.
+
+**La difference de fond** : la relation de `PairDiff` (`|v - w| >= k`) est
+**monotone en `w`** -- le meilleur support est toujours `min(dom[b])` ou
+`max(dom[b])` -- donc un test **aux bornes** y serait exact. Celle de
+`PairRatio` (`|v - w| in {0, delta}`) ne l'est **pas** : le seul support d'une
+valeur peut etre une valeur **interieure** du domaine.
+
+Recopier le test aux bornes d'un propagateur a l'autre est donc **exact pour
+l'un et faux pour l'autre**, alors que les deux se ressemblent au point de
+partager leur helper. C'est precisement l'erreur que le partage invite, et
+`canary3` l'injecte :
+
+    support cherche aux bornes :
+      0 violation sur delta = 1     (la ou les bornes suffisent effectivement)
+     28 sur delta = d-1
+     24 sur delta >= d
+      0 sur la chaine
+
+**Zero sur `delta = 1`** : avec `d = 3`, tout minimum supporte toute valeur, et
+le test aux bornes coincide avec le test exact. Le canari discrimine donc bien
+sur la **structure de la relation**, pas au hasard.
+
+### Le croisement PairDiff x PairRatio
+C'est celui qui couvre le risque assume au commit precedent -- un bug du helper
+partage toucherait les deux propagateurs a la fois. Il mord : 30 violations sur
+le chevauchant, 0 sur le temoin disjoint.
+
+### Quatrieme forme de la meme lecon
+`Mono x PairRatio` a **echoue** d'abord. La cellule partagee etait bien rognee,
+mais **du mauvais cote** : `Mono([0, 1])` ne peut que **relever le plancher** de
+`dom[1]`, qui vaut alors `{1, 2}` ; son minimum, 1, supporte toutes les valeurs
+a `delta = 1`, donc l'inference injectee ne se trompait jamais. Il fallait
+`Mono([1, 0])`, qui **abaisse le plafond** et produit `dom[1] = {0, 1}` -- dont
+le minimum 0 ne supporte plus la valeur 2.
+
+**Enonce complet, apres quatre echecs** : il faut que l'autre propagateur
+puisse produire **le domaine partiel PARTICULIER que l'inference injectee lit
+de travers**. Pas seulement rogner ; pas seulement rogner la bonne cellule ;
+la rogner **du bon cote**.
+
+### Cout, remesure
+    3 paires : 0,20 s      15 paires : 0,32 s
+    6 paires : 0,21 s      21 paires : 0,42 s
+   10 paires : 0,27 s
+Croissance reelle, toujours sans consequence. Rien n'est prevu, tout est
+remesure.
