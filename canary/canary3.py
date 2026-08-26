@@ -44,7 +44,10 @@ import sys
 from rulesearch import *
 from dsl2 import *
 from deduction import apply_T0, apply_T1, apply_T2, t1_regions
-from propagate import domaines, domaines_contiennent, propager, propager_alldiff
+from propagate import (domaines, domaines_contiennent, propager,
+                       propager_alldiff, propager_count,
+                       propager_count_interdiction,
+                       propager_count_forcage)
 
 random.seed(23)
 n = 4
@@ -308,6 +311,168 @@ if detecte:
 else:
     print("  ECHEC : un propagateur FAUX passe le canari. Il ne verifie rien.")
     echecs += 1
+
+
+# ==========================================================================
+# Count -- DEUX SENS dans le meme commit, parce que le test negatif les
+# distingue SEPAREMENT. Chacun a son bug injecte, chacun est vu mordre.
+# ==========================================================================
+#
+# Cas construits a la main : le generateur ne produit `Count` qu'avec des
+# bornes tirees au hasard, il ne garantit ni `lo == hi`, ni `lo == 0`.
+
+# D : lo == hi. Comptage exact -- les deux sens s'appliquent et coincident
+#     avec toute confusion lo/hi. Un propagateur correct ICI ne prouve rien.
+casD = RuleSystem(2, 2, [Count([0, 1, 2, 3], 1, 2, 2)], "D lo=hi")
+
+# E : lo < hi. Intervalle lache : c'est la que confondre lo et hi devient FAUX.
+casE = RuleSystem(2, 2, [Count([0, 1, 2, 3], 1, 1, 3)], "E lo<hi")
+
+# F : lo == 0. LE PIEGE, analogue de |R| < d pour AllDiff : la contrainte
+#     autorise ZERO occurrence, donc aucun raisonnement « une cellule doit
+#     valoir val » n'y est valide.
+casF = RuleSystem(2, 2, [Count([0, 1, 2, 3], 1, 0, 2)], "F lo=0")
+
+print()
+print("-- Count : surete sur les trois formes de bornes --")
+for nom, rs in (("D lo == hi", casD), ("E lo < hi", casE), ("F lo == 0", casF)):
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+
+# ---- LES DEUX SENS DOIVENT SE DECLENCHER -------------------------------
+# Un propagateur correct et JAMAIS INVOQUE est le motif du projet : deux
+# techniques de deduction ont deja ete ecrites, verifiees, et retirees pour
+# cette raison. On le constate ici avant d'y revenir dans six mois.
+
+def _declenchements(rs):
+    rnd2 = random.Random(31)
+    sols = toutes_solutions(rs) or []
+    ci = cf = 0
+    for sol in sols[:60]:
+        for k in (0, 1, 2, 3):
+            dom = domaines(rs, indices(sol, k, rnd2))
+            for _ in range(20):
+                prog = False
+                arret = False
+                for cn in rs.constraints:
+                    if getattr(cn, "kind", None) != "COUNT":
+                        continue
+                    pi, c = propager_count_interdiction(cn, dom)
+                    if pi:
+                        ci += 1
+                        prog = True
+                    if c:
+                        arret = True
+                        break
+                    pf, c = propager_count_forcage(cn, dom)
+                    if pf:
+                        cf += 1
+                        prog = True
+                    if c:
+                        arret = True
+                        break
+                if arret or not prog:
+                    break
+    return ci, cf
+
+print()
+print("-- Count : chaque sens doit etre INVOQUE au moins une fois --")
+tot_i = tot_f = 0
+for nom, rs in (("D lo == hi", casD), ("E lo < hi", casE), ("F lo == 0", casF)):
+    ci, cf = _declenchements(rs)
+    tot_i += ci
+    tot_f += cf
+    print("  %-22s interdiction=%-4d forcage=%-4d" % (nom, ci, cf))
+if not tot_i:
+    print("  ECHEC : le sens INTERDICTION n'est jamais invoque -- il est inerte.")
+    echecs += 1
+if not tot_f:
+    print("  ECHEC : le sens FORCAGE n'est jamais invoque -- il est inerte.")
+    echecs += 1
+if tot_i and tot_f:
+    print("  OK : les deux sens sont operants.")
+
+
+# ---- TEST NEGATIF, UN PAR SENS -----------------------------------------
+# La condition posee pour mettre les deux sens dans le meme commit : le canari
+# doit les rejeter SEPAREMENT. Le bug injecte est le meme dans les deux cas --
+# confondre `lo` et `hi` -- ce qui est l'erreur naturelle sur une contrainte a
+# deux bornes, et il est faux exactement quand `lo < hi`.
+
+def _interdiction_zele(cn, dom):
+    """BUG : declenche sur `lo` au lieu de `hi`."""
+    sur, poss = [], []
+    for i in cn.region:
+        if cn.val in dom[i]:
+            poss.append(i)
+            if len(dom[i]) == 1:
+                sur.append(i)
+    if len(sur) != cn.lo:
+        return False, False
+    prog = False
+    certains = set(sur)
+    for i in poss:
+        if i in certains:
+            continue
+        dom[i].discard(cn.val)
+        prog = True
+        if not dom[i]:
+            return prog, True
+    return prog, False
+
+
+def _forcage_zele(cn, dom):
+    """BUG : declenche sur `hi` au lieu de `lo`."""
+    poss = [i for i in cn.region if cn.val in dom[i]]
+    if len(poss) != cn.hi:
+        return False, False
+    prog = False
+    for i in poss:
+        if dom[i] != {cn.val}:
+            dom[i].clear()
+            dom[i].add(cn.val)
+            prog = True
+    return prog, False
+
+
+def _fabrique(sens_i, sens_f):
+    """Propagateur complet ou UN seul sens est remplace par sa version fausse.
+    L'autre reste correct : une violation est donc imputable au sens injecte."""
+    def _p(rs, dom):
+        for _ in range(50):
+            prog = False
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) != "COUNT":
+                    continue
+                pi, c = sens_i(cn, dom)
+                if c:
+                    return True, True
+                pf, c = sens_f(cn, dom)
+                if c:
+                    return True, True
+                prog = prog or pi or pf
+            if not prog:
+                break
+        return True, False
+    return _p
+
+print()
+print("-- test negatif Count : chaque sens rejete SEPAREMENT --")
+for etiquette, faux in (
+        ("INTERDICTION zelee", _fabrique(_interdiction_zele, propager_count_forcage)),
+        ("FORCAGE zele", _fabrique(propager_count_interdiction, _forcage_zele))):
+    detecte = False
+    for nom, rs in (("D lo == hi", casD), ("E lo < hi", casE), ("F lo == 0", casF)):
+        v = cas_surete("%s / %s" % (etiquette[:12], nom), rs, prop=faux)
+        if v:
+            detecte = True
+    if detecte:
+        print("  OK : %s est rejetee." % etiquette)
+    else:
+        print("  ECHEC : %s passe le canari. Le sens n'est pas couvert." % etiquette)
+        echecs += 1
 
 
 print()

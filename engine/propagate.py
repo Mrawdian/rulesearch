@@ -85,10 +85,86 @@ def propager_alldiff(cn, dom):
     return prog, False
 
 
+# ---------- COUNT ----------
+#
+# `Count(region, val, lo, hi)` : le nombre de cellules valant `val` dans la
+# region est dans [lo, hi].
+#
+# DEUX SENS, et ils sont bien distincts :
+#   - INTERDICTION : si le minimum atteignable vaut deja `hi`, aucune autre
+#     cellule ne peut prendre `val` ;
+#   - FORCAGE      : si le maximum atteignable vaut `lo`, toutes les cellules
+#     qui peuvent encore prendre `val` doivent la prendre.
+#
+# Ils sont dans le meme commit parce que `canary3` les rejette SEPAREMENT dans
+# son test negatif -- chacun a son bug injecte, chacun est vu mordre. Sans
+# cette separation, ils auraient du etre commites un par un.
+#
+# Minimum atteignable = nombre de cellules DEJA reduites a {val}.
+# Maximum atteignable = nombre de cellules qui PEUVENT encore valoir `val`.
+#
+# Ce qui n'est deliberement PAS fait : aucune detection de contradiction par
+# comptage (`|sur| > hi`, `|poss| < lo`). Elle serait correcte, mais
+# `feasible()` la fait deja et reste l'oracle. Seul un domaine VIDE est
+# signale comme contradiction, comme pour AllDiff.
+
+
+def _count_etat(cn, dom):
+    """(cellules certainement `val`, cellules pouvant valoir `val`).
+
+    « Certainement » se lit sur le DOMAINE reduit a un singleton, pas sur une
+    assignation : c'est ce qui rend la regle plus forte que le
+    forward-checking.
+    """
+    sur = [i for i in cn.region if len(dom[i]) == 1 and cn.val in dom[i]]
+    poss = [i for i in cn.region if cn.val in dom[i]]
+    return sur, poss
+
+
+def propager_count_interdiction(cn, dom):
+    """Si `hi` cellules valent deja `val`, aucune autre ne le peut."""
+    sur, poss = _count_etat(cn, dom)
+    if len(sur) != cn.hi:
+        return False, False
+    prog = False
+    certains = set(sur)
+    for i in poss:
+        if i in certains:
+            continue
+        dom[i].discard(cn.val)
+        prog = True
+        if not dom[i]:
+            return prog, True
+    return prog, False
+
+
+def propager_count_forcage(cn, dom):
+    """Si seules `lo` cellules peuvent encore valoir `val`, toutes doivent."""
+    sur, poss = _count_etat(cn, dom)
+    if len(poss) != cn.lo:
+        return False, False
+    prog = False
+    for i in poss:
+        if dom[i] != {cn.val}:
+            dom[i].clear()
+            dom[i].add(cn.val)
+            prog = True
+    return prog, False
+
+
+def propager_count(cn, dom):
+    p1, c1 = propager_count_interdiction(cn, dom)
+    if c1:
+        return True, True
+    p2, c2 = propager_count_forcage(cn, dom)
+    return (p1 or p2), c2
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
     "ALLDIFF": propager_alldiff,
+    "COUNT": propager_count,
 }
 
 

@@ -1101,3 +1101,52 @@ Le risque qu'un bug d'interaction n'apparaisse qu'a n plus grand est reel et
 
 **A ajouter au moment du branchement, PAS avant** : tant qu'aucun propagateur
 n'est sur le chemin d'execution, ce controle n'aurait rien a comparer.
+
+## 2026-08-26 - Count : deux sens dans le meme commit, et la condition qui l'autorise
+
+`Count(region, val, lo, hi)` porte deux bornes, donc deux regles :
+- **INTERDICTION** : si le minimum atteignable vaut deja `hi`, aucune autre
+  cellule ne peut prendre `val` ;
+- **FORCAGE** : si le maximum atteignable vaut `lo`, toutes les cellules qui
+  peuvent encore prendre `val` doivent la prendre.
+
+Minimum atteignable = cellules deja reduites au singleton `{val}`. Maximum
+atteignable = cellules dont le domaine contient encore `val`. Comme pour
+AllDiff, la lecture se fait sur les **domaines**, pas sur les assignations.
+
+**Condition posee pour les mettre dans le meme commit** : que `canary3` les
+rejette **separement** dans son test negatif. Elle est remplie, et le bug
+injecte est le meme des deux cotes -- **confondre `lo` et `hi`**, l'erreur
+naturelle sur une contrainte a deux bornes, fausse exactement quand `lo < hi`.
+
+    INTERDICTION zelee : 0 violation sur lo == hi, 20 sur lo < hi, 21 sur lo == 0
+    FORCAGE zele       : 0 violation sur lo == hi, 19 sur lo < hi,  9 sur lo == 0
+
+Chaque variante ne remplace **qu'un** sens, l'autre restant correct : une
+violation est donc imputable au sens injecte. Et les deux donnent **zero**
+violation sur `lo == hi`, ou la confusion est effectivement sans effet -- le
+canari discrimine, il ne signale pas au hasard.
+
+**Cas limites, construits a la main** : `lo == hi` (comptage exact),
+`lo < hi` (intervalle lache), et `lo == 0` -- **le piege**, analogue de
+`|R| < d` pour AllDiff : la contrainte autorise **zero** occurrence, donc
+aucun raisonnement « une cellule doit valoir `val` » n'y est valide.
+
+**Verification supplementaire, ajoutee sans qu'elle soit demandee** : chaque
+sens doit etre **invoque au moins une fois**. Deux techniques de deduction ont
+deja ete ecrites, verifiees correctes, puis retirees pour n'avoir jamais
+tourne. Un propagateur inerte est le motif du projet, et il se constate a
+l'ecriture ou jamais. Mesure : interdiction 10 declenchements, forcage 5.
+Le forcage ne se declenche **jamais** sur `lo == 0` -- normal, il faudrait que
+plus aucune cellule ne puisse valoir `val` -- mais il se declenche sur les deux
+autres formes.
+
+**Ce qui n'est deliberement pas fait** : aucune detection de contradiction par
+comptage (`|sur| > hi`, `|poss| < lo`). Elle serait correcte, mais
+`feasible()` la fait deja et reste l'oracle. Seul un domaine **vide** est
+signale, comme pour AllDiff.
+
+**A verifier au commit suivant** : `dsl_hash` passe de `e40600351a72` a
+`06fe04a859f1` tandis que `engine_active_hash` reste `0caa9267db60`. C'est le
+**premier test reel** de la section de regroupement de `summarize.py`, qui
+n'avait jamais eu l'occasion de s'afficher.

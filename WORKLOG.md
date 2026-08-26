@@ -11,6 +11,53 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - Count, deuxieme propagateur, deux sens dans un seul commit
+
+**Demande** : feu vert pour Count. Les deux sens dans le meme commit
+**seulement si** `canary3` les distingue separement dans son test negatif ;
+sinon un seul sens par commit.
+
+**Condition remplie**, donc les deux sont commites ensemble. Le bug injecte est
+le meme des deux cotes -- confondre `lo` et `hi` -- et chaque variante ne
+remplace qu'un sens, l'autre restant correct : la violation est imputable.
+
+    INTERDICTION zelee : 0 sur lo == hi, 20 sur lo < hi, 21 sur lo == 0
+    FORCAGE zele       : 0 sur lo == hi, 19 sur lo < hi,  9 sur lo == 0
+
+Zero des deux cotes sur `lo == hi`, ou la confusion est effectivement sans
+effet : le canari **discrimine**, il ne signale pas au hasard.
+
+**Cas limites construits a la main** : `lo == hi`, `lo < hi`, et `lo == 0` --
+le piege, analogue de `|R| < d` pour AllDiff : la contrainte autorise zero
+occurrence, donc aucun raisonnement « une cellule doit valoir val » n'y est
+valide. Surete : **0 violation** sur les trois.
+
+**Ajoute sans que ce soit demande** : un controle que **chaque sens est invoque
+au moins une fois**. Deux techniques de deduction ont deja ete ecrites,
+verifiees, puis retirees pour n'avoir jamais tourne -- un propagateur inerte se
+constate a l'ecriture ou jamais. Mesure : interdiction 10, forcage 5. Le
+forcage ne se declenche jamais sur `lo == 0`, ce qui est normal.
+
+**Verifie** : `rulesearch.py`, `dsl2.py`, `deduction.py`, `t0_legacy.py` ont un
+**diff vide** -- la conservation de `feasible()` reste verifiable
+mecaniquement.
+
+**Non verifie / suppose** :
+- `propagate.py` n'est toujours **pas branche**. `engine_active_hash` reste
+  `0caa9267db60` alors que `dsl_hash` passe a `06fe04a859f1`.
+- **La section de regroupement de `summarize.py` n'a toujours jamais ete vue
+  s'afficher** : il faut que la production ait ecrit des enregistrements sous
+  le nouveau `dsl_hash`. C'est son premier test reel et il est **en attente**.
+- Interaction AllDiff x Count : couverte uniquement sur les systemes du
+  generateur qui portent les deux. Le controle de fond -- propagation contre
+  `count_solutions` -- reste a ajouter **au branchement**.
+
+**Bloque sur** : rien.
+
+**Pour Claude chat** : troisieme propagateur au choix parmi SumRange, NeqAdj,
+Mono, PairDiff, PairRatio. Meme gabarit ; regle « les deux sens ensemble
+seulement si le test negatif les separe » desormais generale.
+
 ## 2026-08-26 - engine_active : lire par-dessus les ruptures de serie
 
 **Demande** : ne pas toucher a `dsl_hash` -- l'asymetrie est ecrasante -- mais
