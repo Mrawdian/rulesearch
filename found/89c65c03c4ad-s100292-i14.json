@@ -1,0 +1,20 @@
+{
+  "ts": 1787707670.4167342,
+  "dsl_hash": "89c65c03c4ad",
+  "seed": 100292,
+  "idx": 14,
+  "n": 4,
+  "d": 3,
+  "sys": "CONNECTED(v2) + COUNT(v2,1-5)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@adj",
+  "ms": 27,
+  "total_grids": 13,
+  "clue_frac": 0.125,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 13,
+    "1": 0,
+    "2": 2
+  },
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
