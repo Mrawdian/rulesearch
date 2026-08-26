@@ -1643,3 +1643,25 @@ Le saut vient des croisements a n=3, pas du nombre de paires : chacun fait
 15 600 essais contre ~600 a n=2. **La croissance n'est pas quadratique en
 paires, elle est dominee par la taille de grille.** A surveiller a `NoSquare`,
 qui exigera au moins n=3 lui aussi.
+
+## 2026-08-26 - correction d'attribution du cout de canary3
+
+L'hypothese posee en ouvrant les croisements etait que le cout croitrait
+**quadratiquement avec le nombre de paires**. La mesure dit autre chose :
+
+    3 paires : 0,20 s     15 paires : 0,32 s
+    6 paires : 0,21 s     21 paires : 0,42 s
+   10 paires : 0,27 s     28 paires : 3,39 s
+
+Le saut d'un facteur huit entre 21 et 28 paires ne vient **pas** des sept
+paires ajoutees : il vient de ce qu'elles sont les premieres a **n=3**.
+Chacune fait 15 600 essais la ou une paire a n=2 en fait ~600.
+
+**Le terme dominant est `n`, pas le nombre de paires.** L'espace des grilles
+croit exponentiellement en `n^2` tandis que les paires croissent en `k^2` ;
+a `k = 45` et `n = 2`, les paires ne coutent rien. C'est donc le passage a
+des contraintes exigeant de plus grandes regions -- `NoSquare`, `Connected` --
+qu'il faut surveiller, pas l'arrivee du dixieme propagateur.
+
+Consigne parce que la mauvaise attribution etait ecrite, et qu'une prevision
+de cout fausse conduit a optimiser le mauvais terme.

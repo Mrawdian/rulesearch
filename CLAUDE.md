@@ -94,10 +94,23 @@ Les sept cas, pour que la liste ne se reconstitue pas de memoire :
    partagent les memes petites valeurs en tete. Sur un tirage **aleatoire de
    meme taille**, le meme bug produit des centaines de violations.
 
-Le septieme et le huitieme sont les plus instructifs : c'est le motif
-**applique au dispositif cense le prevenir**. Le huitieme est pire encore --
-il ne touchait pas la mesure mais **l'echantillonnage du canari**, et il a
-ete introduit dans le commit meme qui ajoutait la couverture qu'il annulait. Un test negatif qui ne teste rien est une metrique
+Le septieme et le huitieme sont les plus instructifs, et le huitieme est d'un
+cran au-dessus de tous les autres :
+
+    le septieme faussait un TEST. Le huitieme faussait la MESURE DE
+    COUVERTURE des tests -- il ne disait pas une chose fausse sur le moteur,
+    il disait une chose fausse sur ce que les canaris verifiaient.
+
+**LE MOTIF S'APPLIQUE RECURSIVEMENT.** Chaque etage de verification est
+lui-meme un instrument, et justiciable de la meme regle que ce qu'il verifie :
+la metrique, puis le canari qui la garde, puis le test negatif qui garde le
+canari, puis l'echantillon sur lequel ce test porte. **Aucun etage n'est
+exempt du fait d'etre un etage de controle** -- au contraire, plus un
+dispositif est en amont, moins sa defaillance est visible, parce que tout ce
+qui est en aval continue d'imprimer des resultats d'apparence normale.
+
+Le huitieme a de plus ete introduit **dans le commit meme qui ajoutait la
+couverture qu'il annulait**. Un test negatif qui ne teste rien est une metrique
 confondue a l'etage du meta-outillage. Rien ne protege automatiquement de ce
 motif, pas meme les regles ecrites pour s'en proteger.
 
@@ -146,6 +159,22 @@ ete identifies ainsi.
    Regle generale : **une duplication documentee comme deliberee est un
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
+
+16. **Une coincidence entre verifications INDEPENDANTES est un defaut commun,
+   pas un fait.**
+   Quand plusieurs verifications independantes rendent **le meme verdict
+   simultanement**, suspecter le **dispositif partage** avant de croire au
+   verdict.
+   C'est un raisonnement sur la **STRUCTURE du resultat**, pas sur son
+   contenu, et il ne demande de comprendre aucun des cas : sept croisements
+   independants ne deviennent pas tous inertes en meme temps, donc la cause
+   est **commune**, donc elle est **en amont des sept** -- dans ce qu'ils
+   partagent, pas dans ce qui les distingue.
+   C'est ce qui a evite de conclure a sept propagateurs inertes le
+   26/08/2026, alors que le defaut etait dans l'echantillonnage (cas 8).
+   Procedure : **diagnostiquer separement avant toute correction.** Un
+   diagnostic qui cherche exhaustivement une configuration declenchante
+   tranche entre les deux lectures en une execution.
 
 15. **Un PREFIXE d'enumeration n'est jamais un echantillon.**
    `toutes_solutions` enumere dans l'ordre lexicographique. `sols[:k]` retient
