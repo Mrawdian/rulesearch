@@ -1,0 +1,20 @@
+{
+  "ts": 1787725909.0395813,
+  "dsl_hash": "89c65c03c4ad",
+  "seed": 22728,
+  "idx": 2,
+  "n": 4,
+  "d": 4,
+  "sys": "ALLDIFF@diags + ALLDIFF@blocks + ALLDIFF@rows",
+  "ms": 50,
+  "total_grids": 13,
+  "clue_frac": 0.271,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 19,
+    "1": 1,
+    "2": 0
+  },
+  "max_level": 1,
+  "verdict": "CANDIDAT"
+}
