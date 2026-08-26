@@ -1,0 +1,31 @@
+{
+  "ts": 1787767710.8369186,
+  "dsl_hash": "e80bc1b2b437",
+  "seed": 24681,
+  "idx": 2,
+  "engine_active": [
+    "rulesearch.py",
+    "dsl2.py",
+    "deduction.py",
+    "prefilter.py",
+    "t0_legacy.py"
+  ],
+  "engine_active_hash": "0caa9267db60",
+  "inst_seed": 24681002,
+  "n": 4,
+  "d": 3,
+  "sys": "PAIRSTEP(2)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,6-9)@grid",
+  "ms": 117,
+  "total_grids": 13,
+  "clue_frac": 0.531,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 12,
+    "1": 0,
+    "2": 1
+  },
+  "t0_unknown": 45,
+  "t0_left": 11,
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
