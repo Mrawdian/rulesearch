@@ -62,7 +62,7 @@ n'a de sens que parce que **l'un des deux ne bouge jamais**.
 
 ## LE MOTIF DU PROJET — a lire avant les invariants, ils en decoulent
 
-**Sept fois** dans ce projet, un instrument a mesure autre chose que ce qu'il
+**Dix fois** dans ce projet, un instrument a mesure autre chose que ce qu'il
 annoncait : quatre metriques, deux techniques de deduction inertes, un test
 negatif vide.
 
@@ -114,8 +114,31 @@ Les sept cas, pour que la liste ne se reconstitue pas de memoire :
    aurait du l'empecher. **Ecrire la mise en garde ne suffit pas : c'est
    le CHIFFRE MIS EN AVANT qui doit porter sur la bonne population.**
 
-Les septieme, huitieme et neuvieme sont les plus instructifs, et ils sont
-d'un cran au-dessus des autres :
+10. **Prototype de mesure de A, plus faible que le moteur** -- le banc
+   annoncait **x3,99** de gain de debit. Le prototype **remplacait** la
+   saturation par la propagation, il perdait donc les detections de
+   contradiction que les propagateurs omettent deliberement,
+   `feasible()` etant l'oracle. Remonte en **filtre devant** la
+   saturation : **x0,99**, zero deduction perdue. **Presque tout le gain
+   etait du travail non fait.**
+
+**LE DIXIEME EST LE PLUS IMPORTANT DES DIX**, et pour une raison qui n'a
+rien a voir avec sa taille :
+
+    les neuf autres CONTREDISAIENT une attente, ou etaient neutres.
+    Le dixieme CONFIRMAIT ce qu'on voulait croire -- un gain de debit,
+    sur le critere de succes du chantier, au moment ou on l'attendait.
+
+    UN RESULTAT FAVORABLE MERITE LE MEME CONTROLE QU'UN RESULTAT
+    DEFAVORABLE, ET IL LE RECOIT MOINS SOUVENT.
+
+C'est le regime ou un instrument n'est jamais reverifie : on ne cherche
+pas l'erreur dans ce qui va dans le bon sens. Le x3,99 aurait ete pousse
+comme le resultat du chantier si un garde n'avait pas ete impose --
+afficher le SENS des divergences, et separer la population couverte.
+
+Les septieme, huitieme et neuvieme sont ensuite les plus instructifs, et
+ils sont d'un cran au-dessus des autres :
 
     le septieme faussait un TEST. Le huitieme faussait la MESURE DE
     COUVERTURE des tests -- il ne disait pas une chose fausse sur le moteur,
@@ -134,8 +157,10 @@ couverture qu'il annulait**. Un test negatif qui ne teste rien est une metrique
 confondue a l'etage du meta-outillage. Rien ne protege automatiquement de ce
 motif, pas meme les regles ecrites pour s'en proteger.
 
-**Les septieme, huitieme et neuvieme cas ont ete trouves par Claude Code,
-sans que l'utilisateur le demande.** C'est le **mode de travail attendu**, pas une exception : signaler
+**Les septieme, huitieme, neuvieme et dixieme cas ont ete trouves par
+Claude Code, sans que l'utilisateur le demande** -- le dixieme grace a un
+garde que l'utilisateur avait impose, et qui n'aurait servi a rien s'il
+n'avait pas ete LU alors que le chiffre etait bon. C'est le **mode de travail attendu**, pas une exception : signaler
 ce qui contredit l'hypothese ou rend une mesure douteuse fait partie de la
 tache, meme hors de ce qui a ete demande. La moitie des cas de cette liste ont
 ete identifies ainsi.

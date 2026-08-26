@@ -1,4 +1,12 @@
-# VERDICT : A NE REMPLIT PAS SON CRITERE DE SUCCES
+# VERDICT : A A ECHOUE SUR CE QU'IL VISAIT
+
+**La propagation sur domaines ne produit aucun gain de debit. n=5 ne passe pas
+sous la borne de 20 s. Le chantier a echoue sur son critere de succes.**
+
+Ce n'est pas un resultat partiel, ni un resultat a nuancer. Dix propagateurs
+ecrits, verifies, croises deux a deux : **x0,99**.
+
+## Le detail de la mesure
 
 **Mesure du 26/08/2026, apres l'ecriture des dix propagateurs, `Connected`
 compris. Prototype EQUIVALENT EN DEDUCTION (propagation en filtre devant la
@@ -32,12 +40,37 @@ Le prototype **deduit davantage** a cout egal : 11 instances resolues par lui
 seul, 63 `max_level` abaisses sur 132, **0 deduction perdue**. C'est un gain de
 QUALITE de deduction -- exactement ce que A avait ete declare NE PAS viser.
 
-## Le critere de reouverture de l'articulation est ATTEINT
+## Le critere de reouverture de l'articulation etait MAL CONCU
 
-Il avait ete fixe a l'avance et en un seul point : « si a n=5 le debit reste
-insuffisant avec l'inaccessibilite seule, et seulement dans ce cas ». La mesure
-le declenche. La preuve de surete est deja faite (14ter) : **rien ne reste a
-etablir avant de l'ecrire**, si la decision est prise. Elle ne l'est pas ici.
+Il est atteint **formellement** : « si a n=5 le debit reste insuffisant avec
+l'inaccessibilite seule ». Mais **l'articulation ne sera pas ouverte**, et le
+critere lui-meme etait defectueux.
+
+Il devait **constater** un debit insuffisant. Il ne devait pas **ouvrir une
+piste** que les mesures rendent invraisemblable : il n'y a aucun facteur a
+recuperer nulle part -- ni sur la population couverte, ni sur le decile le plus
+couteux, ni sur les instances qui atteignent la borne. Rien ne suggere qu'un
+`Connected` plus fort trouverait, seul, ce qui est absent partout ailleurs.
+
+**Lecon** : un critere de reouverture doit dire a quelle condition une piste
+redevient PLAUSIBLE, pas seulement a quelle condition on est mecontent du
+resultat. Un seuil d'insatisfaction n'est pas une hypothese.
+
+## Ce que A a produit, et qui n'etait pas vise
+
+A cout egal, la propagation **deduit davantage** :
+
+    11 instances resolues par elle seule    63 `max_level` abaisses sur 132
+    0 deduction perdue                      0 solution fausse
+
+C'est le **second instrument du `gain_propagation`** : l'axe QUALITE de
+deduction, pas l'axe debit.
+
+**IL N'EST PAS BRANCHE, ET IL NE DOIT PAS L'ETRE** : le brancher deplacerait la
+frontiere mesuree, ce contre quoi tout le gel de `t0_legacy` a ete construit.
+Il existe, il est mesure, il est disponible **si la question de qualite
+redevient centrale**. Rien de plus, et c'est deja consigne.
+
 
 ---
 

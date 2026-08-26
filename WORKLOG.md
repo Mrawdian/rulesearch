@@ -11,6 +11,96 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - CLOTURE DE A : ce qui est etabli, ce qui ne l'est pas
+
+**Aucun code. Verdict, et etat des lieux.**
+
+## VERDICT
+
+**La propagation sur domaines ne produit aucun gain de debit. n=5 ne passe pas
+sous la borne de 20 s. A a echoue sur ce qu'il visait.**
+
+    125 instances comparables : x0,99      decile le plus couteux : x0,90
+    systemes rendus mesurables: 1 sur 132  aucune ne finit        : 6
+    solutions fausses         : 0          deduction perdue       : 0
+
+Enonce sans attenuation : le volume de travail -- dix propagateurs, 45
+croisements, onze invariants -- rend la nuance trop facile, et le volume n'est
+pas de l'avancement.
+
+## ETABLI
+
+- **`feasible()` est conservee pendant tout A**, et c'est verifiable
+  mecaniquement : diff **vide** sur `rulesearch.py`, `dsl2.py`, `deduction.py`
+  et `t0_legacy.py` entre `3cde7b2` et la cloture. Aucune revue n'est requise.
+- **Dix propagateurs corrects**, chacun avec ses cas limites construits a la
+  main, son test negatif vu mordre, et ses croisements contre tous les
+  precedents. **0 solution fausse** sur toutes les mesures de la journee.
+- **La classe des bugs d'interaction est cernee** (invariant 14) : deduire le
+  CONTENU d'un domaine de sa FORME. Toute lecture perimee est inerte par
+  monotonie. Le critere s'audite **par relecture**, avant tout test.
+- **Le vrai critere de surete est la SUR-APPROXIMATION** (14ter) : 14 en est le
+  cas particulier ; un objet INDUIT n'est pas dangereux s'il est construit par
+  appartenance. Verifie **mecaniquement** sur les dix propagateurs.
+- **Le retrait par inaccessibilite est sur**, preuve ecrite avant le code.
+  **Le forcage par point d'articulation est sur ET monotone** aussi -- l'objet
+  pertinent est l'ensemble des sommets separateurs `a`-`b`, pas l'ensemble des
+  points d'articulation d'un graphe quelconque.
+- **A cout egal, la propagation deduit davantage** : 11 instances resolues par
+  elle seule, 63 `max_level` abaisses, 0 perdue. Second instrument du
+  `gain_propagation`, **mesure et non branche**.
+- **Ou part le budget a n=5** : 97 % dans `solve_graded`, sur les systemes qui
+  atteignent la borne.
+
+## NON ETABLI
+
+- **Que n=5 soit atteignable par une quelconque voie.** A etait la voie
+  identifiee ; elle ne donne rien. Aucune autre n'a ete mesuree.
+- **L'origine du residu** : 1 divergence de `max_level` plus haute sur 132,
+  population entierement couverte. Pas une unsoundness. **Volontairement non
+  explique.**
+- **La generalite des chiffres** : un seul tirage (graine 5), 30 systemes, une
+  famille, une taille. Rien n'a ete replique.
+- **Le gain de qualite en production** : jamais observe, `propagate.py` n'a
+  jamais tourne en production. `engine_active_hash` est reste `0caa9267db60`
+  d'un bout a l'autre de A.
+
+## CE QUI A FAILLI ETRE RAPPORTE COMME UN RESULTAT
+
+**x3,99.** Le prototype remplacait la saturation par la propagation : il
+perdait les detections de contradiction que les propagateurs omettent
+deliberement. En filtre devant la saturation : **x0,99**, 0 perdue.
+
+**C'est le dixieme cas du motif, et le plus important** : la mesure fausse
+allait dans le SENS ESPERE, sur le CRITERE DE SUCCES du chantier. Les neuf
+autres contredisaient une attente ou etaient neutres.
+
+    UN RESULTAT FAVORABLE MERITE LE MEME CONTROLE QU'UN RESULTAT
+    DEFAVORABLE, ET IL LE RECOIT MOINS SOUVENT.
+
+Trois des dix instruments demasques aujourd'hui avaient ete ecrits pour
+prevenir les precedents.
+
+## DECISIONS PRISES ET NON PRISES
+
+- **L'articulation ne sera PAS ouverte.** Son critere de reouverture etait
+  atteint formellement, mais **mal concu** : il devait constater un debit
+  insuffisant, pas ouvrir une piste que les mesures rendent invraisemblable.
+  Un seuil d'insatisfaction n'est pas une hypothese.
+- **Le gain de qualite n'est PAS branche** : il deplacerait la frontiere
+  mesuree.
+- **Rien d'autre n'a ete decide ce soir.**
+
+## POUR CLAUDE CHAT
+
+Le prochain mouvement **n'est pas technique**. Si A ne debloque pas n=5, la
+voie vers la profondeur mesurable n'existe plus dans sa forme actuelle : c'est
+une **question de recherche**, reprise par l'utilisateur avec Mrawdian.
+
+Ne pas proposer de renforcer les propagateurs pour recuperer le facteur : il
+n'est present nulle part, ni sur la population couverte, ni sur le decile le
+plus couteux, ni sur les instances qui atteignent la borne.
+
 ## 2026-08-26 - Connected, dixieme propagateur -- ET A NE REMPLIT PAS SON CRITERE
 
 **Ordre impose et respecte** : preuve ecrite avant le code, `canary3` etendu et

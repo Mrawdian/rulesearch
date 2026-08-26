@@ -1962,3 +1962,55 @@ si le chiffre grossit.
 Fixe a l'avance : « si a n=5 le debit reste insuffisant avec l'inaccessibilite
 seule ». La mesure le declenche. La preuve de surete est faite : **rien ne
 reste a etablir avant de l'ecrire.** La decision n'est pas prise ici.
+
+## 2026-08-26 - VERDICT : A A ECHOUE SUR CE QU'IL VISAIT
+
+**La propagation sur domaines ne produit aucun gain de debit. n=5 ne passe pas
+sous la borne de 20 s. Le chantier a echoue sur son critere de succes.**
+
+Enonce sans attenuation, parce que le volume de travail accompli -- dix
+propagateurs, 45 croisements, onze invariants -- rend la nuance trop facile.
+
+    125 instances comparables : x0,99      decile le plus couteux : x0,90
+    systemes rendus mesurables: 1 sur 132  aucune ne finit        : 6
+
+### Le dixieme cas du motif, et pourquoi il est le plus important
+La mesure fausse **allait dans le sens espere**, sur le **critere de succes du
+chantier**, au moment ou on l'attendait. Les neuf autres contredisaient une
+attente ou etaient neutres.
+
+    UN RESULTAT FAVORABLE MERITE LE MEME CONTROLE QU'UN RESULTAT
+    DEFAVORABLE, ET IL LE RECOIT MOINS SOUVENT.
+
+C'est le regime ou un instrument n'est jamais reverifie. Le x3,99 aurait ete
+rapporte comme le resultat du chantier si l'utilisateur n'avait pas impose
+d'afficher le SENS des divergences et de separer la population couverte.
+
+### L'articulation ne sera pas ouverte, et le critere etait mal concu
+Atteint formellement, il ne sera pas suivi. Il devait **constater** un debit
+insuffisant ; il ne devait pas **ouvrir une piste** que les mesures rendent
+invraisemblable. Aucun facteur n'est recuperable nulle part -- ni sur la
+population couverte, ni sur le decile le plus couteux, ni sur les instances qui
+atteignent la borne.
+
+**Un critere de reouverture doit dire a quelle condition une piste redevient
+PLAUSIBLE, pas seulement a quelle condition on est mecontent du resultat. Un
+seuil d'insatisfaction n'est pas une hypothese.**
+
+### Ce qui est garde, mesure, et NON branche
+A cout egal, la propagation deduit davantage : 11 instances resolues par elle
+seule, 63 `max_level` abaisses, 0 perdue, 0 solution fausse. Second instrument
+du `gain_propagation`, axe QUALITE.
+
+**Ne pas le brancher** : il deplacerait la frontiere mesuree, ce contre quoi le
+gel de `t0_legacy` a ete construit. Disponible si la question de qualite
+redevient centrale.
+
+### Residu ouvert, non explique et laisse tel quel
+**1 divergence de `max_level` plus haute** sur 132, population entierement
+couverte. 0 deduction perdue, 0 solution fausse : ce n'est pas une
+unsoundness. **Non explique, et volontairement non explique ce soir.**
+
+### Ce qui suit n'est pas technique
+Si A ne debloque pas n=5, la voie vers la profondeur mesurable n'existe plus
+dans sa forme actuelle. **C'est une question de recherche, pas d'ingenierie.**
