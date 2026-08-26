@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 02:42 UTC — 18892 systemes evalues
+genere 2026-08-26 02:42 UTC — 18907 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 9918 systemes
+- `89c65c03c4ad` : 9933 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -12,7 +12,7 @@ genere 2026-08-26 02:42 UTC — 18892 systemes evalues
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7466 enregistrements (40%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7466 enregistrements (39%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 9492 | 4767 | 620 | 323 | 905 | 752 | 1034 | 974 | 10.3% |
-| ref | 4 | 3 | 9276 | 2226 | 3912 | 2 | 1235 | 460 | 4 | 1437 | 15.5% |
+| ref | 4 | 3 | 9291 | 2229 | 3918 | 2 | 1239 | 461 | 4 | 1438 | 15.5% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 977, dont T2 : 100%
-- candidats SANS connectivite : 1441, dont T2 : 100%
+- candidats SANS connectivite : 1442, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -51,9 +51,9 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 1253 candidats
+- `89c65c03c4ad` — 1254 candidats
   - AVEC connectivite (498) : T0=13.33 T1=0.00 T2=2.89 — pondere **5.78**
-  - SANS connectivite (755) : T0=15.86 T1=0.00 T2=2.66 — pondere **5.33**
+  - SANS connectivite (756) : T0=15.85 T1=0.00 T2=2.66 — pondere **5.33**
   - test de permutation : **p = 0.0145** — ecart significatif au seuil 0.05
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
