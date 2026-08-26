@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 10:20 UTC — 38608 systemes evalues
+genere 2026-08-26 10:21 UTC — 38622 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -9,11 +9,11 @@ genere 2026-08-26 10:20 UTC — 38608 systemes evalues
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
-- `e3baecf8377b` : 15 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `e3baecf8377b` : 29 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7481 enregistrements (19%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7495 enregistrements (19%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -22,7 +22,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 16422 | 8201 | 1064 | 564 | 1633 | 1307 | 1787 | 1658 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 16071 | 3783 | 6801 | 11 | 2197 | 811 | 7 | 2461 | 15.3% |
+| ref | 4 | 3 | 16085 | 3784 | 6807 | 11 | 2201 | 811 | 7 | 2464 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -34,7 +34,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1785, dont T2 : 100%
-- candidats SANS connectivite : 2771, dont T2 : 100%
+- candidats SANS connectivite : 2774, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -55,7 +55,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*266 candidats sur 4556 portent les champs bruts (6%).*
+*269 candidats sur 4559 portent les champs bruts (6%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
