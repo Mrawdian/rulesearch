@@ -160,11 +160,84 @@ def propager_count(cn, dom):
     return (p1 or p2), c2
 
 
+# ---------- SUM ----------
+#
+# `SumRange(region, lo, hi, d)` : la somme des valeurs de la region est dans
+# [lo, hi]. Meme famille de bornes que `Count`, donc meme gabarit a deux sens.
+#
+#   PLAFOND (borne `hi`) : une valeur est impossible si, meme en donnant aux
+#     autres cellules leur MINIMUM, la somme depasse `hi`.
+#   PLANCHER (borne `lo`) : une valeur est impossible si, meme en donnant aux
+#     autres cellules leur MAXIMUM, la somme n'atteint pas `lo`.
+#
+# C'est la coherence aux bornes, rien de plus. Le raisonnement se lit sur les
+# min/max des DOMAINES, ce qui le rend plus fort que `feasible()`, qui borne
+# les cellules inconnues par `d-1` sans regarder ce qu'elles peuvent valoir.
+#
+# Ce qui n'est deliberement PAS fait : aucune recherche de sous-ensembles
+# realisables (« quelles combinaisons somment exactement a lo »). Correcte mais
+# exponentielle, et surtout elle resoudrait localement des configurations dont
+# la difficulte est ce que le projet mesure. Meme motif que le rejet de Regin.
+
+
+def _sum_domaine_vide(cn, dom):
+    return any(not dom[i] for i in cn.region)
+
+
+def propager_sum_plafond(cn, dom):
+    """Borne `hi` : retire les valeurs TROP GRANDES."""
+    if _sum_domaine_vide(cn, dom):
+        return False, True
+    mn = [min(dom[i]) for i in cn.region]
+    total_min = sum(mn)
+    prog = False
+    for k, i in enumerate(cn.region):
+        plafond = cn.hi - (total_min - mn[k])
+        trop = [v for v in dom[i] if v > plafond]
+        if not trop:
+            continue
+        for v in trop:
+            dom[i].discard(v)
+        prog = True
+        if not dom[i]:
+            return prog, True
+    return prog, False
+
+
+def propager_sum_plancher(cn, dom):
+    """Borne `lo` : retire les valeurs TROP PETITES."""
+    if _sum_domaine_vide(cn, dom):
+        return False, True
+    mx = [max(dom[i]) for i in cn.region]
+    total_max = sum(mx)
+    prog = False
+    for k, i in enumerate(cn.region):
+        plancher = cn.lo - (total_max - mx[k])
+        trop = [v for v in dom[i] if v < plancher]
+        if not trop:
+            continue
+        for v in trop:
+            dom[i].discard(v)
+        prog = True
+        if not dom[i]:
+            return prog, True
+    return prog, False
+
+
+def propager_sum(cn, dom):
+    p1, c1 = propager_sum_plafond(cn, dom)
+    if c1:
+        return True, True
+    p2, c2 = propager_sum_plancher(cn, dom)
+    return (p1 or p2), c2
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
     "ALLDIFF": propager_alldiff,
     "COUNT": propager_count,
+    "SUM": propager_sum,
 }
 
 

@@ -119,6 +119,20 @@ ete identifies ainsi.
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
 
+14. **La classe des bugs d'interaction est CERNEE : deduire le CONTENU d'un
+   domaine de sa FORME.**
+   Tout ce qui repose sur une lecture **perimee** est structurellement inerte :
+   les domaines ne font que **retrecir**, donc une lecture perimee donne
+   toujours un propagateur plus **faible**, jamais plus zele. Deduction
+   manquee, pas solution fausse.
+   Ce qui rend un propagateur **trop zele** par interaction, c'est de croire un
+   domaine plus PETIT qu'il n'est. Or un propagateur ne peut pas lire l'avenir
+   -- il ne peut y arriver qu'en **inferant le contenu depuis la forme** :
+   « domaine plein ou singleton », « domaine deja rogne = cellule decidee ».
+   Vrai dans le monde du forward-checking d'ou l'on vient, **faux** des qu'un
+   autre propagateur a rogne PARTIELLEMENT une cellule partagee.
+   C'est le gabarit du test negatif de chaque croisement.
+
 13. **Chaque propagateur ajoute un CROISEMENT contre TOUS les precedents.**
    Les cas limites sont construits a la main (invariant 8), mais leurs
    **croisements** venaient du generateur, qui n'assemble que les paires que

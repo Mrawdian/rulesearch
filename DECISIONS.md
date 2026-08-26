@@ -1196,3 +1196,54 @@ le bug**. Avec `lo == 0` le sens FORCAGE ne se declenche jamais, et c'est le
 forcage qui porte l'unsoundness. X1 exerce donc la **surete**, pas
 l'interaction. X2 a ete ajoute pour cela. **Une configuration limite n'est pas
 automatiquement une configuration ou l'interaction est observable.**
+
+## 2026-08-26 - SumRange : coherence aux bornes, et deux croisements de plus
+
+Meme famille de bornes que `Count`, donc **le meme gabarit a deux sens**, et la
+comparaison est instructive : la ou `Count` compte des cellules, `SumRange`
+borne une somme, mais les deux se declenchent sur un **extremum atteignable**.
+
+    PLAFOND  (borne hi) : impossible si, meme en donnant aux autres cellules
+                          leur MINIMUM, la somme depasse hi.
+    PLANCHER (borne lo) : impossible si, meme en donnant aux autres cellules
+                          leur MAXIMUM, la somme n'atteint pas lo.
+
+Les min/max se lisent sur les **domaines**, ce qui rend la regle plus forte que
+`feasible()`, qui borne toute cellule inconnue par `d-1` sans regarder ce
+qu'elle peut valoir.
+
+**Ecarte deliberement** : toute recherche de sous-ensembles realisables
+(« quelles combinaisons somment exactement a `lo` »). Correcte mais
+exponentielle, et surtout elle **resoudrait localement** des configurations
+dont la difficulte est ce que le projet mesure. Meme motif que le rejet de
+Regin.
+
+**Deux sens dans le meme commit** : condition remplie, `canary3` les rejette
+separement. Bug injecte : intervertir min et max dans le calcul du reste,
+l'erreur classique de la coherence aux bornes.
+
+    PLAFOND zele  : 86 violations sur lo == hi, 191 sur lo < hi, 0 sur vacuous
+    PLANCHER zele : 87 violations sur lo == hi, 188 sur lo < hi, 0 sur vacuous
+
+**Zero sur le cas vacuous** (`[0, |R|*(d-1)]`, toujours satisfait) : la, aucun
+retrait n'est jamais justifie et aucune confusion min/max ne change rien. Le
+canari discrimine.
+
+### Le croisement Count x SumRange a d'abord ECHOUE, et c'est le resultat
+Premiere version : `Count(lo=1, hi=2)` sur une region de **2** cellules. Le bug
+d'interaction ne mordait pas. Cause : avec `hi == |R|`, le sens INTERDICTION ne
+peut **rien retirer a l'interieur de sa propre region** -- il ne se declenche
+que lorsque toutes les cellules valent deja `val`. Count ne pouvait donc pas
+fabriquer le domaine **partiellement rogne** dont le bug a besoin.
+
+Corrige en `hi = 1`. **La lecon est la meme que pour X1** : une paire de
+configurations limites n'est pas automatiquement une paire ou l'interaction est
+**observable**. Il faut verifier que l'un des deux propagateurs peut
+effectivement **ROGNER** une cellule partagee -- pas seulement la partager.
+
+    AllDiff x SumRange       : chevauchant 48, temoin disjoint 0
+    Count(lo=hi=1) x SumRange: chevauchant 24, temoin disjoint 0
+
+### Cout des croisements, mesure
+`canary3` complet : **0,20 s** avec trois paires. La croissance quadratique
+annoncee est, a ce stade, sans effet pratique. A remesurer, pas a supposer.

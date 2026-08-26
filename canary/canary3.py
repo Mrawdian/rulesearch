@@ -47,7 +47,9 @@ from deduction import apply_T0, apply_T1, apply_T2, t1_regions
 from propagate import (domaines, domaines_contiennent, propager,
                        propager_alldiff, propager_count,
                        propager_count_interdiction,
-                       propager_count_forcage)
+                       propager_count_forcage, propager_sum,
+                       propager_sum_plafond, propager_sum_plancher,
+                       PROPAGATEURS)
 
 random.seed(23)
 n = 4
@@ -476,6 +478,156 @@ for etiquette, faux in (
 
 
 # ==========================================================================
+# SumRange -- meme famille de bornes que Count, donc meme gabarit a deux sens.
+# ==========================================================================
+
+# G : lo == hi. Somme exacte -- les deux sens mordent au maximum.
+casG = RuleSystem(2, 3, [SumRange([0, 1, 2, 3], 4, 4, 3)], "G lo=hi")
+# H : lo < hi. Intervalle lache.
+casH = RuleSystem(2, 3, [SumRange([0, 1, 2, 3], 3, 5, 3)], "H lo<hi")
+# I : bornes VACUOUS -- [0, |R|*(d-1)] est toujours satisfait. LE PIEGE :
+#     aucun retrait n'y est jamais justifie. Analogue de lo == 0 pour Count.
+casI = RuleSystem(2, 3, [SumRange([0, 1, 2, 3], 0, 8, 3)], "I vacuous")
+
+print()
+print("-- SumRange : surete sur les trois formes de bornes --")
+for nom, rs in (("G lo == hi", casG), ("H lo < hi", casH), ("I vacuous", casI)):
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- SumRange : chaque sens doit etre INVOQUE au moins une fois --")
+
+
+def _declenchements_sum(rs):
+    rnd2 = random.Random(37)
+    sols = toutes_solutions(rs) or []
+    cp = cq = 0
+    for sol in sols[:60]:
+        for k in (0, 1, 2, 3):
+            dom = domaines(rs, indices(sol, k, rnd2))
+            for _ in range(20):
+                prog = arret = False
+                for cn in rs.constraints:
+                    if getattr(cn, "kind", None) != "SUM":
+                        continue
+                    pa, c = propager_sum_plafond(cn, dom)
+                    if pa:
+                        cp += 1
+                        prog = True
+                    if c:
+                        arret = True
+                        break
+                    pb, c = propager_sum_plancher(cn, dom)
+                    if pb:
+                        cq += 1
+                        prog = True
+                    if c:
+                        arret = True
+                        break
+                if arret or not prog:
+                    break
+    return cp, cq
+
+
+tot_p = tot_q = 0
+for nom, rs in (("G lo == hi", casG), ("H lo < hi", casH), ("I vacuous", casI)):
+    cp, cq = _declenchements_sum(rs)
+    tot_p += cp
+    tot_q += cq
+    print("  %-22s plafond=%-4d plancher=%-4d" % (nom, cp, cq))
+if not tot_p:
+    print("  ECHEC : le sens PLAFOND est inerte.")
+    echecs += 1
+if not tot_q:
+    print("  ECHEC : le sens PLANCHER est inerte.")
+    echecs += 1
+if tot_p and tot_q:
+    print("  OK : les deux sens sont operants.")
+
+
+# ---- test negatif, un par sens -----------------------------------------
+# Bug injecte : intervertir min et max dans le calcul du reste. C'est l'erreur
+# classique de la coherence aux bornes, et elle est fausse des que les domaines
+# ne sont pas tous des singletons.
+
+def _sum_plafond_zele(cn, dom):
+    """BUG : borne le reste par son MAXIMUM au lieu de son minimum."""
+    if any(not dom[i] for i in cn.region):
+        return False, True
+    mx = [max(dom[i]) for i in cn.region]
+    total_max = sum(mx)
+    prog = False
+    for k, i in enumerate(cn.region):
+        plafond = cn.hi - (total_max - mx[k])
+        trop = [v for v in dom[i] if v > plafond]
+        if trop:
+            for v in trop:
+                dom[i].discard(v)
+            prog = True
+            if not dom[i]:
+                return prog, True
+    return prog, False
+
+
+def _sum_plancher_zele(cn, dom):
+    """BUG : borne le reste par son MINIMUM au lieu de son maximum."""
+    if any(not dom[i] for i in cn.region):
+        return False, True
+    mn = [min(dom[i]) for i in cn.region]
+    total_min = sum(mn)
+    prog = False
+    for k, i in enumerate(cn.region):
+        plancher = cn.lo - (total_min - mn[k])
+        trop = [v for v in dom[i] if v < plancher]
+        if trop:
+            for v in trop:
+                dom[i].discard(v)
+            prog = True
+            if not dom[i]:
+                return prog, True
+    return prog, False
+
+
+def _fabrique_sum(sens_p, sens_q):
+    def _p(rs, dom):
+        for _ in range(50):
+            prog = False
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) != "SUM":
+                    continue
+                pa, c = sens_p(cn, dom)
+                if c:
+                    return True, True
+                pb, c = sens_q(cn, dom)
+                if c:
+                    return True, True
+                prog = prog or pa or pb
+            if not prog:
+                break
+        return True, False
+    return _p
+
+
+print()
+print("-- test negatif SumRange : chaque sens rejete SEPAREMENT --")
+for etiquette, faux in (
+        ("PLAFOND zele", _fabrique_sum(_sum_plafond_zele, propager_sum_plancher)),
+        ("PLANCHER zele", _fabrique_sum(propager_sum_plafond, _sum_plancher_zele))):
+    detecte = False
+    for nom, rs in (("G lo == hi", casG), ("H lo < hi", casH), ("I vacuous", casI)):
+        v = cas_surete("%s / %s" % (etiquette[:9], nom), rs, prop=faux)
+        if v:
+            detecte = True
+    if detecte:
+        print("  OK : %s est rejete." % etiquette)
+    else:
+        print("  ECHEC : %s passe le canari." % etiquette)
+        echecs += 1
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -640,6 +792,106 @@ else:
           "et le temoin DISJOINT reste muet (%d)."
           % (viols[nom_chevauche], viols[nom_temoin]))
     print("  Le chevauchement est bien le mecanisme, pas un decor.")
+
+
+# ---- paires impliquant SumRange (invariant 13 : contre TOUS les precedents)
+
+def _moteur(remplacants):
+    """Propagateur complet ou seuls les `kind` listes sont remplaces par une
+    version fausse. Les autres gardent leur propagateur de production : une
+    violation est donc imputable au remplacant."""
+    def _p(rs, dom):
+        for _ in range(60):
+            prog = False
+            for cn in rs.constraints:
+                k = getattr(cn, "kind", None)
+                f = remplacants.get(k) or PROPAGATEURS.get(k)
+                if f is None:
+                    continue
+                pp, c = f(cn, dom)
+                if c:
+                    return True, True
+                prog = prog or pp
+            if not prog:
+                break
+        return True, False
+    return _p
+
+
+def _sum_bugue_forme(d):
+    """BUG D'INTERACTION, meme classe que celui de Count : deduire le CONTENU
+    d'un domaine de sa FORME. Ici, « un domaine deja rogne est une cellule
+    decidee », donc on le borne par son minimum -- confusion entre CONTRAINTE
+    et DETERMINEE. Sous-estime le maximum atteignable du reste, donc releve le
+    plancher a tort. Exige qu'un domaine ait ete rogne PARTIELLEMENT."""
+    def f(cn, dom):
+        if any(not dom[i] for i in cn.region):
+            return False, True
+        prog, c = propager_sum_plafond(cn, dom)   # ce sens reste correct
+        if c:
+            return True, True
+        if any(not dom[i] for i in cn.region):
+            return True, True
+        mx = [min(dom[i]) if 1 < len(dom[i]) < d else max(dom[i])
+              for i in cn.region]
+        total_max = sum(mx)
+        for k, i in enumerate(cn.region):
+            plancher = cn.lo - (total_max - mx[k])
+            trop = [v for v in dom[i] if v < plancher]
+            if trop:
+                for v in trop:
+                    dom[i].discard(v)
+                prog = True
+                if not dom[i]:
+                    return prog, True
+        return prog, False
+    return f
+
+
+def _paire(titre, rs_chev, rs_disj, bug):
+    """Un croisement complet : surete des deux cotes, puis le bug injecte, qui
+    doit mordre sur le CHEVAUCHANT et rester muet sur le TEMOIN disjoint."""
+    print()
+    print("-- croisement %s --" % titre)
+    faute = 0
+    for etiq, rs in (("surete chevauche", rs_chev), ("surete disjoint ", rs_disj)):
+        v = croisement_surete("  " + etiq, rs)
+        if v is None or v > 0:
+            faute += 1
+    vc = croisement_surete("  bug chevauche  ", rs_chev, prop=bug)
+    vd = croisement_surete("  bug disjoint   ", rs_disj, prop=bug)
+    if not vc:
+        print("  ECHEC : le bug d'interaction ne mord pas sur le chevauchant.")
+        faute += 1
+    elif vd:
+        print("  ECHEC : le TEMOIN disjoint crie aussi (%d) -- bug simple, pas "
+              "interaction. Le croisement ne prouve rien." % vd)
+        faute += 1
+    else:
+        print("  OK : mord sur le chevauchant (%d), temoin disjoint muet (%d)."
+              % (vc, vd))
+    return faute
+
+
+echecs += _paire(
+    "AllDiff |R|<d  x  SumRange",
+    RuleSystem(2, 3, [AllDiff([0, 1]), SumRange([1, 2], 2, 4, 3)], "P3c"),
+    RuleSystem(2, 3, [AllDiff([0, 1]), SumRange([2, 3], 2, 4, 3)], "P3d"),
+    _moteur({"SUM": _sum_bugue_forme(3)}))
+
+# Count doit ici avoir `hi < |R|`. Avec `hi == |R|` le sens INTERDICTION ne
+# peut RIEN retirer a l'interieur de sa propre region -- il ne se declenche que
+# lorsque toutes les cellules valent deja `val` -- donc Count ne peut pas
+# fabriquer le domaine PARTIELLEMENT rogne dont le bug a besoin. Constate en
+# faisant echouer ce croisement : c'est la meme lecon que X1. Une paire de
+# configurations limites n'est pas automatiquement une paire ou l'interaction
+# est observable ; il faut verifier que l'un des deux peut effectivement
+# ROGNER une cellule partagee.
+echecs += _paire(
+    "Count lo=hi=1  x  SumRange",
+    RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), SumRange([1, 2], 2, 4, 3)], "P4c"),
+    RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), SumRange([2, 3], 2, 4, 3)], "P4d"),
+    _moteur({"SUM": _sum_bugue_forme(3)}))
 
 
 print()

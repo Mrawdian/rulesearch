@@ -11,6 +11,60 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - SumRange, troisieme propagateur, + deux croisements
+
+**Demande** : SumRange, meme famille de bornes que Count, gabarit a deux sens.
+
+**Fait** : `propager_sum_plafond` / `propager_sum_plancher` (coherence aux
+bornes lue sur les **domaines**, donc plus forte que `feasible()` qui borne
+toute inconnue par `d-1`). Trois cas limites a la main : `lo == hi`, `lo < hi`,
+et **vacuous** `[0, |R|*(d-1)]` -- le piege, ou aucun retrait n'est jamais
+justifie. Deux croisements ajoutes : AllDiff x SumRange, Count x SumRange.
+
+**Deux sens dans le meme commit** : condition remplie.
+
+    PLAFOND zele  : 86 / 191 / 0 violations (lo==hi / lo<hi / vacuous)
+    PLANCHER zele : 87 / 188 / 0
+    AllDiff x SumRange        : chevauchant 48, temoin disjoint 0
+    Count(lo=hi=1) x SumRange : chevauchant 24, temoin disjoint 0
+
+**LE CROISEMENT Count x SumRange A ECHOUE D'ABORD, ET J'AI CORRIGE LE
+CROISEMENT, PAS LE CANARI.** Premiere version avec `Count(lo=1, hi=2)` sur une
+region de 2 cellules : le bug ne mordait pas. Cause : avec `hi == |R|`, le sens
+INTERDICTION ne peut **rien retirer dans sa propre region**, donc Count ne
+pouvait pas fabriquer le domaine partiellement rogne dont le bug a besoin.
+Meme lecon que X1 : **une paire de configurations limites n'est pas
+automatiquement une paire ou l'interaction est observable**. Il faut que l'un
+des deux puisse effectivement ROGNER une cellule partagee, pas seulement la
+partager.
+
+**Generalisation ecrite dans CLAUDE.md (invariant 14)** : la classe des bugs
+d'interaction est **cernee**. Tout ce qui repose sur une lecture perimee est
+inerte par monotonie -- les domaines ne font que retrecir. Le seul moyen pour
+un propagateur de devenir trop zele par interaction est **d'inferer le contenu
+d'un domaine depuis sa forme**. C'est desormais le gabarit du test negatif de
+chaque croisement.
+
+**Verifie** : les huit canaris passent depuis la racine et depuis `engine/`.
+`rulesearch.py`, `dsl2.py`, `deduction.py`, `t0_legacy.py` : diff vide.
+`canary3` complet tourne en **0,20 s** avec trois paires -- la croissance
+quadratique est sans effet pratique a ce stade.
+
+**Non verifie / suppose** :
+- `propagate.py` toujours **pas branche**. `dsl_hash` passe a `23303c299f39`,
+  `engine_active_hash` reste `0caa9267db60`.
+- Les croisements sont a n=2 pour rester exhaustifs. Meme limite, meme reponse
+  : le controle de fond est le solveur exhaustif, au branchement.
+- Le cas **vacuous** de SumRange ne peut rien declencher, donc il n'exerce que
+  la surete -- comme X1. Ce n'est pas un defaut, mais il ne faut pas le
+  compter comme une couverture d'interaction.
+
+**Bloque sur** : rien.
+
+**Pour Claude chat** : restent NeqAdj, Mono, PairDiff, PairRatio (faciles),
+NoTriple et NoSquare (moyens), Connected (dur, en dernier). Chaque ajout =
+un propagateur + N croisements contre tous les precedents.
+
 ## 2026-08-26 - croisements manuels de propagateurs (invariant 13)
 
 **Demande** : avant SumRange, construire a la main les croisements de paires de
