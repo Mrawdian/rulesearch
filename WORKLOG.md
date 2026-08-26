@@ -11,6 +11,107 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - RELEVE CONSOLIDE : T0 sature la grille, et un discriminant fort apparait
+
+Seuil atteint : `connect-d4` a 21 candidats, `static-d4` en a 57. Le releve
+preliminaire precedent est desormais superflu.
+
+**A. Distribution par tag (journaux)**
+
+    tag            systemes  cands       T0      T1      T2   max_level des cands
+    connect           13881   1399    41362       0    5335   {2: 1399}
+    static-ref        13597   2087    94679       0    7257   {2: 2087}
+    connect-d4          643     21     1037       0     124   {2: 21}
+    static-d4           643     57     3637       9     300   {1: 4, 2: 53}
+    baseline            124      7      341       0      32   {2: 7}
+
+**Premier fait : la hierarchie a trois niveaux existe enfin, sur `static-d4`.**
+T1 s'y invoque 9 fois, et surtout **4 candidats sur 57 ont `max_level = 1`** --
+premiers candidats du projet dont T1 est le niveau le plus eleve requis. La
+prediction "d=4 rend un domaine a T1" est **confirmee**, plus nettement que
+dans le releve preliminaire.
+
+**Deuxieme fait, et c'est un BIAIS A SIGNALER : la restitution est asymetrique.**
+`static-d4` a 34,4 % de systemes avec region T1 eligible ; **`connect-d4` en a
+0,0 %**. Les familles `connect,relational` ne produisent aucun ALLDIFF, a
+aucun domaine. Donc a d=4, `static` dispose de trois niveaux et `connect` de
+deux. **Comparer leur profondeur est confondu par la disponibilite meme de la
+technique** -- meme classe de defaut que la comparaison d=2 contre d=4
+corrigee plus tot. La comparaison connect/static a d=4 ne peut pas porter sur
+`max_level` sans traiter ce point.
+
+**B. Ce que T0 remplit a lui seul (mesure demandee, ad hoc, non versionnee)**
+
+Saturation de T0 jusqu'au point fixe, sans jamais invoquer T1 ni T2, sur 60
+instances par configuration :
+
+    config           indices   T0 seul    reste apres   resolues
+                        moy.  % grille     T0 (cases)   integralement par T0
+    connect    d=3       6,0      74,2 %         4,13   36/60  (60,0 %)
+    static-ref d=3       9,5      98,0 %         0,32   55/60  (91,7 %)
+    connect-d4 d=4       6,3      81,2 %         3,00   40/60  (66,7 %)
+    static-d4  d=4      10,0      94,7 %         0,85   53/60  (88,3 %)
+
+**L'hypothese est largement confirmee** : T0 remplit 74 a 98 % de la grille a
+lui seul, et resout **integralement** 60 a 92 % des instances. Sur les
+systemes statiques il ne reste en moyenne que **0,32 case** -- il n'y a
+litteralement pas de place pour une hierarchie. Seize cases se resolvent par
+la technique la plus faible.
+
+Nuance qui empeche de conclure trop vite : sur `connect` a d=3 il reste **4,13
+cases** en moyenne et 40 % des instances resistent a T0. Ce n'est pas rien.
+La saturation n'est donc pas uniforme -- elle est quasi totale sur `static`,
+partielle sur `connect`.
+
+**Troisieme fait, non anticipe : cette mesure est un DISCRIMINANT FORT.**
+
+    fraction de grille resolue par T0 seul, a d=3 :
+      connect     74,2 %
+      static-ref  98,0 %
+
+Un ecart de 24 points, contre 5,75 / 5,28 (soit 8,9 %) pour le score pondere
+d'invocations. **Les systemes a connectivite resistent massivement plus a la
+technique la plus faible** -- ce qui est exactement ce que l'hypothese de
+fracture locale / non-locale predit, et mesure de facon bien plus tranchee que
+tout ce qui a ete essaye jusqu'ici. L'ecart persiste a d=4 (81,2 % contre
+94,7 %) mais s'y reduit de moitie.
+
+Candidat serieux comme metrique principale, a la place du niveau requis :
+**resistance a T0**, non saturee, non binaire, et sans dependance a une
+structure de region -- donc pas exposee au probleme qui rend T1 indisponible
+pour `connect`.
+
+**Non verifie / suppose** :
+- La partie B repose sur **60 instances par configuration**, sans test de
+  significativite. L'ecart de 24 points est grand, mais il n'est pas teste.
+- La partie B mesure des systemes **regeneres** (graine 2026), pas les
+  systemes exactement journalises.
+- "T0 arrive avant" est desormais **mesure**, mais l'inference "donc n=4 est
+  trop petit pour une hierarchie fine" reste une **interpretation** : elle est
+  forte pour `static` (0,32 case restante), faible pour `connect` (4,13).
+- La resistance a T0 n'a **pas** ete ajoutee a `summarize.py` : aucune mesure
+  n'est versionnee, conformement a la consigne de ne rien coder.
+- Les 4 candidats a `max_level = 1` de `static-d4` n'ont pas ete inspectes
+  individuellement.
+- Aucune conclusion sur l'hypothese centrale : la comparaison a d=4 est
+  confondue (voir deuxieme fait), et a d=3 la mesure de resistance a T0 n'est
+  pas testee.
+
+**Bloque sur** : rien. Le service tourne, la file a quatre configurations est
+active, rien n'a ete modifie.
+
+**Pour Claude chat** :
+- **T1 fonctionne et a un domaine a d=4 sur `static` uniquement.** Les familles
+  `connect,relational` ne generent aucun ALLDIFF, a aucun domaine : T1 y sera
+  toujours indisponible. Ce n'est pas un bug.
+- **Ne pas comparer `connect-d4` et `static-d4` sur `max_level`** : l'un a
+  trois niveaux disponibles, l'autre deux. Comparaison confondue.
+- La mesure la plus discriminante trouvee a ce jour est la **fraction de grille
+  resolue par T0 seul** (74 % contre 98 % a d=3), pas le niveau requis ni le
+  score pondere d'invocations. Elle n'est pas encore dans `summarize.py`.
+- T0 resout integralement 60 a 92 % des instances a n=4. Toute discussion sur
+  une hierarchie de deduction fine a cette taille doit partir de ce chiffre.
+
 ## 2026-08-26 - RELEVE PRELIMINAIRE, NON CONCLUANT : T1 a d=4
 
 **Statut : preliminaire. Ne rien en conclure.** 150 systemes et 11 candidats
