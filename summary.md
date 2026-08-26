@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 01:30 UTC — 16161 systemes evalues
+genere 2026-08-26 01:30 UTC — 16176 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 7187 systemes
+- `89c65c03c4ad` : 7202 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 8117 | 4091 | 527 | 278 | 774 | 647 | 859 | 848 | 10.4% |
-| ref | 4 | 3 | 7920 | 1916 | 3326 | 1 | 1054 | 386 | 3 | 1234 | 15.6% |
+| ref | 4 | 3 | 7935 | 1922 | 3331 | 1 | 1055 | 387 | 3 | 1236 | 15.6% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -28,7 +28,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 851, dont T2 : 100%
-- candidats SANS connectivite : 1238, dont T2 : 100%
+- candidats SANS connectivite : 1240, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
@@ -51,10 +51,10 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 924 candidats
+- `89c65c03c4ad` — 926 candidats
   - AVEC connectivite (372) : T0=13.44 T1=0.00 T2=2.84 — pondere **5.69**
-  - SANS connectivite (552) : T0=15.86 T1=0.00 T2=2.64 — pondere **5.29**
-  - test de permutation : **p = 0.0535** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
+  - SANS connectivite (554) : T0=15.86 T1=0.00 T2=2.65 — pondere **5.30**
+  - test de permutation : **p = 0.0685** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
