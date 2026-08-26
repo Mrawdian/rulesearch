@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 17:42 UTC — 56522 systemes evalues
+genere 2026-08-26 17:42 UTC — 56537 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -12,7 +12,7 @@ genere 2026-08-26 17:42 UTC — 56522 systemes evalues
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `b71bb0907fb5` : 222 systemes
+- `b71bb0907fb5` : 237 systemes
 - `e8a1f930f7b9` : 207 systemes
 - `6680f7b47e6f` : 124 systemes
 
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (12780 systemes) : `06fe04a859f1`, `23303c299f39`, `b71bb0907fb5`, `e40600351a72`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (12795 systemes) : `06fe04a859f1`, `23303c299f39`, `b71bb0907fb5`, `e40600351a72`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -36,7 +36,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 25475 | 12715 | 1731 | 858 | 2523 | 2009 | 2724 | 2601 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 24932 | 5761 | 10553 | 15 | 3488 | 1265 | 10 | 3840 | 15.4% |
+| ref | 4 | 3 | 24947 | 5762 | 10562 | 15 | 3491 | 1265 | 10 | 3842 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -48,7 +48,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2728, dont T2 : 100%
-- candidats SANS connectivite : 4150, dont T2 : 100%
+- candidats SANS connectivite : 4152, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -69,7 +69,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*2588 candidats sur 6878 portent les champs bruts (38%).*
+*2590 candidats sur 6880 portent les champs bruts (38%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -91,9 +91,9 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (87) : resistance **40.0%**
   - SANS connectivite (107) : resistance **20.5%**
   - test de permutation : **p = 0.0005** — significatif.
-- `b71bb0907fb5` — 25 candidats
+- `b71bb0907fb5` — 27 candidats
   - AVEC connectivite (12) : resistance **46.9%**
-  - SANS connectivite (13) : resistance **16.1%**
+  - SANS connectivite (15) : resistance **15.7%**
   - *groupes trop petits (< 20) — aucun test*
 - `e8a1f930f7b9` — 28 candidats
   - AVEC connectivite (11) : resistance **46.0%**
@@ -148,9 +148,9 @@ qui ne sature pas.
   - AVEC connectivite (13) : T0=13.31 T1=0.00 T2=3.08 — pondere **6.15**
   - SANS connectivite (18) : T0=15.83 T1=0.00 T2=2.94 — pondere **5.89**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
-- `b71bb0907fb5` — 25 candidats
+- `b71bb0907fb5` — 27 candidats
   - AVEC connectivite (12) : T0=12.25 T1=0.00 T2=3.58 — pondere **7.17**
-  - SANS connectivite (13) : T0=15.92 T1=0.00 T2=2.23 — pondere **4.46**
+  - SANS connectivite (15) : T0=16.60 T1=0.00 T2=2.20 — pondere **4.40**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
 - `e8a1f930f7b9` — 28 candidats
   - AVEC connectivite (11) : T0=13.45 T1=0.00 T2=3.55 — pondere **7.09**
