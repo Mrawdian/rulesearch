@@ -11,6 +11,56 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - croisements manuels de propagateurs (invariant 13)
+
+**Demande** : avant SumRange, construire a la main les croisements de paires de
+propagateurs, sur des regions qui **se chevauchent**, avec un test negatif qui
+soit un bug **d'interaction** et non la reinjection d'un bug simple.
+
+**Fait** : trois systemes a n=2 / d=3, enumeration **exhaustive** (toutes les
+solutions x tous les sous-ensembles d'indices) -- un echantillon aleatoire
+raterait la configuration rare qui declenche l'interaction.
+
+    X1  AllDiff |R|<d x Count lo==0, chevauchant
+    X2  AllDiff |R|<d x Count lo==1, chevauchant
+    X3  meme paire, DISJOINTE -- TEMOIN
+
+**RESULTAT NEGATIF, consigne parce qu'il vaut mieux qu'une case vide** : le bug
+suggere -- le **cache perime** -- est **structurellement inerte** ici. Les
+domaines ne font que retrecir et les declencheurs de Count sont des egalites
+sur des quantites monotones : une lecture perimee donne un `sur` plus petit et
+un `poss` plus grand, donc un propagateur plus **faible**, jamais plus zele. Il
+produirait une deduction manquee, pas une solution fausse. La meme monotonie
+protegera les huit propagateurs suivants.
+
+**Le bug d'interaction reel** est ailleurs : l'hypothese implicite qu'un
+domaine est **plein ou singleton**, vraie dans le monde du forward-checking
+d'ou l'on vient, fausse des qu'un autre propagateur a rogne partiellement une
+cellule partagee.
+
+    bug sur X2 (chevauche) : 24 violations
+    bug sur X3 (DISJOINT)  :  0 violation
+
+**Verifie** : surete 0 violation sur les trois croisements ; le temoin disjoint
+reste muet la ou le chevauchant crie. Les huit canaris passent.
+
+**CE QUE JE SIGNALE SANS QUE CE SOIT DEMANDE** : le croisement **nomme** dans
+la consigne -- `|R| < d` x `lo == 0` -- donne **0 violation meme avec le bug**.
+Avec `lo == 0` le sens FORCAGE ne se declenche jamais, et c'est lui qui porte
+l'unsoundness. X1 exerce la surete, **pas** l'interaction ; X2 a ete ajoute
+pour ca. **Une configuration limite n'est pas automatiquement une configuration
+ou l'interaction est observable** -- et un croisement qui ne peut rien
+declencher aurait ete un canari vide de plus.
+
+**Non verifie / suppose** :
+- Une seule paire existe aujourd'hui. Le cout quadratique (45 paires a dix
+  propagateurs) n'a donc pas encore ete mesure.
+- Les croisements sont a n=2, pour l'exhaustivite. Meme limite qu'au commit
+  precedent, meme reponse : le controle de fond est le solveur exhaustif, au
+  branchement.
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - Count, deuxieme propagateur, deux sens dans un seul commit
 
 **Demande** : feu vert pour Count. Les deux sens dans le meme commit

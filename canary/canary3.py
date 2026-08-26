@@ -475,6 +475,173 @@ for etiquette, faux in (
         echecs += 1
 
 
+# ==========================================================================
+# CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
+# ==========================================================================
+#
+# Les cas limites sont a la main, mais leurs CROISEMENTS venaient jusqu'ici du
+# generateur, qui n'assemble que les paires que les familles du DSL produisent
+# naturellement. Avec dix propagateurs il y aura 45 paires ; le generateur
+# n'en couvrira qu'une fraction. C'est exactement la faiblesse de couverture
+# payee avec T1.
+#
+# Donc : pour chaque paire de propagateurs branches, un systeme portant les
+# DEUX contraintes dans leur configuration limite respective, sur des regions
+# QUI SE CHEVAUCHENT.
+#
+# LE CHEVAUCHEMENT EST LE POINT. Deux propagateurs sur des regions disjointes
+# ne peuvent pas interagir : c'est le partage de cellules qui cree le risque
+# qu'un retrait de l'un rende l'autre trop zele. Le systeme X3 ci-dessous est
+# le TEMOIN disjoint, et il doit rester muet la ou X2 crie.
+#
+# Le cout est quadratique en nombre de propagateurs. C'est assume : c'est la
+# seule couverture qui ne depende pas du generateur.
+
+# X1 : la paire limite nommee -- AllDiff |R| < d croise Count lo == 0,
+#      partageant la cellule 1.
+croiX1 = RuleSystem(2, 3, [AllDiff([0, 1]),
+                           Count([1, 2], 1, 0, 1)], "X1 |R|<d x lo=0")
+
+# X2 : meme AllDiff limite, Count avec lo == 1. C'est ici que le forcage peut
+#      se declencher, donc ici que le bug d'interaction peut mordre.
+croiX2 = RuleSystem(2, 3, [AllDiff([0, 1]),
+                           Count([1, 2], 1, 1, 2)], "X2 |R|<d x lo=1")
+
+# X3 : TEMOIN. Identique a X2, regions DISJOINTES. Doit rester muet.
+croiX3 = RuleSystem(2, 3, [AllDiff([0, 1]),
+                           Count([2, 3], 1, 1, 2)], "X3 disjoint")
+
+CROISEMENTS = (("X1 |R|<d x lo=0 (chevauche)", croiX1),
+               ("X2 |R|<d x lo=1 (chevauche)", croiX2),
+               ("X3 meme paire, DISJOINT", croiX3))
+
+
+def croisement_surete(nom, rs, prop=None, verbeux=True):
+    """Surete par enumeration EXHAUSTIVE : toutes les solutions croisees avec
+    tous les sous-ensembles d'indices possibles. Les grilles de croisement sont
+    minuscules exprès pour que ce soit calculable en entier -- un echantillon
+    aleatoire raterait precisement la configuration rare qui declenche
+    l'interaction."""
+    fonction = prop or propager
+    sols = toutes_solutions(rs)
+    if sols is None:
+        print("  %-30s INDETERMINE : au-dela du plafond" % nom)
+        return None
+    N = rs.n * rs.n
+    viol = essais = 0
+    for sol in sols:
+        for taille in range(N + 1):
+            for pris in itertools.combinations(range(N), taille):
+                essais += 1
+                g = [sol[i] if i in pris else UNASSIGNED for i in range(N)]
+                dom = domaines(rs, g)
+                _, contra = fonction(rs, dom)
+                if contra or not domaines_contiennent(dom, sol):
+                    viol += 1
+    if verbeux:
+        print("  %-30s solutions=%-4d essais=%-5d VIOLATIONS=%d"
+              % (nom, len(sols), essais, viol))
+    return viol
+
+
+print()
+print("-- croisements AllDiff x Count : surete --")
+for nom, rs in CROISEMENTS:
+    v = croisement_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+
+# ---- TEST NEGATIF D'INTERACTION ----------------------------------------
+#
+# Il doit s'agir d'un bug D'INTERACTION, pas de la reinjection d'un bug simple.
+#
+# CE QUI NE MARCHE PAS, ET POURQUOI -- resultat negatif, consigne ici parce
+# qu'il vaut mieux qu'une case vide. Le candidat naturel etait le CACHE PERIME
+# (un propagateur lit l'etat d'une cellule et ne le relit pas apres qu'un autre
+# l'ait reduite). Il est **structurellement inerte** ici : les domaines ne font
+# que RETRECIR, et les deux declencheurs de Count sont des egalites sur des
+# quantites monotones (`|sur|` croit, `|poss| decroit`). Une lecture perimee
+# donne donc toujours un `sur` plus PETIT et un `poss` plus GRAND que la
+# realite -- c'est-a-dire un propagateur plus FAIBLE, jamais plus zele. Un
+# cache perime produirait ici une deduction manquee, pas une solution fausse.
+#
+# CE QUI MARCHE : le bug d'interaction reel a cette frontiere est l'hypothese
+# implicite qu'un domaine est PLEIN OU SINGLETON -- vrai dans le monde du
+# forward-checking d'ou l'on vient, faux des qu'un autre propagateur a rogne
+# PARTIELLEMENT une cellule partagee. C'est le piege conceptuel propre a
+# l'introduction des domaines, et il exige le chevauchement.
+
+def _fabrique_croise_bugue(d):
+    def _count_bugue(cn, dom):
+        sur = [i for i in cn.region if len(dom[i]) == 1 and cn.val in dom[i]]
+        # LE BUG : « une cellule peut valoir val si elle est intacte (domaine
+        # plein) ou deja fixee a val ». Sous-estime `poss` des qu'une cellule
+        # partagee a ete rognee partiellement par AllDiff.
+        poss = [i for i in cn.region
+                if dom[i] == {cn.val} or len(dom[i]) == d]
+        prog = False
+        if len(sur) == cn.hi:
+            certains = set(sur)
+            for i in cn.region:
+                if i not in certains and cn.val in dom[i]:
+                    dom[i].discard(cn.val)
+                    prog = True
+                    if not dom[i]:
+                        return prog, True
+        if len(poss) == cn.lo:
+            for i in poss:
+                if dom[i] != {cn.val}:
+                    dom[i].clear()
+                    dom[i].add(cn.val)
+                    prog = True
+        return prog, False
+
+    def _p(rs, dom):
+        for _ in range(50):
+            prog = False
+            for cn in rs.constraints:
+                k = getattr(cn, "kind", None)
+                if k == "ALLDIFF":
+                    pa, c = propager_alldiff(cn, dom)
+                    if c:
+                        return True, True
+                    prog = prog or pa
+                elif k == "COUNT":
+                    pc, c = _count_bugue(cn, dom)
+                    if c:
+                        return True, True
+                    prog = prog or pc
+            if not prog:
+                break
+        return True, False
+    return _p
+
+
+print()
+print("-- test negatif d'INTERACTION : hypothese « plein ou singleton » --")
+viols = {}
+for nom, rs in CROISEMENTS:
+    viols[nom] = croisement_surete("bug " + nom, rs,
+                                   prop=_fabrique_croise_bugue(rs.d))
+
+nom_chevauche = "X2 |R|<d x lo=1 (chevauche)"
+nom_temoin = "X3 meme paire, DISJOINT"
+if not viols.get(nom_chevauche):
+    print("  ECHEC : le bug d'interaction n'est pas detecte sur le croisement "
+          "qui chevauche. Le croisement ne couvre rien.")
+    echecs += 1
+elif viols.get(nom_temoin):
+    print("  ECHEC : le TEMOIN disjoint crie aussi -- ce n'est donc pas une "
+          "interaction mais un bug simple, et le croisement ne prouve rien.")
+    echecs += 1
+else:
+    print("  OK : le bug mord sur le croisement qui CHEVAUCHE (%d violations) "
+          "et le temoin DISJOINT reste muet (%d)."
+          % (viols[nom_chevauche], viols[nom_temoin]))
+    print("  Le chevauchement est bien le mecanisme, pas un decor.")
+
+
 print()
 if echecs:
     print("ECHEC : %d section(s) en defaut." % echecs)

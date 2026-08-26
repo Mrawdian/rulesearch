@@ -1150,3 +1150,49 @@ signale, comme pour AllDiff.
 `06fe04a859f1` tandis que `engine_active_hash` reste `0caa9267db60`. C'est le
 **premier test reel** de la section de regroupement de `summarize.py`, qui
 n'avait jamais eu l'occasion de s'afficher.
+
+## 2026-08-26 - croisements de propagateurs, et le bug d'interaction qui N'EXISTE PAS
+
+Trois systemes construits a la main pour la paire AllDiff x Count, tous a
+n=2 / d=3 pour que l'enumeration soit **exhaustive** -- toutes les solutions
+croisees avec **tous** les sous-ensembles d'indices. Un echantillon aleatoire
+raterait precisement la configuration rare qui declenche l'interaction.
+
+    X1  AllDiff |R| < d  x  Count lo == 0   regions partageant une cellule
+    X2  AllDiff |R| < d  x  Count lo == 1   regions partageant une cellule
+    X3  meme paire que X2, regions DISJOINTES   -- TEMOIN
+
+### Le candidat naturel est structurellement inerte, et c'est un resultat
+Le bug d'interaction suggere etait le **cache perime** : un propagateur lit le
+domaine d'une cellule et ne le relit pas apres qu'un autre l'ait reduite. Il ne
+peut **pas** etre injecte ici, pour une raison de fond :
+
+> les domaines ne font que **retrecir**, et les deux declencheurs de Count sont
+> des egalites sur des quantites **monotones** (`|sur|` croit, `|poss|`
+> decroit). Une lecture perimee donne donc toujours un `sur` plus PETIT et un
+> `poss` plus GRAND que la realite -- c'est-a-dire un propagateur plus
+> **faible**, jamais plus zele.
+
+Un cache perime produirait ici une **deduction manquee**, pas une solution
+fausse. La classe n'est pas vide, mais **ce candidat-la** en est exclu par
+monotonie. Consigne parce qu'un resultat negatif vaut mieux qu'une case vide,
+et parce que la meme monotonie protegera les huit propagateurs suivants.
+
+### Le bug d'interaction reel a cette frontiere
+L'hypothese implicite qu'un domaine est **plein ou singleton** -- vraie dans le
+monde du forward-checking d'ou l'on vient, **fausse** des qu'un autre
+propagateur a rogne **partiellement** une cellule partagee. C'est le piege
+conceptuel propre a l'introduction des domaines, et il **exige** le
+chevauchement.
+
+    bug sur X2 (chevauche)  : 24 violations
+    bug sur X3 (DISJOINT)   :  0 violation
+
+Le temoin disjoint reste muet : le chevauchement est bien le mecanisme.
+
+### Ce que X1 ne peut PAS tester, et il fallait le dire
+Le croisement nomme -- `|R| < d` x `lo == 0` -- donne **0 violation meme avec
+le bug**. Avec `lo == 0` le sens FORCAGE ne se declenche jamais, et c'est le
+forcage qui porte l'unsoundness. X1 exerce donc la **surete**, pas
+l'interaction. X2 a ete ajoute pour cela. **Une configuration limite n'est pas
+automatiquement une configuration ou l'interaction est observable.**

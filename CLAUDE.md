@@ -119,6 +119,25 @@ ete identifies ainsi.
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
 
+13. **Chaque propagateur ajoute un CROISEMENT contre TOUS les precedents.**
+   Les cas limites sont construits a la main (invariant 8), mais leurs
+   **croisements** venaient du generateur, qui n'assemble que les paires que
+   les familles du DSL produisent naturellement. Dix propagateurs = 45 paires ;
+   le generateur n'en couvrira qu'une fraction. C'est la faiblesse de
+   couverture payee avec T1.
+   Donc : pour chaque paire de propagateurs branches, un systeme portant les
+   deux contraintes dans leur configuration limite respective, **sur des
+   regions qui SE CHEVAUCHENT**.
+   **Le chevauchement est le mecanisme, pas le decor** : deux propagateurs sur
+   des regions disjointes ne peuvent pas interagir. Chaque croisement porte
+   donc un **temoin disjoint** qui doit rester **muet** la ou le croisement
+   chevauchant crie -- sinon le bug injecte est un bug simple et le croisement
+   ne prouve rien.
+   Le test negatif d'un croisement doit etre un bug **d'interaction**, jamais
+   la reinjection d'un bug simple.
+   Cout quadratique, **assume** : c'est la seule couverture qui ne depende pas
+   du generateur.
+
 12. **`dsl_hash` ne se relache jamais. Le regroupement est une LECTURE.**
    Le hash porte sur tout `engine/`, y compris des modules inertes : pendant A
    chaque propagateur rompt la serie sans rien changer au comportement. On ne
