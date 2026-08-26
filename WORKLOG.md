@@ -11,6 +11,54 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - Mono, cinquieme propagateur, + quatre croisements
+
+**Fait** : `propager_mono_avant` / `propager_mono_arriere`, coherence aux
+bornes sur une contrainte d'ordre. Quatre croisements de plus : **dix paires**.
+
+**MONO EST LE PREMIER PROPAGATEUR SUR PAR CONSTRUCTION.** Il ne fait **aucune**
+lecture de forme -- seulement `min`, `max` et l'appartenance -- donc
+l'invariant 14 le declare immunise aux interactions, **par relecture, avant
+tout test**. Le critere ne fait pas que garder : il **classe**.
+
+Confirmation par l'autre bout : pour fabriquer une interaction unsound sur
+Mono, il a fallu **introduire deliberement une lecture de forme** dans le bug
+injecte. C'est exactement ce que 14 predit.
+
+**Verifie** :
+
+    AVANT zele   : 76 / 75 / 10 violations  (|R|=2 / |R|=3 / |R|=4,d=2)
+    ARRIERE zele : 50 / 41 /  7
+    AllDiff  x Mono : chevauchant  6, temoin disjoint 0
+    Count    x Mono : chevauchant 12, temoin disjoint 0
+    SumRange x Mono : chevauchant  6, temoin disjoint 0
+    NeqAdj   x Mono : chevauchant  6, temoin disjoint 0
+
+**DEUX CROISEMENTS ONT ECHOUE, ET J'AI CORRIGE LES CROISEMENTS, PAS LE
+CANARI.** Le bug porte sur le sens ARRIERE, qui lit `dom[b]` ; avec
+`Mono([1, 2])` et l'autre contrainte sur `[0, 1]`, l'autre propagateur rognait
+le `a`. Corrige en inversant l'ordre de la region.
+
+**TROISIEME OCCURRENCE DE LA MEME LECON, desormais precisee dans l'invariant
+13** : partager une cellule ne suffit pas, il faut que l'autre puisse
+effectivement la **rogner** -- et qu'il rogne **celle que l'inference injectee
+lit**, pas une voisine.
+
+**COUT DE canary3, REMESURE** : 0,20 s (3 paires), 0,21 s (6), **0,27 s (10)**.
+La croissance est visible et reste sans effet pratique. A remesurer apres
+PairRatio, et surtout apres NoSquare et Connected.
+
+**Non verifie / suppose** :
+- `propagate.py` toujours pas branche ; `engine_active_hash` inchange.
+- Les croisements restent a n=2. Le controle de fond reste le solveur
+  exhaustif, au branchement.
+
+**Bloque sur** : rien.
+
+**Pour Claude chat** : restent PairDiff et PairRatio (faciles), NoTriple et
+NoSquare (moyens), Connected (dur, en dernier, et sa question ouverte sur
+l'invariant 14 doit etre traitee EN PREMIER a l'etape 10).
+
 ## 2026-08-26 - NeqAdj, quatrieme propagateur, + trois croisements
 
 **Demande** : NeqAdj puis Mono, meme gabarit, croisements contre tous les

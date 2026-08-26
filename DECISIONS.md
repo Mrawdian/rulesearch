@@ -1318,3 +1318,57 @@ bug d'interaction de la classe de l'invariant 14 :
     AllDiff x NeqAdj  : chevauchant 42, temoin disjoint 0
     Count   x NeqAdj  : chevauchant 12, temoin disjoint 0
     SumRange x NeqAdj : chevauchant 18, temoin disjoint 0
+
+## 2026-08-26 - Mono : le premier propagateur SUR PAR CONSTRUCTION
+
+Deux sens, tous deux de la coherence aux bornes :
+
+    AVANT   : `dom[b]` ne peut contenir de valeur < min(dom[a])
+    ARRIERE : `dom[a]` ne peut contenir de valeur > max(dom[b])
+
+**AUDIT DE FORME : ce propagateur n'en fait AUCUNE.** Il ne lit que
+`min(dom[i])`, `max(dom[i])` et l'appartenance. Par l'invariant 14 il est donc
+**sur par construction vis-a-vis des interactions**, et c'est verifiable **par
+simple relecture**, avant tout test. C'est le premier du chantier dans ce cas,
+et cela montre que le critere de relecture n'est pas qu'un garde-fou : il
+**classe** les propagateurs.
+
+Confirmation par l'autre bout : pour fabriquer une interaction unsound sur
+Mono, il a fallu **introduire deliberement une lecture de forme** dans le bug
+injecte. On ne pouvait pas faire autrement -- ce qui est exactement ce que
+l'invariant 14 predit.
+
+**`feasible()` ne verifie que les paires assignees** ; sur une grille complete
+cela revient a la monotonie de toute la suite, et c'est contre les grilles
+completes que la propagation doit etre sure. Une seule passe ne suffit pas des
+`|R| >= 3` : la contrainte se propage de proche en proche, et c'est le point
+fixe de `propager()` qui fait le travail.
+
+**Deux sens dans le meme commit** : condition remplie.
+
+    AVANT zele   : 76 / 75 / 10 violations  (|R|=2 / |R|=3 / |R|=4,d=2)
+    ARRIERE zele : 50 / 41 /  7
+
+### Les quatre croisements, et la troisieme occurrence de la meme lecon
+Deux d'entre eux ont **echoue** avant correction. Le bug injecte porte sur le
+sens ARRIERE, qui lit `dom[b]` -- la cellule la plus loin dans l'ordre de la
+region. Avec `Mono([1, 2])` et l'autre contrainte sur `[0, 1]`, l'autre
+propagateur rognait le `a` : le bug ne voyait **jamais** de domaine partiel.
+Corrige en inversant l'ordre de la region (`Mono([2, 1])`).
+
+**La lecon se precise, et c'est sa troisieme forme** : il ne suffit pas que
+l'un des deux propagateurs puisse **rogner** une cellule partagee -- il faut
+qu'il rogne **LA cellule que l'inference injectee LIT**.
+
+    AllDiff  x Mono : chevauchant  6, temoin disjoint 0
+    Count    x Mono : chevauchant 12, temoin disjoint 0
+    SumRange x Mono : chevauchant  6, temoin disjoint 0
+    NeqAdj   x Mono : chevauchant  6, temoin disjoint 0
+
+### Cout de canary3, remesure
+    3 paires  : 0,20 s
+    6 paires  : 0,21 s
+    10 paires : 0,27 s
+La croissance est visible mais reste sans effet pratique. A remesurer apres
+PairRatio, et surtout apres NoSquare et Connected dont les regions sont bien
+plus grandes.

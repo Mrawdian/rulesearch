@@ -49,7 +49,9 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_count_interdiction,
                        propager_count_forcage, propager_sum,
                        propager_sum_plafond, propager_sum_plancher,
-                       propager_neqadj, PROPAGATEURS)
+                       propager_neqadj, propager_mono,
+                       propager_mono_avant, propager_mono_arriere,
+                       PROPAGATEURS)
 
 random.seed(23)
 n = 4
@@ -725,6 +727,153 @@ else:
 
 
 # ==========================================================================
+# Mono -- deux sens, et AUCUNE lecture de forme : sur par construction.
+# ==========================================================================
+
+# M : |R| = 2 -- une seule paire, pas de propagation de proche en proche.
+casM = RuleSystem(2, 3, [Mono([0, 1])], "M |R|=2")
+# N : |R| = 3 -- LE POINT : une seule passe ne suffit pas, la contrainte se
+#     propage de proche en proche. C'est le point fixe qui fait le travail.
+casN = RuleSystem(2, 3, [Mono([0, 1, 2])], "N |R|=3")
+# O : |R| = 4, d = 2 -- cas le plus tendu, la suite est presque constante.
+casO = RuleSystem(2, 2, [Mono([0, 1, 2, 3])], "O |R|=4, d=2")
+
+print()
+print("-- Mono : surete --")
+for nom, rs in (("M |R| = 2", casM), ("N |R| = 3", casN), ("O |R|=4, d=2", casO)):
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- Mono : chaque sens doit etre INVOQUE au moins une fois --")
+
+
+def _declenchements_mono(rs):
+    rnd4 = random.Random(43)
+    sols = toutes_solutions(rs) or []
+    ca = cb = 0
+    for sol in sols[:60]:
+        for k in (1, 2):
+            dom = domaines(rs, indices(sol, k, rnd4))
+            for _ in range(20):
+                prog = arret = False
+                for cn in rs.constraints:
+                    if getattr(cn, "kind", None) != "MONO":
+                        continue
+                    pa, c = propager_mono_avant(cn, dom)
+                    if pa:
+                        ca += 1
+                        prog = True
+                    if c:
+                        arret = True
+                        break
+                    pb, c = propager_mono_arriere(cn, dom)
+                    if pb:
+                        cb += 1
+                        prog = True
+                    if c:
+                        arret = True
+                        break
+                if arret or not prog:
+                    break
+    return ca, cb
+
+
+tot_a = tot_b = 0
+for nom, rs in (("M |R| = 2", casM), ("N |R| = 3", casN), ("O |R|=4, d=2", casO)):
+    ca, cb = _declenchements_mono(rs)
+    tot_a += ca
+    tot_b += cb
+    print("  %-22s avant=%-4d arriere=%-4d" % (nom, ca, cb))
+if not tot_a:
+    print("  ECHEC : le sens AVANT est inerte.")
+    echecs += 1
+if not tot_b:
+    print("  ECHEC : le sens ARRIERE est inerte.")
+    echecs += 1
+if tot_a and tot_b:
+    print("  OK : les deux sens sont operants.")
+
+
+# ---- test negatif, un par sens -----------------------------------------
+# Bug injecte : intervertir min et max, l'erreur classique sur une contrainte
+# d'ordre. Chaque variante ne remplace qu'un sens.
+
+def _mono_avant_zele(cn, dom):
+    R = cn.region
+    prog = False
+    for k in range(len(R) - 1):
+        a, b = R[k], R[k + 1]
+        if not dom[a] or not dom[b]:
+            return prog, True
+        seuil = max(dom[a])              # LE BUG : max au lieu de min
+        trop = [v for v in dom[b] if v < seuil]
+        if trop:
+            for v in trop:
+                dom[b].discard(v)
+            prog = True
+            if not dom[b]:
+                return prog, True
+    return prog, False
+
+
+def _mono_arriere_zele(cn, dom):
+    R = cn.region
+    prog = False
+    for k in range(len(R) - 1, 0, -1):
+        a, b = R[k - 1], R[k]
+        if not dom[a] or not dom[b]:
+            return prog, True
+        seuil = min(dom[b])              # LE BUG : min au lieu de max
+        trop = [v for v in dom[a] if v > seuil]
+        if trop:
+            for v in trop:
+                dom[a].discard(v)
+            prog = True
+            if not dom[a]:
+                return prog, True
+    return prog, False
+
+
+def _fabrique_mono(sens_a, sens_b):
+    def _p(rs, dom):
+        for _ in range(50):
+            prog = False
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) != "MONO":
+                    continue
+                pa, c = sens_a(cn, dom)
+                if c:
+                    return True, True
+                pb, c = sens_b(cn, dom)
+                if c:
+                    return True, True
+                prog = prog or pa or pb
+            if not prog:
+                break
+        return True, False
+    return _p
+
+
+print()
+print("-- test negatif Mono : chaque sens rejete SEPAREMENT --")
+for etiquette, faux in (
+        ("AVANT zele", _fabrique_mono(_mono_avant_zele, propager_mono_arriere)),
+        ("ARRIERE zele", _fabrique_mono(propager_mono_avant, _mono_arriere_zele))):
+    detecte = False
+    for nom, rs in (("M |R| = 2", casM), ("N |R| = 3", casN), ("O |R|=4,d=2", casO)):
+        v = cas_surete("%s / %s" % (etiquette[:8], nom), rs, prop=faux)
+        if v:
+            detecte = True
+    if detecte:
+        print("  OK : %s est rejete." % etiquette)
+    else:
+        print("  ECHEC : %s passe le canari." % etiquette)
+        echecs += 1
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -1019,6 +1168,76 @@ echecs += _paire(
     RuleSystem(2, 3, [SumRange([0, 1], 0, 2, 3), NeqAdj([1, 2])], "N3c"),
     RuleSystem(2, 3, [SumRange([0, 1], 0, 2, 3), NeqAdj([2, 3])], "N3d"),
     _bug_neq)
+
+
+# ---- paires impliquant Mono ---------------------------------------------
+#
+# NOTE : le propagateur Mono de production ne fait AUCUNE lecture de forme,
+# donc l'invariant 14 le declare sur par construction. Le bug injecte ici en
+# introduit une DELIBEREMENT -- c'est la seule facon de fabriquer une
+# interaction unsound sur cette contrainte, et c'est en soi une confirmation
+# de l'invariant.
+
+def _mono_bugue_forme(d):
+    """BUG D'INTERACTION : « domaine deja rogne = cellule decidee », donc on
+    borne `dom[b]` par son MINIMUM au lieu de son maximum dans le sens
+    ARRIERE. Exige qu'un autre propagateur ait rogne partiellement `b`."""
+    def f(cn, dom):
+        prog, c = propager_mono_avant(cn, dom)   # ce sens reste correct
+        if c:
+            return True, True
+        R = cn.region
+        for k in range(len(R) - 1, 0, -1):
+            a, b = R[k - 1], R[k]
+            if not dom[a] or not dom[b]:
+                return True, True
+            seuil = min(dom[b]) if 1 < len(dom[b]) < d else max(dom[b])
+            trop = [v for v in dom[a] if v > seuil]
+            if trop:
+                for v in trop:
+                    dom[a].discard(v)
+                prog = True
+                if not dom[a]:
+                    return prog, True
+        return prog, False
+    return f
+
+
+_bug_mono = _moteur({"MONO": _mono_bugue_forme(3)})
+
+echecs += _paire(
+    "AllDiff |R|<d  x  Mono",
+    RuleSystem(2, 3, [AllDiff([0, 1]), Mono([1, 2])], "M1c"),
+    RuleSystem(2, 3, [AllDiff([0, 1]), Mono([2, 3])], "M1d"),
+    _bug_mono)
+
+# ORDRE DE LA REGION IMPOSE PAR LE BUG. Le bug injecte porte sur le sens
+# ARRIERE, qui lit `dom[b]` -- la cellule la PLUS LOIN dans l'ordre de la
+# region. Il faut donc que la cellule partagee soit ce `b`, pas le `a`.
+# Avec `Mono([1, 2])` et Count sur `[0, 1]`, l'autre propagateur rogne le `a`
+# et le bug ne voit jamais de domaine partiel : les deux croisements ont
+# ECHOUE avant d'etre corriges ainsi.
+#
+# TROISIEME OCCURRENCE DE LA MEME LECON, et elle se precise : il ne suffit pas
+# que l'un des deux puisse ROGNER une cellule partagee -- il faut qu'il rogne
+# LA cellule que l'inference injectee va lire.
+echecs += _paire(
+    "Count lo=hi=1  x  Mono",
+    RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), Mono([2, 1])], "M2c"),
+    RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), Mono([3, 2])], "M2d"),
+    _bug_mono)
+
+echecs += _paire(
+    "SumRange  x  Mono",
+    RuleSystem(2, 3, [SumRange([0, 1], 0, 2, 3), Mono([2, 1])], "M3c"),
+    RuleSystem(2, 3, [SumRange([0, 1], 0, 2, 3), Mono([3, 2])], "M3d"),
+    _bug_mono)
+
+echecs += _paire(
+    "NeqAdj  x  Mono",
+    RuleSystem(2, 3, [NeqAdj([0, 1]), Mono([1, 2])], "M4c"),
+    RuleSystem(2, 3, [NeqAdj([0, 1]), Mono([2, 3])], "M4d"),
+    _bug_mono)
 
 
 print()

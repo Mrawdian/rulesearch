@@ -285,6 +285,75 @@ def propager_neqadj(cn, dom):
     return prog, False
 
 
+# ---------- MONO ----------
+#
+# `Mono(region)` : la suite est non decroissante le long de la region.
+# `feasible()` ne verifie que les paires **assignees** ; sur une grille
+# complete cela revient bien a la monotonie de toute la suite, et c'est contre
+# les grilles completes que la propagation doit etre sure.
+#
+# DEUX SENS :
+#   AVANT   : `dom[b]` ne peut contenir de valeur < min(dom[a])
+#   ARRIERE : `dom[a]` ne peut contenir de valeur > max(dom[b])
+#
+# AUDIT DE FORME (invariant 14) : ce propagateur ne fait **aucune** lecture de
+# forme. Il ne lit que `min(dom[i])`, `max(dom[i])` et l'appartenance -- donc
+# il est **sur par construction** vis-a-vis des interactions. C'est le premier
+# du chantier dans ce cas, et c'est verifiable par simple relecture.
+#
+# Une seule passe ne suffit pas sur une region de trois cellules ou plus : la
+# contrainte se propage de proche en proche. Le point fixe est assure par
+# `propager()`, qui reboucle tant qu'il y a progres.
+
+
+def propager_mono_avant(cn, dom):
+    """`dom[b]` >= min(dom[a]) pour chaque paire consecutive."""
+    R = cn.region
+    prog = False
+    for k in range(len(R) - 1):
+        a, b = R[k], R[k + 1]
+        if not dom[a] or not dom[b]:
+            return prog, True
+        seuil = min(dom[a])
+        trop = [v for v in dom[b] if v < seuil]
+        if not trop:
+            continue
+        for v in trop:
+            dom[b].discard(v)
+        prog = True
+        if not dom[b]:
+            return prog, True
+    return prog, False
+
+
+def propager_mono_arriere(cn, dom):
+    """`dom[a]` <= max(dom[b]) pour chaque paire consecutive."""
+    R = cn.region
+    prog = False
+    for k in range(len(R) - 1, 0, -1):
+        a, b = R[k - 1], R[k]
+        if not dom[a] or not dom[b]:
+            return prog, True
+        seuil = max(dom[b])
+        trop = [v for v in dom[a] if v > seuil]
+        if not trop:
+            continue
+        for v in trop:
+            dom[a].discard(v)
+        prog = True
+        if not dom[a]:
+            return prog, True
+    return prog, False
+
+
+def propager_mono(cn, dom):
+    p1, c1 = propager_mono_avant(cn, dom)
+    if c1:
+        return True, True
+    p2, c2 = propager_mono_arriere(cn, dom)
+    return (p1 or p2), c2
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
@@ -292,6 +361,7 @@ PROPAGATEURS = {
     "COUNT": propager_count,
     "SUM": propager_sum,
     "NEQADJ": propager_neqadj,
+    "MONO": propager_mono,
 }
 
 

@@ -163,6 +163,17 @@ ete identifies ainsi.
    ne prouve rien.
    Le test negatif d'un croisement doit etre un bug **d'interaction**, jamais
    la reinjection d'un bug simple.
+   **Le chevauchement doit porter sur LA cellule que l'inference injectee
+   LIT.** Trois croisements ont echoue avant d'etre corriges, chaque fois pour
+   la meme raison sous un habit different : partager une cellule ne suffit pas,
+   il faut que l'autre propagateur puisse effectivement la **rogner**, et qu'il
+   rogne **celle-la** et pas une voisine.
+   - `X1` : avec `lo == 0` le forcage de Count ne se declenche jamais.
+   - `Count x SumRange` : avec `hi == |R|` l'interdiction ne peut rien retirer
+     dans sa propre region.
+   - `Count/SumRange x Mono` : l'autre propagateur rognait le `a` de la paire
+     alors que le bug lit le `b`. Corrige en inversant l'ordre de la region.
+   Un croisement qui ne peut rien declencher est un canari vide de plus.
    Cout quadratique, **assume** : c'est la seule couverture qui ne depende pas
    du generateur.
 
