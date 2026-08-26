@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 07:14 UTC — 30463 systemes evalues
+genere 2026-08-26 07:14 UTC — 30478 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 21489 systemes
+- `89c65c03c4ad` : 21504 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -12,7 +12,7 @@ genere 2026-08-26 07:14 UTC — 30463 systemes evalues
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7466 enregistrements (25%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7466 enregistrements (24%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 14282 | 7140 | 934 | 493 | 1399 | 1132 | 1557 | 1444 | 10.1% |
-| d4 | 4 | 4 | 2065 | 953 | 521 | 13 | 154 | 136 | 99 | 139 | 6.7% |
+| d4 | 4 | 4 | 2080 | 963 | 525 | 13 | 155 | 136 | 99 | 139 | 6.7% |
 | ref | 4 | 3 | 13992 | 3319 | 5883 | 9 | 1922 | 712 | 6 | 2141 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -34,7 +34,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 ### censure de l'echantillon
 
-- **1653 systemes avec CONNECTED sur 12592 (13.1%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **1653 systemes avec CONNECTED sur 12606 (13.1%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
