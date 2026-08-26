@@ -1,13 +1,13 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 20:08 UTC — 62241 systemes evalues
+genere 2026-08-26 20:08 UTC — 62256 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `06fe04a859f1` : 9167 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `e3baecf8377b` : 5149 systemes
-- `62448a55927e` : 3633 systemes
+- `62448a55927e` : 3648 systemes
 - `23303c299f39` : 1743 systemes
 - `e40600351a72` : 1441 systemes
 - `0327bdc4c76a` : 853 systemes
@@ -25,7 +25,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (18499 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `b71bb0907fb5`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (18514 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `b71bb0907fb5`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -39,7 +39,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 28363 | 14120 | 1941 | 953 | 2812 | 2247 | 3017 | 2916 | 10.3% |
+| connect | 4 | 3 | 28378 | 14127 | 1944 | 953 | 2814 | 2250 | 3017 | 2916 | 10.3% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
 | ref | 4 | 3 | 27763 | 6417 | 11762 | 15 | 3857 | 1425 | 12 | 4275 | 15.4% |
 
@@ -58,7 +58,7 @@ contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 ### censure de l'echantillon
 
-- **3291 systemes avec CONNECTED sur 25707 (12.8%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **3291 systemes avec CONNECTED sur 25716 (12.8%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -244,5 +244,5 @@ qui ne sature pas.
 - TROP-CHER : 3313 systemes abandonnes (5.3% des systemes), 96% du temps total
   dont 3291 avec CONNECTED, 22 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 13.0% sur 23206 systemes
-  - sans CONNECTED : 0.0% sur 5157 systemes
+  - avec CONNECTED : 13.0% sur 23215 systemes
+  - sans CONNECTED : 0.0% sur 5163 systemes
