@@ -243,6 +243,7 @@ def _test_permutation(a, b, n_iter=N_PERM, graine=20260826):
     return (au_moins + 1.0) / (n_iter + 1.0)
 
 
+_testees = []
 for _h, _n in by_hash.most_common():
     _sous = [r for r in cands if r.get("dsl_hash") == _h]
     if len(_sous) < MIN_GROUPE:
@@ -254,16 +255,47 @@ for _h, _n in by_hash.most_common():
       % (len(_a), _moy(_a, 0), _moy(_a, 1), _moy(_a, 2), _pondere(_a)))
     w("  - SANS connectivite (%d) : T0=%.2f T1=%.2f T2=%.2f — pondere **%.2f**"
       % (len(_b), _moy(_b, 0), _moy(_b, 1), _moy(_b, 2), _pondere(_b)))
+    _rep = (reproductibles is None) or (_h in reproductibles)
     _p = _test_permutation(_a, _b)
+    _testees.append((_h, _rep, _p))
     if _p is None:
         w("  - *groupes trop petits (< %d) — aucun test, aucune conclusion*"
           % MIN_GROUPE)
+    elif _p < SEUIL_P and not _rep:
+        w("  - test de permutation : p = %.4f — **A NE PAS RETENIR** : serie NON "
+          "REPRODUCTIBLE. Un ecart significatif issu d'un moteur dont la source "
+          "n'existe plus n'est pas un resultat, il n'est pas rejouable." % _p)
     elif _p < SEUIL_P:
         w("  - test de permutation : **p = %.4f** — ecart significatif au seuil "
-          "%.2f" % (_p, SEUIL_P))
+          "%.2f, sur une serie reproductible." % (_p, SEUIL_P))
     else:
         w("  - test de permutation : **p = %.4f** — **NON SIGNIFICATIF**, "
           "l'ecart est compatible avec le bruit. Ne pas conclure." % (_p, ))
+w("")
+
+# Synthese : ce qui compte n'est pas qu'un p soit sorti quelque part, mais
+# qu'il soit sorti sur une serie REJOUABLE.
+_rep_testees = [(h, p_) for h, r, p_ in _testees if r and p_ is not None]
+_rep_signif = [(h, p_) for h, p_ in _rep_testees if p_ < SEUIL_P]
+w("### ce que les series reproductibles etablissent")
+w("")
+if not _rep_testees:
+    w("**Aucune serie reproductible n'a d'echantillon suffisant pour etre "
+      "testee.** L'ecart n'est ni etabli ni refute : il n'est pas mesure.")
+elif _rep_signif:
+    w("**%d serie(s) reproductible(s) sur %d etablissent l'ecart** : %s."
+      % (len(_rep_signif), len(_rep_testees),
+         ", ".join("`%s` (p=%.4f)" % (h, p_) for h, p_ in _rep_signif)))
+else:
+    w("**AUCUNE serie reproductible n'etablit l'ecart.** %d serie(s) "
+      "reproductible(s) testee(s), %d significative(s)."
+      % (len(_rep_testees), 0))
+    w("")
+    w("A traiter comme une **absence de resultat**, pas comme une refutation :")
+    w("les echantillons reproductibles sont encore trop petits pour trancher.")
+    w("Tout p significatif affiche plus haut provient d'une serie NON")
+    w("REPRODUCTIBLE et **ne doit pas etre mis en avant** -- son moteur")
+    w("n'existe plus, la mesure n'est pas rejouable.")
 w("")
 w("*Test de permutation bilateral, %d melanges, stdlib seule. Un ecart non*" % N_PERM)
 w("*significatif ne dit pas qu'il n'y a pas d'effet : il dit que ces donnees*")

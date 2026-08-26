@@ -11,6 +11,97 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - absence de resultat, canary6 discrimine, file corrigee a d=4
+
+**Demande** : traiter comme une absence de resultat le fait que seule une serie
+NON REPRODUCTIBLE soit significative ; etendre `canary6` pour qu'une technique
+doive **reclasser** et pas seulement se declencher ; ajouter deux
+configurations a d=4 pour rendre a T1 un domaine.
+
+**1. Le resume distingue desormais reproductible et non reproductible.**
+`summarize.py` affiche **A NE PAS RETENIR** sur tout p significatif issu d'une
+serie non reproductible, et ajoute une section de synthese
+**"ce que les series reproductibles etablissent"**.
+
+**RESULTAT QUI A CHANGE DEPUIS LA DEMANDE.** La premisse de la demande --
+"aucune serie reproductible n'etablit l'ecart" -- **n'est plus vraie**. La
+serie reproductible `89c65c03c4ad` a grossi pendant la nuit (17409 systemes,
+2176 candidats) et **est devenue significative** :
+
+    89c65c03c4ad  2176 candidats   REPRODUCTIBLE
+      AVEC connectivite (862)  : T0=13,25  T2=2,87  pondere 5,75
+      SANS connectivite (1314) : T0=15,89  T2=2,64  pondere 5,28
+      p = 0,0010
+
+    615abe43d6bc   945 candidats  p = 0,0060  NON REPRODUCTIBLE -> ecarte
+    0327bdc4c76a   107 candidats  p = 0,1569  non significatif
+    12564867381b    75 candidats  p = 0,8296  non significatif
+
+Le code ecrit pour dire "aucune serie reproductible n'etablit l'ecart" dit donc
+aujourd'hui l'inverse : **1 serie reproductible sur 3 l'etablit**. Les deux
+branches existent et sont exercees ; ce n'est pas une absence de garde-fou.
+
+Reserve : avec 2176 candidats, un ecart modeste devient significatif. La taille
+d'effet est de +8,9 % sur le score pondere (5,75 contre 5,28). Le p dit que
+l'ecart n'est pas du hasard, pas qu'il est important.
+
+**2. `canary6` exige desormais que la technique RECLASSE.** Second controle :
+comparer la distribution de `max_level` **avec et sans** le niveau le plus
+eleve. Si elle est identique, la technique est un renommage et le canari
+echoue.
+
+**3. File corrigee.** `queue.json` passe de deux a **quatre** configurations :
+`connect` et `static-ref` a d=3 (conservees), plus `connect-d4` et `static-d4`
+a d=4.
+
+**Cause reelle de la demande 3, consignee dans DECISIONS.md** : imposer d=3
+pour corriger un biais de comparabilite -- correction juste et necessaire -- a
+**supprime un niveau entier de deduction**. A n=4, un ALLDIFF sur 4 cases avec
+3 valeurs est infaisable, donc `t1_regions()` est vide, donc T1 n'a plus de
+domaine. Personne ne l'a vu pendant plusieurs heures : aucun canari ne
+verifiait qu'une technique conserve un domaine dans l'espace explore, et
+`max_level` ne distingue pas un T1 absent d'un T1 rare.
+
+**Verifie** (execute et observe) :
+- **Les six canaris passent depuis la racine ET depuis `engine/` : 12/12.**
+- `canary6` controle B verifie **dans les deux sens** : il passe sur T2 (8
+  systemes reclasses, {0:27, 1:2} -> {0:21, 2:8}) et **detecte l'egalite**
+  quand on compare un niveau a lui-meme -- cas qui simule exactement une
+  technique redondante.
+- `queue.json` relu : 4 tags, `['connect', 'static-ref', 'connect-d4',
+  'static-d4']`, `block_systems` inchange a 15.
+- Redemarrage confirme (processus de 39 s) et **pathspec du scheduler present
+  dans le code charge** : le commit de ce tour ne sera plus absorbe.
+- `summarize.py` exerce ses deux branches de synthese.
+
+**Non verifie / suppose** :
+- **Les tags `-d4` n'ont pas encore tourne.** La file est relue au cycle
+  suivant ; aucun enregistrement `connect-d4` ni `static-d4` n'existe. Que T1
+  retrouve effectivement un domaine a d=4 est **une prediction**, appuyee sur
+  la mesure de 21 % de regions eligibles a d=4 sur `baseline`, pas sur un run.
+- Le test de permutation suppose l'echangeabilite sous H0 ; les candidats d'une
+  meme serie partagent generateur et graines. Le p reste indicatif.
+- Aucune correction pour tests multiples (4 series testees).
+- La taille d'effet n'est pas assortie d'un intervalle de confiance.
+- La contradiction a propagation bornee reste **non codee**, sur consigne : si
+  T1 retrouve un domaine a d=4, le trou se comble peut-etre seul.
+
+**Bloque sur** : rien. Aucun redemarrage requis -- `queue.json` est relu a
+chaque cycle, `summarize.py` et les canaris a chaque bloc.
+
+**Pour Claude chat** :
+- La file compte **quatre** tags. Un `summary.md` sans `connect-d4` /
+  `static-d4` signifie que la rotation ne les a pas encore atteints, pas qu'ils
+  ont echoue.
+- **L'ecart est desormais etabli sur une serie reproductible** (`89c65c03c4ad`,
+  p = 0,0010). C'est le premier resultat rejouable du projet sur l'hypothese
+  centrale -- mais il porte sur l'EFFORT de deduction, pas sur la profondeur,
+  et la taille d'effet est modeste (+8,9 %).
+- Un p significatif marque **A NE PAS RETENIR** vient d'une serie dont le
+  moteur n'existe plus : ne pas le citer.
+- Une technique de deduction doit **creer un palier, pas deplacer une
+  etiquette**. `canary6` le verifie maintenant.
+
 ## 2026-08-26 - le scheduler absorbait les commits de travail
 
 **Constat** : apres avoir prepare le commit du tour precedent

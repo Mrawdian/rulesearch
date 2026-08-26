@@ -484,3 +484,76 @@ que son message annonce.
 Reouverture : si d'autres interferences apparaissent (index, stash, branche),
 la vraie reponse est que le scheduler travaille sur un clone dedie plutot que
 sur l'arbre de developpement.
+
+## 2026-08-26 - corriger un biais en a cree un autre, invisible plusieurs heures
+La file avait ete ramenee a `connect` et `static-ref` **tous deux a d=3** pour
+supprimer un biais reel : comparer d=2 a d=4 rendait la mesure inexploitable,
+l'ecart pouvant venir du domaine et non de la connectivite. La correction etait
+juste.
+
+Elle a eu une consequence que personne n'a vue : **imposer d=3 a supprime un
+niveau entier de la hierarchie de deduction.** A n=4, les regions structurelles
+ont 4 cases ; un ALLDIFF sur 4 cases avec 3 valeurs est infaisable par principe
+des tiroirs. Le generateur n'en produit donc aucun, `t1_regions()` est vide, et
+T1 -- correcte, testee, non modifiee -- n'a plus **aucun domaine
+d'application**. La hierarchie annoncee a trois niveaux n'en avait plus que
+deux, T0 et T2.
+
+Le symptome (T1 a 0 invocation) est reste invisible plusieurs heures, jusqu'a
+ce que la mesure de `level_uses` le fasse apparaitre. Rien ne l'a signale :
+aucun canari ne verifiait qu'une technique conserve un domaine dans l'espace
+reellement explore, et le resume n'affichait que `max_level`, ou l'absence de
+T1 ne se distingue pas d'un T1 simplement rare.
+
+**Ce qu'il faut en retenir, et qui depasse ce cas** : corriger un biais est une
+modification de l'espace explore, donc un changement de ce qu'on mesure. Une
+correction de comparabilite peut detruire une mesure ailleurs. Verifier apres
+coup que les techniques et les metriques ont toujours un domaine.
+
+Correction : la file passe a **quatre** configurations -- `connect` et
+`static-ref` a d=3, plus `connect-d4` et `static-d4` a d=4. A d=4 les ALLDIFF
+sur regions de 4 cases redeviennent faisables, T1 retrouve un domaine et la
+hierarchie ses trois niveaux. On obtient de surcroit la comparaison
+connect/static **aux deux domaines**, ce qui repond a la question de robustesse
+laissee ouverte : un resultat obtenu a un seul domaine ne se generalise pas.
+
+Reouverture : si T1 reste a 0 invocation sur les tags `-d4`, la cause n'est pas
+le domaine et il faut la chercher ailleurs.
+
+
+## 2026-08-26 - canary6 : se declencher ne suffit pas, il faut reclasser
+Ajout d'un second controle, ne apres qu'une technique redondante ait failli
+etre codee. Le premier controle (declenchement) ne l'aurait pas arretee.
+
+Le cas concret : `t1_regions()` etant vide dans l'espace explore,
+`saturate_low()` vaut T0 seul ; une technique definie comme "contradiction
+saturant T0 seul" y est donc **identique a T2**. Elle se serait invoquee
+normalement, aurait passe le canari, et n'aurait rien mesure de neuf --
+reclassant simplement les T2 existants sous une nouvelle etiquette.
+
+`canary6` compare desormais la distribution de `max_level` **avec et sans** la
+technique du niveau le plus eleve. Si elle est identique, la technique est un
+**renommage** et le canari echoue.
+
+Verifie dans les deux sens : le controle passe sur T2 (8 systemes reclasses,
+{0:27, 1:2} -> {0:21, 2:8}) et detecte bien l'egalite quand on compare un
+niveau a lui-meme, cas qui simule une technique redondante.
+
+Invariant qui en decoule : **une technique de deduction doit creer un palier,
+pas deplacer une etiquette.** Se declencher est necessaire, pas suffisant.
+
+
+## 2026-08-26 - le resume traite l'absence de resultat reproductible comme telle
+Le test de permutation ne donnait un p significatif que sur `615abe43d6bc`,
+serie **NON REPRODUCTIBLE** ; les trois series reproductibles ne concluaient
+pas. Afficher ce p en tete revenait a mettre en avant un resultat non
+rejouable, issu d'un moteur dont la source n'existe plus.
+
+`summarize.py` distingue desormais les deux cas. Un p significatif sur une
+serie non reproductible est affiche **A NE PAS RETENIR**, et une section de
+synthese indique explicitement quand **aucune serie reproductible n'etablit
+l'ecart** -- en precisant qu'il s'agit d'une **absence de resultat** et non
+d'une refutation : les echantillons rejouables sont encore trop petits.
+
+C'est la contrepartie de la decision de conserver les series orphelines : on
+les garde comme donnees, mais elles ne peuvent pas porter une conclusion.
