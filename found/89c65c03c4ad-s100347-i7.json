@@ -1,0 +1,20 @@
+{
+  "ts": 1787708979.803091,
+  "dsl_hash": "89c65c03c4ad",
+  "seed": 100347,
+  "idx": 7,
+  "n": 4,
+  "d": 3,
+  "sys": "MONO@diags + NEQADJ@cols + COUNT(v1,1-2)@cols",
+  "ms": 29,
+  "total_grids": 13,
+  "clue_frac": 0.542,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 11,
+    "1": 0,
+    "2": 1
+  },
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
