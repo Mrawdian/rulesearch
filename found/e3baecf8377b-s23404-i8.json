@@ -1,0 +1,23 @@
+{
+  "ts": 1787739873.8104105,
+  "dsl_hash": "e3baecf8377b",
+  "seed": 23404,
+  "idx": 8,
+  "inst_seed": 23404008,
+  "n": 4,
+  "d": 3,
+  "sys": "MONO@blocks + MONO@cols",
+  "ms": 28,
+  "total_grids": 13,
+  "clue_frac": 0.375,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 16,
+    "1": 0,
+    "2": 3
+  },
+  "t0_unknown": 60,
+  "t0_left": 12,
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
