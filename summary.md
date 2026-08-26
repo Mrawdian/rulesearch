@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 18:36 UTC — 58682 systemes evalues
+genere 2026-08-26 18:36 UTC — 58696 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -19,20 +19,20 @@ genere 2026-08-26 18:36 UTC — 58682 systemes evalues
 - `e8a1f930f7b9` : 207 systemes
 - `84fba70921e0` : 206 systemes
 - `6680f7b47e6f` : 124 systemes
-- `62448a55927e` : 74 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `62448a55927e` : 88 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (14940 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `b71bb0907fb5`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (14954 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `b71bb0907fb5`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
 
 *45054 enregistrements sont anterieurs au champ `engine_active_hash` et ne peuvent etre regroupes avec aucun autre.*
 
-**7540 enregistrements (13%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7554 enregistrements (13%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -41,7 +41,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 26567 | 13239 | 1813 | 897 | 2638 | 2100 | 2833 | 2720 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 26000 | 5979 | 11024 | 15 | 3626 | 1335 | 10 | 4011 | 15.4% |
+| ref | 4 | 3 | 26014 | 5984 | 11028 | 15 | 3628 | 1336 | 10 | 4013 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -53,7 +53,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2847, dont T2 : 100%
-- candidats SANS connectivite : 4321, dont T2 : 100%
+- candidats SANS connectivite : 4323, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -74,7 +74,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*2878 candidats sur 7168 portent les champs bruts (40%).*
+*2880 candidats sur 7170 portent les champs bruts (40%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
