@@ -1,19 +1,19 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 10:29 UTC — 38904 systemes evalues
+genere 2026-08-26 10:29 UTC — 38919 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
-- `e3baecf8377b` : 311 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `e3baecf8377b` : 326 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**7777 enregistrements (20%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**7792 enregistrements (20%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -22,7 +22,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 16572 | 8277 | 1070 | 568 | 1645 | 1323 | 1807 | 1672 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 16217 | 3811 | 6873 | 11 | 2216 | 816 | 7 | 2483 | 15.3% |
+| ref | 4 | 3 | 16232 | 3815 | 6878 | 11 | 2217 | 817 | 7 | 2487 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -34,7 +34,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1799, dont T2 : 100%
-- candidats SANS connectivite : 2793, dont T2 : 100%
+- candidats SANS connectivite : 2797, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -55,15 +55,15 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*302 candidats sur 4592 portent les champs bruts (7%).*
+*306 candidats sur 4596 portent les champs bruts (7%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
   - SANS connectivite (158) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `e3baecf8377b` — 38 candidats (**NON REPRODUCTIBLE**)
+- `e3baecf8377b` — 42 candidats (**NON REPRODUCTIBLE**)
   - AVEC connectivite (16) : resistance **32.6%**
-  - SANS connectivite (22) : resistance **15.8%**
+  - SANS connectivite (26) : resistance **16.8%**
   - *groupes trop petits (< 20) — aucun test*
 
 ## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)
@@ -94,9 +94,9 @@ qui ne sature pas.
   - AVEC connectivite (28) : T0=12.82 T1=0.00 T2=2.79 — pondere **5.57**
   - SANS connectivite (47) : T0=15.09 T1=0.00 T2=2.68 — pondere **5.36**
   - test de permutation : **p = 0.8296** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
-- `e3baecf8377b` — 38 candidats
+- `e3baecf8377b` — 42 candidats
   - AVEC connectivite (16) : T0=14.12 T1=0.00 T2=2.62 — pondere **5.25**
-  - SANS connectivite (22) : T0=16.23 T1=0.00 T2=2.14 — pondere **4.27**
+  - SANS connectivite (26) : T0=15.92 T1=0.00 T2=2.19 — pondere **4.38**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
 - `12a0c0c5e34b` — 31 candidats
   - AVEC connectivite (13) : T0=13.31 T1=0.00 T2=3.08 — pondere **6.15**
