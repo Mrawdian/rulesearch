@@ -11,6 +11,99 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - A OUVERT. Gel de T0-historique, seul, sans propagateur
+
+**Demande** : ouvrir A. Avant toute ligne de propagation, geler la definition
+actuelle de T0 dans un module intouchable dont la metrique acquise continue de
+dependre.
+
+**Cause reelle** : la propagation sur domaines est **strictement plus forte**
+que le forward-checking actuel. `candidates()` filtre contre les valeurs
+**assignees** ; une propagation filtre contre les **domaines**. La resistance a
+T0 mesurant la non-localite **relativement a un propagateur donne**, renforcer
+ce propagateur **deplace la frontiere mesuree** : un T0 plus fort resoudrait
+davantage de systemes a connectivite, donc mesurerait **moins bien exactement
+ce qu'il doit mesurer**. Le gel est structurel, pas une commodite d'archivage.
+
+**Correction** :
+- `engine/t0_legacy.py` (nouveau, **jamais modifiable**) : copie figee de
+  `candidates`, `apply_T0`, la saturation au point fixe, et `resistance()` qui
+  rend les deux bruts.
+- `run.py` : la metrique se refere desormais a `t0_legacy`, plus a
+  `deduction.apply_T0`.
+- `canary/t0_reference.json` : 60 entrees figees.
+- `canary/canary8.py` : verrou.
+- `canary8` enregistre dans `run_canaries()`.
+
+**LE GEL DU MODULE NE SUFFISAIT PAS, et c'est le point de conception.**
+`t0_legacy` appelle `rs.feasible(g, changed=i)`, dont le comportement vit dans
+les classes de contraintes que A va toucher. Une modification de `feasible()`
+changerait les valeurs produites **sans que le fichier gele ait bouge d'une
+ligne**. `canary8` ne compare donc pas a du code courant -- lequel va changer
+par construction -- mais a des **nombres figes**.
+
+Le puzzle est stocke tel quel plutot que regenere : `random_solution` et
+`minimal_clues` peuvent legitimement changer sous A ; les regenerer rendrait le
+canari sensible a des evolutions permises.
+
+**Decision d'architecture prise par l'utilisateur** : `feasible()` est
+CONSERVEE, la propagation s'ajoute a cote. Trois raisons, dont une que je
+n'avais pas vue et qui est la plus forte : **le solveur exhaustif utilise
+`feasible()`, et c'est lui qui produit la verite contre laquelle `canary3`
+validera les propagateurs.** Code partage = `canary3` compare une erreur a
+elle-meme. Cout assume : duplication de la logique de chaque contrainte.
+
+**Verifie** (execute et observe) :
+- **Les huit canaris passent depuis la racine ET depuis `engine/` : 16/16.**
+- `canary8` passe sur les 60 entrees (40 positives, 20 nulles).
+- **Test negatif dans les DEUX sens, et il mord** :
+  - affaiblissement (une passe de T0 au lieu du point fixe) : **20 divergences
+    sur 60** ;
+  - renforcement (T0+T2, entrees `static`) : **6 sur 6**, toutes tombant a 0
+    case restante contre 2 a 4 attendues.
+
+**LE TEST NEGATIF EST LUI-MEME UN CAS DU MOTIF DU PROJET -- septieme de la
+liste, desormais en tete de CLAUDE.md.** Sa premiere version renforcait T0
+avec **T1**. Zero divergence : non parce que le canari etait aveugle, mais
+parce que **T1 est un no-op dans cet espace**, fait etabli le matin meme et
+oublie l'apres-midi. Le test ne prouvait rien tout en ayant l'air de conclure.
+Deuxieme version, T0+T2 : correcte mais **impraticable**, plus de six minutes
+pour huit entrees, T2 sur des systemes a connectivite etant exactement le cas
+couteux. Un test juste qui ne finit pas ne vaut pas mieux qu'un test vide.
+Troisieme version : les deux sens, cout maitrise, `python3 -u` -- les deux
+premieres sorties avaient ete perdues par bufferage.
+
+**Non verifie / suppose** :
+- Le sens A n'est detecte que sur **20 entrees sur 60** : pour les 40 autres,
+  une seule passe de T0 atteint deja le point fixe. Suffisant pour prouver que
+  la comparaison mord, mais le corpus n'est pas uniformement sensible.
+- Le sens B n'a ete verifie que sur **6 entrees `static`**. Les entrees a
+  connectivite -- les plus importantes -- n'ont pas ete testees en
+  renforcement, faute de temps de calcul.
+- **`dsl_hash` change** (ajout dans `engine/`). La serie pre-A est close ; les
+  donnees anterieures ne se comparent pas aux suivantes.
+- Aucun propagateur n'existe. Ce commit ne contient **que le gel**.
+
+**Bloque sur** : rien.
+
+**QUESTIONS EN ATTENTE, non tranchees seul** :
+1. **`canary3` etendu, ou un `canary9` separe ?** Dix propagateurs a venir.
+   Entasser dans `canary3` le rend illisible ; le dupliquer dilue la
+   responsabilite du canari de correction. Mon inclination : etendre
+   `canary3`, une section par propagateur.
+2. Sur `AllDiff` avec `|R| > d` (infaisable par principe des tiroirs) : le
+   retrait simple suffit-il a atteindre la contradiction par saturation ? Si
+   non, le propagateur dira "pas de contradiction" sur un systeme mort --
+   **correct au sens incomplet, mais a constater et non a supposer**.
+
+**Pour Claude chat** :
+- **`engine/t0_legacy.py` ne doit JAMAIS etre modifie.** Si `canary8` diverge,
+  c'est le reste du moteur qu'il faut corriger, pas le corpus a regenerer.
+- **`feasible()` est conservee telle quelle** pendant tout A. La propagation
+  s'ajoute a cote. C'est ce qui garde l'oracle independant.
+- La metrique acquise se refere a `t0_legacy`, jamais a `deduction.apply_T0`.
+- Un seul propagateur par commit, `canary3` etendu **avant** chacun.
+
 ## 2026-08-26 - resistance != profondeur, file reduite, PERIMETRE-A.md
 
 **Demande** : ecrire noir sur blanc que la resistance a T0 n'est pas la

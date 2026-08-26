@@ -37,7 +37,11 @@ from rulesearch import (UNASSIGNED, RuleSystem, rows, cols, diags, blocks,
                         count_solutions, random_solution, minimal_clues)
 from dsl2 import (random_cages, adj_pairs, knight_pairs,
                   PairDiff, PairRatio, Connected, NoSquare)
-from deduction import solve_graded, apply_T0
+from deduction import solve_graded
+# La metrique acquise se refere au propagateur GELE, jamais a celui de
+# deduction.py : la resistance mesure la non-localite RELATIVEMENT a un
+# propagateur, donc renforcer ce dernier deplacerait la frontiere mesuree.
+from t0_legacy import resistance as t0_resistance
 from prefilter import is_dead
 
 
@@ -58,7 +62,7 @@ def run_canaries():
     env = dict(os.environ)
     env["PYTHONPATH"] = ENGINE + os.pathsep + env.get("PYTHONPATH", "")
     for c in ("canary.py", "canary2.py", "canary3.py", "canary4.py",
-              "canary5.py", "canary6.py", "canary7.py"):
+              "canary5.py", "canary6.py", "canary7.py", "canary8.py"):
         p = os.path.join(HERE, "canary", c)
         if not os.path.exists(p):
             continue
@@ -217,13 +221,9 @@ def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
         puz = minimal_clues(rs, sol)
         fracs.append(sum(1 for x in puz if x != UNASSIGNED) / cells)
         PHASE = "resistance_T0"
-        _g = list(puz)
-        while True:
-            _p, _c = apply_T0(rs, _g)
-            if _c or not _p:
-                break
-        t0_unknown += sum(1 for x in puz if x == UNASSIGNED)
-        t0_left += sum(1 for x in _g if x == UNASSIGNED)
+        _inc, _rest = t0_resistance(rs, puz)
+        t0_unknown += _inc
+        t0_left += _rest
         PHASE = "solve_graded"
         r = solve_graded(rs, puz)
         if r["solved"]:

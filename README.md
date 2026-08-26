@@ -53,6 +53,10 @@ Ne sature pas (contrairement a `max_level`, a 100 % partout) et ne depend
 d'aucune technique dont la disponibilite varie selon les familles -- T1 par
 exemple n'existe que sur les systemes portant un ALLDIFF de taille d.
 
+Calculee par `engine/t0_legacy.py`, **module gele** : la resistance mesure
+la non-localite RELATIVEMENT a un propagateur donne, donc le propagateur de
+reference doit etre fige par nature. Voir DECISIONS.md.
+
 Les deux BRUTS sont journalises, pas le ratio : une normalisation peut changer,
 et un ratio journalise ne se recalcule pas. La premiere version normalisait sur
 la grille entiere et etait **confondue par la densite d'indices** -- `connect`
@@ -79,6 +83,12 @@ Ils doivent passer depuis la racine ET depuis `engine/`.
     canary2.py  niveaux de technique requis par famille
     canary3.py  correction de T1 : aucune divergence avec la solution
     canary4.py  surete du pre-filtre : aucun faux positif
+    canary8.py  gel de T0-historique : engine/t0_legacy.py doit rendre
+                exactement les valeurs de canary/t0_reference.json, 60
+                entrees figees le 26/08/2026. Verrouille aussi la
+                semantique de feasible(), dont t0_legacy depend. Une
+                divergence est un SIGNAL : ne jamais regenerer le corpus
+                pour faire passer le canari.
     canary7.py  surete de la resistance a T0 : elle doit valoir 0 sur un
                 systeme que T0 resout integralement, et etre strictement
                 positive sur un systeme qu'il ne resout pas. Une metrique

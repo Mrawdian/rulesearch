@@ -756,3 +756,212 @@ consequence sur la validite -- les systemes generes sont inchanges,
 venir ne sont pas celles qu'on aurait eues sans ce changement.
 
 `dsl_hash` inchange : `run.py` n'est pas dans `engine/`.
+
+## 2026-08-26 - A est OUVERT. Decision d'architecture : feasible() est CONSERVEE
+Le chantier A (etat de candidats explicite) est ouvert. Sa condition
+d'ouverture n'est pas le gain de debit mais le fait que **la propagation sur
+domaines est strictement plus forte que le forward-checking actuel**, donc
+qu'elle detruirait la metrique acquise si rien n'etait fait.
+
+### Decision : la propagation s'AJOUTE, elle ne remplace pas
+
+Chaque contrainte gardera `feasible(g)` **inchangee** et recevra
+`propagate(dom)` **a cote**. Trois raisons, dans l'ordre de force :
+
+1. **Un oracle independant est impose par le risque asymetrique.** Un
+   propagateur qui retire un candidat de trop **ne plante pas** : il rend une
+   solution FAUSSE. Cela ne se detecte que si quelque chose de **non contamine**
+   sait ce qui est vrai. Si propagation et verite partagent leur code, plus rien
+   ne peut attraper l'erreur.
+2. **Le solveur exhaustif utilise `feasible()`**, et c'est lui qui produit la
+   verite contre laquelle `canary3` valide les propagateurs. Un code partage
+   rendrait `canary3` aveugle -- il comparerait une erreur a elle-meme.
+3. **Le corpus fige de `canary8` en depend.** `t0_legacy` appelle `feasible()` :
+   si sa semantique bouge, le verrou bouge. Un verrou qui bouge n'est pas un
+   verrou.
+
+**Cout assume : duplication de la logique de chaque contrainte**, une fois en
+`feasible` et une fois en `propagate`. C'est le prix de l'independance de
+l'oracle, et il est paye volontairement.
+
+### Ordre impose du chantier
+
+1. **Gel de T0-historique** (fait) : `engine/t0_legacy.py` + `canary8`.
+2. `canary3` etendu **AVANT** chaque propagateur, jamais apres.
+3. Les sept faciles d'abord (AllDiff en premier, gabarit des autres), les deux
+   moyens ensuite, **Connected en dernier** -- et seulement avec le retrait par
+   inaccessibilite et le forcage par point d'articulation, la detection de
+   contradiction actuelle etant conservee telle quelle.
+4. **Un seul propagateur par commit.** Jamais deux. C'est le terrain exact du
+   risque asymetrique.
+5. **Ne pas redefinir la hierarchie pour l'instant.** La propagation absorbera
+   T0 et une partie de T1 : c'est attendu. La nouvelle hierarchie se decidera
+   quand elle tournera, pas avant.
+
+### Sur l'affirmation Steiner
+
+Le filtrage complet de la connexite est **suppose** NP-difficile (probleme de
+type Steiner). Cette affirmation est **non verifiee dans ce projet** et **ne
+sert pas d'argument** : on ne vise pas le filtrage complet, seulement des
+regles saines et incompletes. Marquee comme telle dans `PERIMETRE-A.md`.
+
+
+## 2026-08-26 - gel de T0-historique : pourquoi le module ne suffisait pas
+`engine/t0_legacy.py` fige le propagateur de reference de la metrique acquise.
+
+**Raison du gel, et elle est structurelle** : la resistance a T0 mesure la
+non-localite **relativement a un propagateur donne**. Renforcer le propagateur
+deplace la frontiere qu'on mesure -- un T0 plus fort resoudrait davantage de
+systemes a connectivite, donc mesurerait **moins bien exactement ce qu'il doit
+mesurer**. Le propagateur de reference est fige **par nature**, pas par
+commodite d'archivage.
+
+**Le gel du fichier ne suffisait pas.** `t0_legacy` appelle
+`rs.feasible(g, changed=i)`, dont le comportement vit dans les classes de
+contraintes que A va toucher. Une modification de `feasible()` changerait les
+valeurs produites **sans que le fichier gele ait bouge d'une ligne**.
+
+D'ou `canary8`, qui ne compare pas a du code courant -- lequel va changer par
+construction -- mais a des **nombres figes** : `canary/t0_reference.json`, 60
+entrees du 26/08/2026. Chaque entree fige la recette du systeme, son label, **le
+puzzle lui-meme**, et les deux valeurs attendues.
+
+Le puzzle est stocke tel quel plutot que regenere : `random_solution` et
+`minimal_clues` vivent dans `engine/` et peuvent legitimement changer sous A.
+Les regenerer rendrait le canari sensible a des evolutions permises.
+
+**Equilibre du corpus** : le tirage naturel donnait 47 entrees a resistance
+nulle contre 13 positives. Or ce sont les **positives** qui detectent un
+propagateur RENFORCE -- un T0 plus fort laisse moins de cases. Les nulles sont
+au plancher et detectent l'affaiblissement. A rendant le propagateur plus fort,
+la proportion a ete inversee : **40 positives, 20 nulles**, les deux sens
+restant couverts.
+
+Consequence : `dsl_hash` change (ajout dans `engine/`). La serie pre-A est
+close de toute facon.
+
+Reouverture : aucune. Ce module ne doit jamais etre modifie. Si une divergence
+apparait, c'est le reste du moteur qu'il faut corriger.
+
+## 2026-08-26 - la force du propagateur Connected est un CHOIX DE CONCEPTION, pas un parametre a maximiser
+Note ecrite a l'ouverture de A, six propagateurs avant d'en avoir besoin,
+precisement parce qu'on l'aura oubliee d'ici la.
+
+**La force du propagateur `Connected` n'est pas un parametre a maximiser. Elle
+definit la frontiere entre ce que le moteur traite comme local et ce qu'il ne
+peut pas decomposer. Un `Connected` trop bien propage rendrait le moteur
+incapable d'observer la non-localite qu'il etudie.**
+
+C'est le meme piege que le T0 renforce, a un autre etage. La resistance a T0
+mesure la non-localite **relativement a un propagateur** ; si le propagateur de
+la seule contrainte non decomposable devient assez fort pour la decomposer en
+pratique, l'objet d'etude disparait dans l'instrument.
+
+### La dissymetrie qui rend la chose vivable
+
+Les **sept propagateurs faciles** peuvent etre aussi forts qu'on veut. Ils
+portent des contraintes **decomposables par nature** : les renforcer ne detruit
+rien, cela ne fait qu'ameliorer le traitement de ce qui est deja local.
+
+C'est le **contraste** entre eux et `Connected` qui produit le signal.
+Renforcer les locaux **augmente** meme ce contraste. La contrainte de retenue
+ne porte donc que sur un propagateur sur dix.
+
+### Consequence pratique, A DECIDER A L'ETAPE 5 ET PAS AVANT
+
+Le propagateur `Connected` devra **probablement rester deliberement faible** --
+retrait par inaccessibilite et forcage par points d'articulation, rien de plus
+-- **non par difficulte d'implementation mais par choix de conception**. La
+difficulte technique (filtrage complet hors de portee) et le choix de
+conception coincident ici, ce qui pourrait faire croire que le second n'est
+qu'une justification du premier. Ce n'est pas le cas : meme si le filtrage
+complet devenait accessible, il ne faudrait pas l'adopter sans mesure.
+
+**Et il faudra mesurer l'effet de son ajout sur la resistance a T0 avant de
+l'adopter, exactement comme pour une metrique.** Le protocole existe deja :
+`canary8` compare a un corpus fige, l'invariant 7bis impose de tester toute
+mesure contre les variables journalisees. Ici la question est symetrique --
+non pas "cette mesure est-elle confondue ?" mais "ce propagateur detruit-il la
+mesure ?".
+
+**Critere de decision pour l'etape 5, FERME le 26/08/2026** : si l'ajout du
+propagateur `Connected` rapproche `connect` de `static` sur la resistance, le
+propagateur a mange le signal.
+
+**Reponse par defaut dans ce cas** : garder `t0_legacy` comme **reference
+unique de la metrique**, et laisser le propagateur faire son travail de debit
+sans toucher a la mesure. C'est exactement ce que le gel permet, et cela separe
+proprement **l'instrument** de **l'accelerateur** -- deux roles qu'il n'y a
+aucune raison de faire porter au meme code.
+
+Reouverture : cette note ne se tranche pas, elle se rappelle. Elle est a relire
+integralement au moment d'ecrire le propagateur `Connected`.
+
+## 2026-08-26 - deux regles de canari, tirees de deux echecs distincts
+
+### Les cas limites se construisent a la main
+
+Un canari qui attend ses cas du generateur **ne teste que ce que le generateur
+produit**. Deja paye deux fois :
+
+- **T1** : code correct, restriction correcte, **zero invocation sur 8991
+  systemes**. L'espace genere ne contient aucun ALLDIFF de taille d, donc le
+  cas ou T1 s'applique n'apparaissait jamais. Aucun canari ne l'a signale
+  parce qu'aucun ne construisait ce cas.
+- **Le propagateur AllDiff a venir** : le generateur ne produit `AllDiff` que
+  si `d >= n`, sur des regions de taille `n`. Les regions de taille `!= d` --
+  precisement la ou T1 s'etait trompee -- n'apparaissent qu'avec `d > n` ou via
+  les cages. Un canari qui les attendrait du generateur ne testerait rien.
+
+**Regle** (invariant 8) : le generateur couvre le cas ordinaire, les bords se
+construisent a la main.
+
+### Un canari doit avoir ete vu echouer
+
+Le test negatif devient la norme : on construit deliberement le defaut que le
+canari doit attraper, et on verifie qu'il l'attrape. Un canari jamais vu rouge
+est une decoration.
+
+Fait pour `canary5` (alarme), `canary6` (renommage), `canary7` (bornes),
+`canary8` (propagateur renforce).
+
+**Anecdote qui justifie la regle a elle seule** : la premiere version du test
+negatif de `canary8` renforcait T0 avec **T1**. Zero divergence detectee -- non
+parce que le canari est aveugle, mais parce que **T1 est un no-op dans cet
+espace**, fait etabli le matin meme et oublie l'apres-midi. Le test ne prouvait
+rien tout en ayant l'air de conclure. Refait avec T2, qui se declenche
+reellement.
+
+La lecon depasse le cas : **un test negatif doit lui-meme etre verifie comme
+tel**. Construire un defaut qui n'en est pas un donne une fausse assurance,
+exactement du meme genre que celle qu'on cherche a eviter.
+
+
+## 2026-08-26 - propagateur AllDiff : filtrage minimal, Regin ECARTE
+Le propagateur `AllDiff` se limite au retrait de la valeur assignee chez les
+autres cellules de la region. C'est la seule regle dont la validite ne depend
+d'aucune hypothese sur la taille de la region.
+
+**Le filtrage par couplage (Regin) est ECARTE -- et il n'est pas faux.** Il
+donne la coherence de domaine complete pour `AllDifferent` et c'est de
+l'etat de l'art. Il est ecarte parce qu'il **n'est pas necessaire au gabarit** :
+`AllDiff` sert de modele aux six autres propagateurs faciles, et chaque regle
+supplementaire est une occasion de retirer un candidat de trop.
+
+Principe general applique ici, valable pour les dix propagateurs : **ne rien
+conclure quand on ne peut pas conclure**. En cas de doute sur une regle de
+filtrage, elle ne rentre pas. Un propagateur incomplet est **correct** ; un
+propagateur trop zele produit des **solutions fausses** -- et ne plante pas,
+c'est tout le probleme.
+
+**Note pour qui relira** : ce propagateur est deliberement plus faible que
+l'etat de l'art. Ce n'est pas un oubli. Sa reouverture demande **une mesure**
+-- montrer que le filtrage supplementaire change quelque chose de mesurable au
+debit ou a la profondeur -- et non une intuition du type "on pourrait faire
+mieux".
+
+Attention particuliere pour `AllDiff` : la region peut avoir une taille
+**differente de d**. Si `|R| > d`, la contrainte est infaisable (principe des
+tiroirs) ; si `|R| < d`, elle est satisfaisable mais **aucun raisonnement du
+type "chaque valeur doit apparaitre" n'y est valide**. C'est exactement la
+configuration ou T1 s'etait trompee. Le canari construit ces cas a la main.

@@ -40,6 +40,45 @@ La structure est calculable. L'interet de jouer ne l'est pas. Ce moteur est
 un **filtre d'elimination**, jamais un juge. Ne jamais ecrire qu'un systeme
 est "bon" ou "amusant" : il est bien pose, c'est tout.
 
+## LE MOTIF DU PROJET — a lire avant les invariants, ils en decoulent
+
+**Sept fois** dans ce projet, un instrument a mesure autre chose que ce qu'il
+annoncait : quatre metriques, deux techniques de deduction inertes, un test
+negatif vide.
+
+**Aucune n'etait fausse au sens du code.** Chacune etait correcte, et sans
+prise sur le regime ou elle servait. Le defaut ne se voit **jamais dans le
+code** — seulement en confrontant l'instrument a ce qu'il pretend distinguer.
+
+    Donc : avant d'adopter tout instrument — metrique, technique, canari,
+    test — EXHIBER un cas qu'il classe positivement et un cas qu'il classe
+    negativement. S'il n'y en a qu'un des deux, il ne mesure rien.
+
+Les sept cas, pour que la liste ne se reconstitue pas de memoire :
+
+1. **T1 faux** — remplissait la grille et se trompait de solution.
+2. **Profondeur v1** — saturait vers 2-3 pour tout, sudoku compris.
+3. **T2 sature** — 100 % contre 100 %, et le verdict automatique imprimait une
+   refutation jamais etablie.
+4. **T3 paire nue, inerte** — correcte, verifiee, jamais declenchee.
+5. **T3 paire cachee, inerte** — meme cause structurelle, seconde tentative.
+6. **Resistance a T0 confondue** — par la densite d'indices, confondant
+   journalise et affiche dans la colonne d'a cote.
+7. **Test negatif de `canary8` vide** — il renforcait T0 avec **T1**, qui est
+   un no-op dans cet espace. Zero divergence detectee : le test ne prouvait
+   rien tout en ayant l'air de conclure.
+
+Le septieme est le plus instructif : c'est le motif **applique au dispositif
+cense le prevenir**. Un test negatif qui ne teste rien est une metrique
+confondue a l'etage du meta-outillage. Rien ne protege automatiquement de ce
+motif, pas meme les regles ecrites pour s'en proteger.
+
+**Ce septieme cas a ete trouve par Claude Code, sans que l'utilisateur le
+demande.** C'est le **mode de travail attendu**, pas une exception : signaler
+ce qui contredit l'hypothese ou rend une mesure douteuse fait partie de la
+tache, meme hors de ce qui a ete demande. La moitie des cas de cette liste ont
+ete identifies ainsi.
+
 ## Invariants durs — ne jamais violer
 
 1. Les canaris tournent avant tout run. `--skip-canary` est reserve au debug.
@@ -67,6 +106,15 @@ est "bon" ou "amusant" : il est bien pose, c'est tout.
    est dans le journal, a cote. La "resistance a T0" normalisee sur la grille
    affichait 74 % contre 98 % ; l'ecart etait entierement du a la densite
    d'indices, visible dans la colonne voisine du meme tableau.
+8. **Tout canari de correction construit ses cas limites A LA MAIN.** Le
+   generateur sert a couvrir le cas ordinaire, **jamais les bords**. Un canari
+   qui attend ses cas du generateur ne teste que ce que le generateur produit
+   -- deja paye avec T1 : code correct, zero invocation sur 8991 systemes,
+   parce que l'espace genere ne contenait aucun ALLDIFF de taille d.
+9. **Un canari doit avoir ete VU ECHOUER au moins une fois.** Le test negatif
+   est la norme, pas l'exception : on construit deliberement le defaut qu'il
+   doit attraper et on verifie qu'il l'attrape. Un canari jamais vu rouge est
+   une decoration. *(Verifie pour canary5, canary6, canary7, canary8.)*
 7. **Toute nouvelle metrique doit etre testee dans le regime ou on compte
    l'utiliser**, pas seulement sur un cas ou elle discrimine. Une metrique
    validee sur un cas facile puis deployee sur un regime saturant ne
@@ -108,30 +156,6 @@ est "bon" ou "amusant" : il est bien pose, c'est tout.
   sature vers 2-3 pour tout, sudoku compris. La profondeur ne veut dire
   quelque chose que relativement a une hierarchie de techniques.
 
-## Le motif qui revient : des metriques qui mesurent autre chose
-
-**Six fois** le projet a produit un chiffre qui ne mesurait pas ce qu'il
-annoncait :
-
-1. **T1 faux** : remplissait la grille et se trompait de solution.
-2. **Profondeur v1** : saturait vers 2-3 pour tout, sudoku compris.
-3. **T2 sature** : 100 % contre 100 %, et le verdict automatique imprimait
-   une refutation non etablie.
-4. **T3 inerte** : correct, verifie, et jamais declenche.
-5. **Effort confondu avec profondeur** : le nombre d'invocations mesure le
-   caractere laborieux, pas la structure.
-6. **Resistance a T0 confondue avec la densite d'indices** : le confondant
-   etait dans la colonne voisine du meme tableau.
-
-Les cas 3 et 4 partagent une cause precise : **une metrique livree sans
-avoir ete testee dans le regime ou elle allait servir**. Le cas 4 est
-survenu immediatement apres que cette regle ait ete ecrite -- l'ecrire ne
-suffit donc pas, d'ou son passage en invariant dur (6 et 7) et sa mise en
-canari (`canary6`).
-
-Regle operationnelle : une metrique n'est acquise que lorsqu'un canari
-echoue quand elle cesse de mesurer. Un document ne l'a jamais garantie.
-
 ## Pourquoi le moteur ne peut pas porter de technique d'ELIMINATION
 
 Le moteur n'a **aucune representation des candidats** : `candidates()` les
@@ -156,6 +180,24 @@ Deux l'ont confirme, l'une apres l'autre :
 **Regle : seules les techniques qui POSENT une valeur ("la case k vaut v")
 peuvent fonctionner sur ce moteur.** T0, T1 et T2 en sont. Avant d'implementer
 toute nouvelle technique, verifier cette propriete -- pas apres.
+
+## Chantier A : la force du propagateur Connected est un choix, pas un maximum
+
+A est OUVERT (26/08/2026). Perimetre dans `PERIMETRE-A.md`, decisions dans
+`DECISIONS.md`.
+
+Un point a ne pas perdre en route : **la force du propagateur `Connected`
+definit la frontiere entre ce que le moteur traite comme local et ce qu'il ne
+peut pas decomposer.** Un `Connected` trop bien propage rendrait le moteur
+incapable d'observer la non-localite qu'il etudie -- meme piege que le T0
+renforce, un etage plus haut.
+
+Dissymetrie qui rend la chose vivable : les sept propagateurs faciles portent
+des contraintes **decomposables par nature** et peuvent etre aussi forts qu'on
+veut. C'est le CONTRASTE entre eux et `Connected` qui produit le signal ;
+renforcer les locaux l'augmente meme.
+
+A relire integralement avant d'ecrire le propagateur `Connected` (etape 5).
 
 ## Si quelqu'un rouvre l'option d'un etat de candidats explicite
 
