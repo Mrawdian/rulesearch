@@ -1,0 +1,20 @@
+{
+  "ts": 1787712789.931578,
+  "dsl_hash": "89c65c03c4ad",
+  "seed": 100517,
+  "idx": 12,
+  "n": 4,
+  "d": 3,
+  "sys": "MONO@blocks + MONO@blocks + NOTRIPLE@rows",
+  "ms": 30,
+  "total_grids": 13,
+  "clue_frac": 0.531,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 20,
+    "1": 0,
+    "2": 3
+  },
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
