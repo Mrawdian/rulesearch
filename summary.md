@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 09:26 UTC — 36198 systemes evalues
+genere 2026-08-26 09:26 UTC — 36213 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 27224 systemes
+- `89c65c03c4ad` : 27239 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 15718 | 7840 | 1027 | 536 | 1557 | 1255 | 1716 | 1587 | 10.1% |
-| d4 | 4 | 4 | 4957 | 2283 | 1261 | 26 | 349 | 329 | 235 | 351 | 7.1% |
+| d4 | 4 | 4 | 4972 | 2286 | 1268 | 26 | 353 | 329 | 235 | 352 | 7.1% |
 | ref | 4 | 3 | 15399 | 3617 | 6491 | 11 | 2116 | 781 | 6 | 2377 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -33,7 +33,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1687, dont T2 : 100%
-- candidats SANS connectivite : 2635, dont T2 : 100%
+- candidats SANS connectivite : 2636, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -54,11 +54,11 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*32 candidats sur 4322 portent les champs bruts (1%).*
+*33 candidats sur 4323 portent les champs bruts (1%).*
 
-- `89c65c03c4ad` — 32 candidats
+- `89c65c03c4ad` — 33 candidats
   - AVEC connectivite (10) : resistance **56.1%**
-  - SANS connectivite (22) : resistance **24.1%**
+  - SANS connectivite (23) : resistance **23.5%**
   - *groupes trop petits (< 20) — aucun test*
 
 ## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)
@@ -73,9 +73,9 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 3157 candidats
+- `89c65c03c4ad` — 3158 candidats
   - AVEC connectivite (1208) : T0=13.11 T1=0.00 T2=2.94 — pondere **5.88**
-  - SANS connectivite (1949) : T0=15.87 T1=0.02 T2=2.66 — pondere **5.34**
+  - SANS connectivite (1950) : T0=15.87 T1=0.02 T2=2.66 — pondere **5.34**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
