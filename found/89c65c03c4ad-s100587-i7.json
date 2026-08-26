@@ -1,0 +1,20 @@
+{
+  "ts": 1787714054.4979758,
+  "dsl_hash": "89c65c03c4ad",
+  "seed": 100587,
+  "idx": 7,
+  "n": 4,
+  "d": 3,
+  "sys": "NEQADJ@blocks + SUM(3+-0)@rows",
+  "ms": 28,
+  "total_grids": 13,
+  "clue_frac": 0.312,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 15,
+    "1": 0,
+    "2": 5
+  },
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
