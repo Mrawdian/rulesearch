@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 16:04 UTC — 52793 systemes evalues
+genere 2026-08-26 16:04 UTC — 52808 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
-- `06fe04a859f1` : 7610 systemes
+- `06fe04a859f1` : 7625 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `e3baecf8377b` : 5149 systemes
 - `e40600351a72` : 1441 systemes
@@ -17,7 +17,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (9051 systemes) : `06fe04a859f1`, `e40600351a72`
+- moteur actif `0caa9267db60` (9066 systemes) : `06fe04a859f1`, `e40600351a72`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -33,7 +33,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 23594 | 11767 | 1599 | 805 | 2348 | 1870 | 2519 | 2390 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 23084 | 5347 | 9750 | 14 | 3230 | 1174 | 10 | 3559 | 15.4% |
+| ref | 4 | 3 | 23099 | 5350 | 9755 | 14 | 3231 | 1175 | 10 | 3564 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -45,7 +45,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2517, dont T2 : 100%
-- candidats SANS connectivite : 3869, dont T2 : 100%
+- candidats SANS connectivite : 3874, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -66,15 +66,15 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*2096 candidats sur 6386 portent les champs bruts (33%).*
+*2101 candidats sur 6391 portent les champs bruts (33%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
   - SANS connectivite (158) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `06fe04a859f1` — 981 candidats
+- `06fe04a859f1` — 986 candidats
   - AVEC connectivite (379) : resistance **41.4%**
-  - SANS connectivite (602) : resistance **21.0%**
+  - SANS connectivite (607) : resistance **21.1%**
   - test de permutation : **p = 0.0005** — significatif.
 - `e3baecf8377b` — 657 candidats
   - AVEC connectivite (268) : resistance **42.1%**
@@ -101,9 +101,9 @@ qui ne sature pas.
   - AVEC connectivite (1304) : T0=13.03 T1=0.00 T2=2.97 — pondere **5.94**
   - SANS connectivite (2085) : T0=15.85 T1=0.02 T2=2.65 — pondere **5.32**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
-- `06fe04a859f1` — 981 candidats
+- `06fe04a859f1` — 986 candidats
   - AVEC connectivite (379) : T0=13.21 T1=0.00 T2=3.04 — pondere **6.07**
-  - SANS connectivite (602) : T0=16.00 T1=0.00 T2=2.65 — pondere **5.30**
+  - SANS connectivite (607) : T0=16.00 T1=0.00 T2=2.64 — pondere **5.29**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
@@ -147,6 +147,7 @@ qui ne sature pas.
 - `T2` indices=0.06 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-2)@grid + PAIRSTEP(1)@adj + PAIRDIFF(>=1)@knight
 - `T2` indices=0.06 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-4)@grid + PAIRDIFF(>=1)@knight + PAIRSTEP(1)@knight
 - `T2` indices=0.06 — PAIRSTEP(1)@knight + PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-4)@grid
+- `T2` indices=0.10 — MONO@cols + SUM(1+-1)@rows
 - `T2` indices=0.12 — SUM(1+-1)@cols + MONO@rows
 - `T2` indices=0.12 — SUM(7+-1)@cols + MONO@blocks + MONO@rows
 - `T2` indices=0.12 — PAIRDIFF(>=1)@knight + PAIRSTEP(1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid
@@ -165,7 +166,6 @@ qui ne sature pas.
 - `T2` indices=0.12 — CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,1-2)@grid + PAIRDIFF(>=1)@adj + PAIRDIFF(>=1)@knight
 - `T2` indices=0.12 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-2)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@adj
 - `T2` indices=0.12 — PAIRDIFF(>=1)@adj + CONNECTED(v2) + COUNT(v2,1-2)@grid + PAIRDIFF(>=1)@knight
-- `T2` indices=0.12 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=2)@adj
 
 ## cout
 - temps total 16.4 h, dont 2% brule sur des systemes MORT
