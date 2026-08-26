@@ -997,3 +997,50 @@ verifier qu'aucune n'est declaree gelee.
 Signal a surveiller : si `canary8` echoue apres un commit dont le message parle
 de "nettoyage", "simplification", "factorisation" ou "DRY", c'est
 vraisemblablement ce piege. Regarder le diff avant de toucher au corpus.
+
+## 2026-08-26 - AllDiff : premier propagateur de A, et la forme des neuf suivants
+
+**Une seule regle de filtrage** : une cellule dont le domaine est reduit a
+`{v}` interdit `v` aux autres cellules de la region. Valide pour **toute**
+taille de region, parce qu'elle ne suppose jamais que chaque valeur doive
+apparaitre -- exactement l'hypothese sur laquelle T1 s'etait trompe.
+
+**Ecarte deliberement** : tout raisonnement de comptage, et le filtrage par
+couplage maximal de Regin (voir l'entree dediee). Le propagateur ne doit rien
+conclure quand il ne peut pas conclure ; **un propagateur incomplet est
+correct, un propagateur trop zele produit des solutions fausses**.
+
+**Ce qui rend la regle plus forte que l'existant** : elle porte sur les
+domaines **singletons**, pas sur les cellules **assignees**. Une cellule peut
+etre reduite a une seule valeur sans avoir ete assignee -- c'est tout l'ecart
+entre forward-checking et propagation.
+
+### Le module est separe, et c'est la garantie, pas une commodite
+`engine/propagate.py` est un module a part : `rulesearch.py` et `dsl2.py` ne
+bougent pas d'une ligne. La conservation de `feasible()` -- condition de
+l'independance de l'oracle -- devient ainsi **verifiable par diff**. Une revue
+humaine peut se tromper ; un diff vide, non.
+
+### Question 2 tranchee par la MESURE, pas a priori
+Sur `|R| > d` (infaisable par principe des tiroirs), le retrait simple
+**n'atteint pas** la contradiction sur grille vide -- aucun domaine n'est
+singleton, la regle ne s'amorce pas. Il l'atteint **des qu'un seul indice est
+pose**. Les deux cas sont journalises par `canary3`.
+
+**Aucune regle n'a ete ajoutee pour combler ce trou.** `feasible()` detecte
+deja l'infaisabilite et reste l'oracle. Un propagateur qui laisse passer une
+infaisabilite est **incomplet, pas faux** : c'est la moitie correcte du
+compromis.
+
+### Le test negatif, et ou il mord
+`canary3` injecte un AllDiff **trop zele** : le hidden single non conditionne,
+c'est-a-dire le bug T1 reecrit dans le langage des domaines. Resultat :
+**0 violation sur `|R| == d`** (ou la regle est effectivement valide) et
+**46 sur `|R| < d`**. Le canari discrimine donc au bon endroit, et pas par
+accident de couverture.
+
+**Consequence** : `dsl_hash` change (nouveau fichier dans `engine/`) alors
+meme que **le comportement de production est inchange** -- `propagate.py`
+n'est pas branche sur la hierarchie de deduction. Une serie se clot pour un
+module inerte. C'est le prix de hacher le repertoire plutot que le chemin
+d'execution, et c'est preferable a l'inverse.

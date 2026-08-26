@@ -119,6 +119,24 @@ ete identifies ainsi.
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
 
+11. **`canary3` GROSSIT a chaque propagateur. Jamais de canari separe.**
+   Ce que `canary3` verifie -- la deduction retrouve EXACTEMENT la solution
+   d'origine -- est une propriete du **systeme de deduction entier**, pas de
+   chaque technique isolee. Un propagateur AllDiff correct et un propagateur
+   Count correct peuvent, **ensemble**, retirer un candidat de trop :
+   **l'erreur nait de l'interaction**, et un canari par propagateur ne la
+   verrait jamais.
+   Chaque ajout tourne donc avec **tous les precedents actifs**. Le cout monte,
+   c'est voulu : c'est la combinatoire qu'on veut couvrir.
+   Deux consequences :
+   - l'ordre d'ajout des propagateurs n'est pas seulement une progression de
+     difficulte, c'est un **ordre de validation incrementale**. Un `canary3`
+     rouge au sixieme propagateur peut accuser le sixieme **comme n'importe
+     quel couple anterieur** ;
+   - s'il devient trop lent pour tourner a chaque run, on le sortira de
+     `run_canaries()` vers un **pre-commit**. On ne reduira **jamais** sa
+     couverture pour gagner du temps.
+
 8. **Tout canari de correction construit ses cas limites A LA MAIN.** Le
    generateur sert a couvrir le cas ordinaire, **jamais les bords**. Un canari
    qui attend ses cas du generateur ne teste que ce que le generateur produit

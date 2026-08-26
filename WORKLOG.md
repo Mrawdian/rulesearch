@@ -11,6 +11,61 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - AllDiff, premier propagateur, avec canary3 etendu AVANT
+
+**Demande** : etendre `canary3` (pas de `canary9` separe), puis ecrire AllDiff,
+seul dans son commit.
+
+**Raison de l'extension, donnee par l'utilisateur et desormais invariant 11** :
+ce que `canary3` verifie est une propriete du **systeme de deduction entier**.
+Deux propagateurs individuellement corrects peuvent, ensemble, retirer un
+candidat de trop -- **l'erreur nait de l'interaction**, qu'un canari par
+propagateur ne verrait jamais.
+
+**Fait** :
+- `engine/propagate.py` (nouveau) : domaines, `propager()` au point fixe,
+  `propager_alldiff()`. **Module separe expres** : `rulesearch.py` et `dsl2.py`
+  ne bougent pas d'une ligne, donc la conservation de `feasible()` est
+  **verifiable par diff** et pas seulement par revue.
+- `canary/canary3.py` : partie 2, trois cas limites **construits a la main**
+  (`|R| == d`, `|R| > d`, `|R| < d`), verite de reference par **enumeration
+  exhaustive** des solutions, pas par `feasible()` seule.
+
+**Verifie** (execute et observe) :
+- surete (aucune valeur d'une solution reelle retiree) : **0 violation** sur
+  les trois cas limites et sur les trois systemes AllDiff du generateur ;
+- **test negatif** : un AllDiff trop zele -- le hidden single non conditionne,
+  soit le bug T1 en langage de domaines -- donne **0 violation sur `|R| == d`**
+  (ou la regle est valide) et **46 sur `|R| < d`**. Le canari discrimine au bon
+  endroit.
+
+**QUESTION 2 DU TOUR PRECEDENT, TRANCHEE PAR LA MESURE** : sur `|R| > d`, le
+retrait simple **n'atteint pas** la contradiction sur grille vide -- aucun
+domaine n'est singleton, la regle ne s'amorce pas -- mais l'atteint **des qu'un
+indice est pose**. Aucune regle n'a ete ajoutee pour combler le trou :
+`feasible()` reste l'oracle, et un propagateur incomplet est correct.
+
+**Non verifie / suppose** :
+- **`propagate.py` n'est PAS branche** sur la hierarchie de deduction. T0/T1/T2
+  et la metrique de resistance (`t0_legacy`) sont inchanges. Le module existe,
+  il est verrouille, il ne tourne pas en production.
+- **`dsl_hash` change quand meme** (nouveau `.py` dans `engine/`) alors que le
+  comportement de production est identique : une serie se clot pour un module
+  inerte.
+- Les cas limites sont a n=2 et n=3 pour que l'enumeration exhaustive tienne.
+  Rien ne prouve qu'un bug d'interaction n'apparaisse qu'a n plus grand -- mais
+  aucun autre propagateur n'existe encore, donc aucune interaction non plus.
+
+**Bloque sur** : rien.
+
+**Pour Claude chat** :
+- **Invariant 11** : `canary3` grossit, jamais de canari separe par
+  propagateur. S'il devient trop lent, il sort vers un pre-commit -- **jamais**
+  on ne reduit sa couverture.
+- Prochain propagateur : `Count`, seul dans son commit, `canary3` etendu avant.
+- Un `canary3` rouge au sixieme propagateur peut accuser le sixieme **ou
+  n'importe quel couple anterieur**.
+
 ## 2026-08-26 - A OUVERT. Gel de T0-historique, seul, sans propagateur
 
 **Demande** : ouvrir A. Avant toute ligne de propagation, geler la definition

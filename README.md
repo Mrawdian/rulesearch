@@ -20,6 +20,8 @@ un run reel.
     engine/     rulesearch.py  regions statiques, contraintes de base, solveur
                 dsl2.py        cages, relationnel, connectivite
                 deduction.py   hierarchie T0/T1/T2
+                t0_legacy.py   T0 GELE -- reference de la metrique, ne jamais modifier
+                propagate.py   propagation sur domaines (projet A), PAS encore branchee
     canary/     canary.py   sensibilite (sudoku reconnu / systeme vide rejete)
                 canary2.py  separation (la hierarchie distingue des difficultes)
     runs/       <date>-<dsl_hash>-<tag>/ config.json + results.jsonl
