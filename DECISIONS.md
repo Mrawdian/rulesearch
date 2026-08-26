@@ -1502,3 +1502,74 @@ la rogner **du bon cote**.
    10 paires : 0,27 s
 Croissance reelle, toujours sans consequence. Rien n'est prevu, tout est
 remesure.
+
+## 2026-08-26 - LA MESURE QUE LE GEL REND POSSIBLE : le gain de propagation
+
+Ce que ni la resistance a T0 ni la resistance a la propagation ne donnent
+seule :
+
+    gain_propagation = (resistance_T0 - resistance_prop) / resistance_T0
+
+C'est **ce que le renforcement des propagateurs LOCAUX recupere**.
+
+**C'est un test plus direct de l'hypothese que la resistance brute.** Un
+systeme localement decomposable devrait voir sa resistance **largement
+recuperee** par des propagateurs locaux plus forts. Un systeme non
+decomposable, **non -- par definition**. L'hypothese predit donc :
+
+    gain FAIBLE pour `connect`,  gain FORT pour `static`.
+
+Et c'est exactement ce que le gel de `t0_legacy` rend possible : **deux
+instruments dont l'un ne bouge jamais**, et c'est l'ecart entre eux qui devient
+le signal. Sans le gel, les deux mesures deriveraient ensemble et l'ecart ne
+voudrait rien dire.
+
+### Ce que le commit de branchement devra contenir
+- un **second champ** dans le record : les deux resistances journalisees en
+  **brut** (`unknown` / `left` pour chacune), **jamais le ratio** -- meme regle
+  qu'a la premiere metrique, pour la meme raison ;
+- un **canari de non-redondance** : si les deux mesures **coincident toujours**,
+  l'une des deux ne sert a rien et il faut le savoir. Un instrument qui suit
+  exactement un autre n'ajoute pas d'information, il ajoute de la confiance
+  injustifiee ;
+- le **controle croise** deja ferme : un systeme resolu par propagation doit
+  avoir la meme solution unique que celle comptee par `count_solutions`.
+
+**Priorite au branchement : le COUT par systeme**, pas la qualite de deduction.
+Voir l'en-tete de PERIMETRE-A.md.
+
+
+## 2026-08-26 - Connected : le point d'articulation est ECARTE, pas reporte
+
+`Connected` gardera **l'inaccessibilite** et la **detection de contradiction
+actuelle**. Rien de plus. Le **forcage par point d'articulation est ecarte**.
+
+**Deux motifs, et aucun n'est la difficulte** :
+1. **Force du propagateur** : un `Connected` trop fort **dissoudrait localement**
+   la difficulte que le projet mesure. La force de ce propagateur n'est pas un
+   parametre a maximiser -- c'est deja ecrit, ceci en est l'application.
+2. **14bis** : l'articulation est **la seule** inference du chantier qui porte
+   sur un objet **induit** par les domaines et **non monotone** sous
+   retrecissement. L'ecarter regle 14bis **sans avoir a le trancher**.
+
+**CE N'EST PAS UN REPORT PAR DIFFICULTE.** Meme si l'articulation etait triviale
+a ecrire, elle ne serait **pas adoptee sans mesure**. C'est une decision de
+perimetre, pas un aveu de cout.
+
+**Critere de reouverture, mesurable et unique** : si a n=5 le debit reste
+insuffisant **avec l'inaccessibilite seule**, et seulement dans ce cas. Et il
+faudra alors **prouver 14bis AVANT** d'ecrire la regle, pas apres.
+
+
+## 2026-08-26 - NoSquare : dsl2.py reste intact, le propagateur construit ses fenetres
+
+`NoSquare(n, val)` a pour region la **grille entiere** alors que la contrainte
+porte sur `(n-1)^2` fenetres 2x2. **On ne corrige pas la contrainte.**
+
+**Motif** : une region trop large rend `touch[i]` **sur-inclusif** -- donc c'est
+une **inefficacite, pas une incorrection**. Et le **diff vide** sur `dsl2.py`
+est la **preuve mecanique** que `feasible()` est conservee pendant tout A. Une
+preuve mecanique vaut plus qu'une optimisation.
+
+Le propagateur construit donc ses fenetres 2x2 lui-meme, a partir de `n`. Le
+commit preparatoire de decomposition qui etait prevu **n'a plus lieu d'etre**.

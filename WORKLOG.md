@@ -11,6 +11,47 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - DECISIONS DE CADRAGE : A est un chantier de debit
+
+**Aucun code.** Quatre decisions prises apres questions, consignees avant
+d'ecrire NoTriple.
+
+**1. A est un chantier de DEBIT, pas de mesure.** A existe pour rendre n=5
+praticable sous 20 s -- la seule experience qui puisse trancher l'hypothese.
+Au branchement, ce qu'il faut verifier en priorite est le **cout par systeme**,
+pas la qualite de deduction. Ecrit en tete de PERIMETRE-A.md et de CLAUDE.md.
+
+**2. LA MESURE QUE LE GEL REND POSSIBLE** -- et que je n'avais pas vue :
+
+    gain_propagation = (resistance_T0 - resistance_prop) / resistance_T0
+
+Test plus **direct** de l'hypothese que la resistance brute : un systeme
+localement decomposable voit sa resistance **recuperee** par des propagateurs
+locaux plus forts ; un systeme non decomposable, **non, par definition**.
+Prediction : gain **faible** pour `connect`, **fort** pour `static`.
+C'est l'ecart entre deux instruments dont **l'un ne bouge jamais** qui est le
+signal -- sans le gel, les deux deriveraient ensemble et l'ecart ne dirait
+rien.
+
+Au branchement : second champ, les deux resistances en **brut** (jamais le
+ratio), **canari de non-redondance** (si les deux mesures coincident toujours,
+l'une ne sert a rien), et le controle croise contre `count_solutions`.
+
+**3. Connected : le point d'articulation est ECARTE, pas reporte.** Deux
+motifs, aucun n'est la difficulte : un Connected trop fort dissoudrait
+localement la difficulte mesuree ; et l'articulation est la **seule** inference
+du chantier portant sur un objet **induit** et **non monotone**, donc l'ecarter
+regle **14bis sans avoir a le trancher**. Reouverture uniquement si le debit a
+n=5 est insuffisant avec l'inaccessibilite seule -- et il faudra alors prouver
+14bis **avant**.
+
+**4. NoSquare : `dsl2.py` reste intact.** Region sur-inclusive = inefficacite,
+pas incorrection ; le diff vide est une preuve mecanique qui vaut plus qu'une
+optimisation. Le propagateur construit ses fenetres 2x2 lui-meme. **Le commit
+preparatoire de decomposition n'a plus lieu d'etre.**
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - PairRatio, septieme propagateur : 21 paires, sept faciles finis
 
 **Fait** : `propager_pairstep`, meme helper que `PairDiff`, autre relation.

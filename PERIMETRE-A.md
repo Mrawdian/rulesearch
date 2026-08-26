@@ -1,3 +1,23 @@
+# A EST UN CHANTIER DE DEBIT, PAS UN CHANTIER DE MESURE
+
+**A lire avant tout le reste de ce document.**
+
+A n'existe pas pour deduire mieux. A existe pour rendre **n=5 praticable sous
+la borne de 20 s par systeme**. C'est la seule experience qui puisse trancher
+l'hypothese centrale, et elle est aujourd'hui hors de portee en temps de
+calcul.
+
+**Consequence directe sur le branchement** : ce qu'il faudra verifier en
+priorite est le **cout par systeme**, pas la qualite de deduction. Le critere
+de succes de A est un debit, pas un taux de resolution.
+
+**Consequence sur le n=4** : brancher la propagation dans une hierarchie a n=4
+saturerait davantage un regime **deja sature** -- T0 seul y resout 60 a 92 %
+des instances. Ce serait le motif du projet applique au chantier lui-meme :
+un instrument plus fin dans un regime ou il n'y a plus rien a distinguer.
+
+---
+
 # PERIMETRE-A.md — etat de candidats explicite dans engine/
 
 Document de decision. **Aucun code n'a ete ecrit.** Il decrit ce qu'il faudrait

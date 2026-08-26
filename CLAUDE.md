@@ -40,6 +40,26 @@ La structure est calculable. L'interet de jouer ne l'est pas. Ce moteur est
 un **filtre d'elimination**, jamais un juge. Ne jamais ecrire qu'un systeme
 est "bon" ou "amusant" : il est bien pose, c'est tout.
 
+## A EST UN CHANTIER DE DEBIT
+
+Le projet A -- la propagation sur domaines -- n'existe **pas** pour deduire
+mieux. Il existe pour rendre **n=5 praticable sous la borne de 20 s**. Le
+critere de succes est un **cout par systeme**, pas un taux de resolution.
+
+Corollaire : ne pas brancher la propagation dans une hierarchie a n=4, ou T0
+seul resout deja 60 a 92 % des instances. Affiner un instrument dans un regime
+sature est le motif du projet applique au chantier lui-meme.
+
+La mesure que le gel de `t0_legacy` rend possible :
+
+    gain_propagation = (resistance_T0 - resistance_prop) / resistance_T0
+
+L'hypothese predit un gain **faible** pour `connect`, **fort** pour `static` --
+un systeme localement decomposable voit sa resistance recuperee par des
+propagateurs locaux plus forts ; un systeme non decomposable, non, **par
+definition**. C'est l'ecart entre les deux instruments qui est le signal, et il
+n'a de sens que parce que **l'un des deux ne bouge jamais**.
+
 ## LE MOTIF DU PROJET — a lire avant les invariants, ils en decoulent
 
 **Sept fois** dans ce projet, un instrument a mesure autre chose que ce qu'il
