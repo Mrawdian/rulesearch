@@ -37,7 +37,7 @@ from rulesearch import (UNASSIGNED, RuleSystem, rows, cols, diags, blocks,
                         count_solutions, random_solution, minimal_clues)
 from dsl2 import (random_cages, adj_pairs, knight_pairs,
                   PairDiff, PairRatio, Connected, NoSquare)
-from deduction import solve_graded
+from deduction import solve_graded, apply_T0
 from prefilter import is_dead
 
 
@@ -58,7 +58,7 @@ def run_canaries():
     env = dict(os.environ)
     env["PYTHONPATH"] = ENGINE + os.pathsep + env.get("PYTHONPATH", "")
     for c in ("canary.py", "canary2.py", "canary3.py", "canary4.py",
-              "canary5.py", "canary6.py"):
+              "canary5.py", "canary6.py", "canary7.py"):
         p = os.path.join(HERE, "canary", c)
         if not os.path.exists(p):
             continue
@@ -198,6 +198,12 @@ def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
 
     fracs, levels, uses_acc = [], [], {0: 0, 1: 0, 2: 0}
     solved = 0
+    # Resistance a T0 : on journalise les DEUX BRUTS, pas le ratio. Un
+    # ratio journalise ne se recalcule pas si la normalisation change ;
+    # deux bruts, si. (La premiere version de cette mesure normalisait
+    # sur la grille entiere et etait confondue par la densite d'indices.)
+    t0_unknown = 0        # cases inconnues du puzzle initial, cumulees
+    t0_left = 0           # cases restantes apres saturation T0 SEULE
     for _ in range(n_instances):
         if time.time() - t0 > max_seconds:
             return {"verdict": "TROP-CHER",
@@ -210,6 +216,14 @@ def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
         PHASE = "minimal_clues"
         puz = minimal_clues(rs, sol)
         fracs.append(sum(1 for x in puz if x != UNASSIGNED) / cells)
+        PHASE = "resistance_T0"
+        _g = list(puz)
+        while True:
+            _p, _c = apply_T0(rs, _g)
+            if _c or not _p:
+                break
+        t0_unknown += sum(1 for x in puz if x == UNASSIGNED)
+        t0_left += sum(1 for x in _g if x == UNASSIGNED)
         PHASE = "solve_graded"
         r = solve_graded(rs, puz)
         if r["solved"]:
@@ -224,6 +238,7 @@ def evaluate_system(rs, n_instances=6, max_seconds=MAX_SECONDS):
     out = {"total_grids": total, "clue_frac": round(cf, 3),
            "solved_frac": round(solved / n_instances, 3),
            "level_uses": uses_acc,
+           "t0_unknown": t0_unknown, "t0_left": t0_left,
            "max_level": max(levels) if levels else -1}
     if cf > MAX_CLUE_FRAC:
         out["verdict"] = "LIBRE"

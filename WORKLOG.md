@@ -11,6 +11,105 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - resistance a T0 normalisee : metrique principale, canary7
+
+**Demande** : la resistance a T0 etait confondue par la densite d'indices.
+Normaliser sur les cases inconnues, recalculer sur les journaux, en faire la
+metrique principale, journaliser les bruts, ajouter `canary7`, consigner.
+
+**Cause reelle** : la mesure normalisait sur la **grille entiere**.
+
+    connect    d=3   74,2 % de grille remplie par T0 seul
+    static-ref d=3   98,0 %
+
+24 points, presentes comme le meilleur discriminant du projet. **Artefact.**
+`connect` recoit 6,0 indices et `static` 9,5 : `static` part de 59 % de grille
+deja remplie contre 37 %. En points **ajoutes** par T0 : 36,7 contre 38,6 --
+identiques. Verifie a la main sur mes propres chiffres.
+
+Le confondant, `clue_frac`, etait **journalise depuis le debut et affiche dans
+la colonne voisine du meme tableau**. Je ne l'ai pas regarde. Sixieme metrique
+du projet a mesurer autre chose que ce qu'elle annonce.
+
+**Correction** : normalisation sur les cases inconnues.
+
+    resistance = t0_left / t0_unknown
+
+**1. Recalcul sur les SYSTEMES DES JOURNAUX** (et non sur des systemes
+regeneres). Les enregistrements ne portent pas encore les bruts, mais ils
+portent `seed` et `idx`, et `gen_system` est deterministe a partir de
+`random.Random(seed)` : rejouer `idx` appels rend **exactement** le systeme
+journalise, verifie par comparaison de `rs.label` avec le champ `sys`.
+Instances fraiches a graine fixe, car `random_solution`/`minimal_clues`
+consomment le `random` global dont l'etat n'est pas reproductible.
+
+    d=3 : connect 39,2 % contre static 18,1 %   facteur 2,2   p = 0,0005
+    d=4 : connect 40,4 % contre static 23,2 %   facteur 1,7   p = 0,0005
+
+**Significatif aux deux domaines** -- ce qui repond aussi a la question de
+robustesse laissee ouverte : le resultat ne tient pas a un domaine particulier.
+
+Ecart avec l'estimation a la main (facteur 8) : le rejeu porte sur les seuls
+**CANDIDATS** journalises, sous-ensemble filtre, alors que la mesure initiale
+prenait toute instance resoluble. Les candidats `static` resistent plus que les
+systemes `static` en general. **Le facteur reel est ~2, pas ~8.**
+
+**2. `summarize.py`** : section **resistance a T0 — METRIQUE PRINCIPALE**, avec
+test de permutation, marquage des series non reproductibles, et refus de
+conclure sous 20 par groupe. `max_level` conserve, explicitement marque
+**SATURE**.
+
+**3. `run.py`** : journalise **`t0_unknown`** et **`t0_left`**, les deux bruts,
+**pas le ratio**. Une normalisation peut changer -- celle-ci vient de changer --
+et un ratio journalise ne se recalcule pas. Calcul par saturation de T0 seule
+sur une copie du puzzle, avant `solve_graded`. **`dsl_hash` inchange** :
+`run.py` n'est pas dans `engine/`, la serie en cours n'est pas rompue.
+
+**4. `canary7`** : la resistance doit valoir **0** quand T0 resout
+integralement, et etre **strictement positive** sinon. Echoue aussi s'il
+n'arrive pas a **exhiber** l'un des deux cas -- une mesure constante n'aurait
+aucun pouvoir discriminant.
+
+**Verifie** (execute et observe) :
+- **Les sept canaris passent depuis la racine ET depuis `engine/` : 14/14.**
+- `canary7` exhibe bien les deux bornes : 5 instances a resistance 0,000 (T0
+  resout tout) et 5 a 0,357 / 0,500 / 0,909 / 0,917 / 1,000.
+- Rejeu : 120 systemes par tag pour `connect`, `static-ref`, `static-d4`, 99
+  pour `connect-d4`, avec concordance de `rs.label` exigee.
+- `summarize.py` tourne et annonce *6 candidats sur 4296 portent les champs
+  bruts (0 %)* -- normal, les champs viennent d'etre ajoutes, seuls les blocs
+  posterieurs les portent.
+- `dsl_hash` inchange, verifie : aucun nouveau hash dans `runs/`.
+
+**Non verifie / suppose** :
+- Le rejeu utilise des **instances fraiches**, pas celles evaluees a l'epoque.
+  Les systemes sont exacts, les puzzles non. Les chiffres sont donc
+  representatifs des systemes journalises, pas une reconstitution.
+- La resistance n'a **pas encore ete testee contre les autres variables
+  journalisees** (`total_grids`, `n`, `d`) -- seulement contre `clue_frac`, le
+  confondant qui vient d'etre trouve. L'invariant 7bis demande plus.
+- Le rejeu porte sur les CANDIDATS uniquement. La resistance sur l'ensemble des
+  systemes n'est pas mesuree.
+- Aucune correction pour tests multiples.
+- Les series a hash orphelin sont incluses dans le rejeu, sans distinction.
+
+**Bloque sur** : rien. Aucun redemarrage requis : `run.py` est relance a chaque
+bloc, `summarize.py` et les canaris aussi.
+
+**Pour Claude chat** :
+- **La metrique principale est la resistance a T0**, `t0_left / t0_unknown`.
+  `max_level` est SATURE (100 % partout) et conserve pour memoire seulement.
+- **Ne jamais normaliser sur la grille entiere** : la densite d'indices differe
+  systematiquement entre `connect` (6,0) et `static` (9,5). Normaliser sur les
+  cases inconnues.
+- Les journaux portent **deux bruts**, jamais le ratio. Si la normalisation
+  change encore, tout reste recalculable.
+- Un `summary.md` annoncant *0 % des candidats portent les champs bruts*
+  signifie que les enregistrements sont anterieurs au 26/08/2026, pas que la
+  mesure est cassee.
+- Avant d'adopter une metrique, la tester contre `clue_frac` d'abord. Le
+  confondant est dans le journal, a cote.
+
 ## 2026-08-26 - RELEVE CONSOLIDE : T0 sature la grille, et un discriminant fort apparait
 
 Seuil atteint : `connect-d4` a 21 candidats, `static-d4` en a 57. Le releve

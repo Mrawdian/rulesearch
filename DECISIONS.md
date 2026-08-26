@@ -557,3 +557,89 @@ d'une refutation : les echantillons rejouables sont encore trop petits.
 
 C'est la contrepartie de la decision de conserver les series orphelines : on
 les garde comme donnees, mais elles ne peuvent pas porter une conclusion.
+
+## 2026-08-26 - sixieme metrique confondue, et le confondant etait dans la colonne d'a cote
+La "resistance a T0" avait d'abord ete mesuree comme **fraction de la grille
+entiere** remplie par T0 seul :
+
+    connect    d=3   74,2 %
+    static-ref d=3   98,0 %
+
+24 points d'ecart, presente comme le meilleur discriminant trouve. **C'etait
+un artefact de la densite d'indices.** `connect` recoit 6,0 indices en moyenne
+et `static` 9,5 : `static` part de 59 % de grille deja remplie contre 37 %. En
+points AJOUTES par T0, les deux sont identiques -- 36,7 contre 38,6.
+
+Le confondant, `clue_frac`, etait **journalise depuis le debut et affiche dans
+la colonne voisine du meme tableau**. Il n'a pas ete regarde.
+
+C'est la **sixieme** metrique du projet a mesurer autre chose que ce qu'elle
+annonce : T1 faux, profondeur v1 saturante, T2 sature, T3 inerte, effort
+confondu avec profondeur, et maintenant resistance confondue avec densite.
+
+**Regle qui en decoule, et qui devient un invariant** : toute nouvelle metrique
+doit etre **testee contre les variables deja journalisees** avant d'etre
+adoptee -- `clue_frac` en premier, puis `total_grids`, `n`, `d`. Le confondant
+n'est presque jamais exotique ; il est dans le journal, a cote.
+
+**Correction** : normalisation sur les cases INCONNUES et non sur la grille.
+
+    resistance = cases restantes apres saturation T0 seule
+                 / cases inconnues du puzzle initial
+
+Le signal survit et se renforce. Recalcul sur les **systemes des journaux**
+(rejeu exact par `seed` + `idx`, instances fraiches a graine fixe), candidats
+uniquement :
+
+    d=3 : connect 39,2 %  contre static 18,1 %   facteur 2,2   p = 0,0005
+    d=4 : connect 40,4 %  contre static 23,2 %   facteur 1,7   p = 0,0005
+
+Significatif aux deux domaines, ce qui repond en meme temps a la question de
+robustesse : le resultat ne depend pas d'un domaine particulier.
+
+Ecart avec l'estimation faite a la main sur l'echantillon regenere (facteur 8) :
+le rejeu porte sur les seuls **CANDIDATS** journalises, sous-ensemble filtre
+(bien poses, peu d'indices), alors que la mesure initiale prenait toute
+instance resoluble. Les candidats `static` resistent plus que les systemes
+`static` en general. Le facteur reel est ~2, pas ~8.
+
+**Adoptee comme metrique principale**, pour trois raisons cumulees :
+1. elle ne sature pas, contrairement a `max_level` (100 % partout) ;
+2. elle est significative aux deux domaines ;
+3. **elle ne depend d'aucune technique dont la disponibilite varie entre les
+   groupes compares.** C'est decisif : `max_level` est confondu a d=4 parce que
+   `static-d4` dispose de T1 (34,4 % de regions eligibles) et `connect-d4`
+   jamais (0,0 %, les familles connect/relational ne produisent aucun ALLDIFF).
+   Comparer la profondeur de deux groupes dont l'un a trois niveaux et l'autre
+   deux n'a pas de sens. La resistance a T0 n'a pas ce defaut : T0 est
+   disponible partout.
+
+Le biais de disponibilite de T1 a d=4 devient donc **secondaire** : il reste
+reel, mais il n'affecte plus la mesure qui fait foi.
+
+**Journalisation** : ce sont les **deux bruts** qui sont enregistres --
+`t0_unknown` et `t0_left` -- et non le ratio. Un ratio journalise ne se
+recalcule pas si la normalisation change ; deux bruts, si. La lecon vient
+directement de cette entree : la premiere normalisation etait fausse, et
+n'aurait pas ete rattrapable si seul le ratio avait ete ecrit.
+
+`max_level` est conserve dans `summary.md`, explicitement marque **SATURE**.
+
+Reouverture : si la resistance sature a son tour (tout proche de 0 ou de 1),
+ou si un confondant non teste apparait, reprendre la liste des variables
+journalisees et tester contre chacune.
+
+
+## 2026-08-26 - canary7 : la metrique principale doit separer ses deux bornes
+Une metrique principale qui ne distinguerait pas ses cas extremes ne mesurerait
+rien, et l'historique du projet montre que ca passe inapercu.
+
+`canary7` verifie aux deux bornes :
+- **resistance nulle** sur une instance que T0 resout integralement ;
+- **resistance strictement positive** sur une instance qu'il ne resout pas.
+
+Il echoue aussi s'il n'arrive pas a **exhiber** l'un des deux cas : ne pas
+trouver d'instance resistante signifierait que la mesure est constante, donc
+sans pouvoir discriminant. C'est la meme exigence que le controle B de
+`canary6` -- se declencher, ou ici se calculer, ne suffit pas : il faut
+separer.

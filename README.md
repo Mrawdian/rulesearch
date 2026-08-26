@@ -43,6 +43,21 @@ un tas de lignes dont on ne sait plus lesquelles se comparent.
                    est une information de recherche : un systeme trop cher
                    a evaluer a n=4 est un fait sur le systeme.
 
+## Resistance a T0 -- metrique principale
+    t0_unknown   cases inconnues du puzzle initial, cumulees sur les instances
+    t0_left      cases restantes apres saturation de T0 SEULE, cumulees
+    resistance = t0_left / t0_unknown
+
+Fraction du travail de deduction que la technique la PLUS FAIBLE ne fait pas.
+Ne sature pas (contrairement a `max_level`, a 100 % partout) et ne depend
+d'aucune technique dont la disponibilite varie selon les familles -- T1 par
+exemple n'existe que sur les systemes portant un ALLDIFF de taille d.
+
+Les deux BRUTS sont journalises, pas le ratio : une normalisation peut changer,
+et un ratio journalise ne se recalcule pas. La premiere version normalisait sur
+la grille entiere et etait **confondue par la densite d'indices** -- `connect`
+recoit 6,0 indices et `static` 9,5, donc `static` partait de bien plus haut.
+
 ## Champ phase
 Present sur les records TROP-CHER. Indique l'etape en cours quand le
 budget a ete depasse, parmi :
@@ -64,6 +79,10 @@ Ils doivent passer depuis la racine ET depuis `engine/`.
     canary2.py  niveaux de technique requis par famille
     canary3.py  correction de T1 : aucune divergence avec la solution
     canary4.py  surete du pre-filtre : aucun faux positif
+    canary7.py  surete de la resistance a T0 : elle doit valoir 0 sur un
+                systeme que T0 resout integralement, et etre strictement
+                positive sur un systeme qu'il ne resout pas. Une metrique
+                qui ne separe pas ces deux cas ne mesure rien.
     canary6.py  declenchement : toute technique de deduction ACTIVEE
                 (niveau <= DEFAULT_MAX_LEVEL) doit s'invoquer au moins
                 une fois sur les cas de reference. Une technique correcte

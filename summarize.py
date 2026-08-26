@@ -10,6 +10,27 @@ from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# Seuils partages par toutes les comparaisons du resume.
+MIN_GROUPE = 20      # sous ce nombre, on refuse de tester
+N_PERM = 2000        # melanges du test de permutation
+SEUIL_P = 0.05
+
+
+def _test_permutation_valeurs(va, vb, n_iter=N_PERM, graine=20260826):
+    """Test de permutation bilateral sur deux listes de valeurs numeriques."""
+    if len(va) < MIN_GROUPE or len(vb) < MIN_GROUPE:
+        return None
+    obs = abs(sum(va) / len(va) - sum(vb) / len(vb))
+    pool = list(va) + list(vb)
+    na = len(va)
+    rng = random.Random(graine)
+    au_moins = 0
+    for _ in range(n_iter):
+        rng.shuffle(pool)
+        if abs(sum(pool[:na]) / na - sum(pool[na:]) / (len(pool) - na)) >= obs:
+            au_moins += 1
+    return (au_moins + 1.0) / (n_iter + 1.0)
+
 
 def hashs_reproductibles(limite=80):
     """
@@ -111,6 +132,10 @@ w("")
 # hypothese de fracture : la connectivite produit-elle plus de T2 ?
 w("## hypothese : la fracture est locale / non-locale")
 w("")
+w("**`max_level` est SATURE** (100 % des candidats a T2) : cette section est")
+w("conservee pour memoire, la mesure qui fait foi est la **resistance a T0**")
+w("ci-dessous.")
+w("")
 w("Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme")
 w("contient CONNECTED atteignent T2 nettement plus souvent que les autres.")
 w("")
@@ -173,7 +198,65 @@ if conn_censures:
       "Il peut n'etre qu'un effet de la borne de temps.")
     w("")
 
-w("## profondeur en continu (le seuil binaire sature, pas ceci)")
+def _resistance(r):
+    """cases restantes apres T0 seul / cases inconnues initiales, ou None"""
+    inc = r.get("t0_unknown")
+    left = r.get("t0_left")
+    if not inc:
+        return None
+    return float(left) / inc
+
+
+w("## resistance a T0 — METRIQUE PRINCIPALE")
+w("")
+w("`resistance = t0_left / t0_unknown` : la fraction du travail de deduction")
+w("que la technique la **plus faible** ne fait pas. Elle ne sature pas, et ne")
+w("depend d'aucune technique dont la disponibilite varie selon les familles")
+w("— contrairement a `max_level`, que T1 rend incomparable entre `connect`")
+w("(aucun ALLDIFF, donc jamais de T1) et `static`.")
+w("")
+w("Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur")
+w("la grille la rendait confondue par la densite d'indices.")
+w("")
+
+_avec_res = [r for r in cands if _resistance(r) is not None]
+if not _avec_res:
+    w("*Aucun enregistrement ne porte encore `t0_unknown` / `t0_left`. Les")
+    w("champs ont ete ajoutes le 26/08/2026 : seuls les blocs posterieurs les")
+    w("portent. Metrique indisponible sur cette serie.*")
+else:
+    w("*%d candidats sur %d portent les champs bruts (%.0f%%).*"
+      % (len(_avec_res), len(cands), 100.0 * len(_avec_res) / max(1, len(cands))))
+    w("")
+    for _h, _n in by_hash.most_common():
+        _sous = [r for r in _avec_res if r.get("dsl_hash") == _h]
+        if len(_sous) < MIN_GROUPE:
+            continue
+        _a = [r for r in _sous if "CONNECTED" in r.get("sys", "")]
+        _b = [r for r in _sous if "CONNECTED" not in r.get("sys", "")]
+        _va = [_resistance(r) for r in _a]
+        _vb = [_resistance(r) for r in _b]
+        _rep = (reproductibles is None) or (_h in reproductibles)
+        w("- `%s` — %d candidats%s"
+          % (_h, len(_sous), "" if _rep else " (**NON REPRODUCTIBLE**)"))
+        if _va:
+            w("  - AVEC connectivite (%d) : resistance **%.1f%%**"
+              % (len(_va), 100.0 * sum(_va) / len(_va)))
+        if _vb:
+            w("  - SANS connectivite (%d) : resistance **%.1f%%**"
+              % (len(_vb), 100.0 * sum(_vb) / len(_vb)))
+        _p = _test_permutation_valeurs(_va, _vb)
+        if _p is None:
+            w("  - *groupes trop petits (< %d) — aucun test*" % MIN_GROUPE)
+        elif _p < SEUIL_P and not _rep:
+            w("  - p = %.4f — **A NE PAS RETENIR** : serie non reproductible." % _p)
+        elif _p < SEUIL_P:
+            w("  - test de permutation : **p = %.4f** — significatif." % _p)
+        else:
+            w("  - test de permutation : **p = %.4f** — **NON SIGNIFICATIF**." % _p)
+w("")
+
+w("## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)")
 w("")
 w("**Cette mesure evalue l'EFFORT de deduction, pas la PROFONDEUR.** Un")
 w("systeme qui demande trois fois T2 est plus laborieux, pas plus profond")
@@ -201,11 +284,6 @@ def _pondere(g):
         return 0.0
     return sum(sum(int(k) * v for k, v in (r.get("level_uses") or {}).items())
                for r in g) / len(g)
-
-
-MIN_GROUPE = 20
-N_PERM = 2000
-SEUIL_P = 0.05
 
 
 def _score(r):

@@ -61,6 +61,12 @@ est "bon" ou "amusant" : il est bien pose, c'est tout.
    pas en pratique. `canary6` l'exige pour tout niveau <= 
    `DEFAULT_MAX_LEVEL` ; relever cette constante sans rendre la technique
    operante fait echouer les canaris, donc bloque le run.
+7bis. **Toute nouvelle metrique doit etre testee contre les variables DEJA
+   JOURNALISEES avant d'etre adoptee** -- `clue_frac` en premier, puis
+   `total_grids`, `n`, `d`. Le confondant n'est presque jamais exotique : il
+   est dans le journal, a cote. La "resistance a T0" normalisee sur la grille
+   affichait 74 % contre 98 % ; l'ecart etait entierement du a la densite
+   d'indices, visible dans la colonne voisine du meme tableau.
 7. **Toute nouvelle metrique doit etre testee dans le regime ou on compte
    l'utiliser**, pas seulement sur un cas ou elle discrimine. Une metrique
    validee sur un cas facile puis deployee sur un regime saturant ne
@@ -90,13 +96,21 @@ est "bon" ou "amusant" : il est bien pose, c'est tout.
   cause n'est pas le choix de la technique mais le moteur lui-meme -- voir
   la section sur les techniques d'elimination. Chercher une troisieme
   technique d'elimination serait la troisieme fois. D'ou `canary6`.
+- **Resistance a T0 confondue par la densite d'indices (26/08/2026).**
+  Normalisee sur la grille entiere, elle donnait 74 % contre 98 % --
+  ecart entierement explique par `clue_frac` (6,0 indices contre 9,5). En
+  points ajoutes par T0, les deux groupes etaient identiques. Le
+  confondant etait journalise et affiche dans la colonne d'a cote.
+  Corrigee par normalisation sur les cases inconnues ; le signal survit
+  (facteur 2,2, p = 0,0005). Sixieme metrique du projet a mesurer autre
+  chose que ce qu'elle annonce -- d'ou l'invariant 7bis.
 - **Mesure de profondeur vide.** Compter les passes d'une technique unique
   sature vers 2-3 pour tout, sudoku compris. La profondeur ne veut dire
   quelque chose que relativement a une hierarchie de techniques.
 
 ## Le motif qui revient : des metriques qui mesurent autre chose
 
-**Quatre fois** le projet a produit un chiffre qui ne mesurait pas ce qu'il
+**Six fois** le projet a produit un chiffre qui ne mesurait pas ce qu'il
 annoncait :
 
 1. **T1 faux** : remplissait la grille et se trompait de solution.
@@ -104,6 +118,10 @@ annoncait :
 3. **T2 sature** : 100 % contre 100 %, et le verdict automatique imprimait
    une refutation non etablie.
 4. **T3 inerte** : correct, verifie, et jamais declenche.
+5. **Effort confondu avec profondeur** : le nombre d'invocations mesure le
+   caractere laborieux, pas la structure.
+6. **Resistance a T0 confondue avec la densite d'indices** : le confondant
+   etait dans la colonne voisine du meme tableau.
 
 Les cas 3 et 4 partagent une cause precise : **une metrique livree sans
 avoir ete testee dans le regime ou elle allait servir**. Le cas 4 est
@@ -151,6 +169,32 @@ non decomposable localement.
 
 `canary3` reste le filet : il exige que la deduction retrouve EXACTEMENT la
 solution d'origine. Ne jamais entreprendre ce chantier sans l'etendre d'abord.
+
+## Metrique principale : la resistance a T0
+
+    resistance = t0_left / t0_unknown
+               = cases restantes apres saturation de T0 SEULE
+                 / cases inconnues du puzzle initial
+
+Fraction du travail que la technique la plus faible ne fait pas. Adoptee le
+26/08/2026 en remplacement de `max_level`, pour trois raisons :
+
+1. **elle ne sature pas** -- `max_level >= 2` vaut 100 % partout ;
+2. elle est significative aux deux domaines (d=3 : 39,2 % contre 18,1 %,
+   p = 0,0005 ; d=4 : 40,4 % contre 23,2 %, p = 0,0005) ;
+3. **elle ne depend d'aucune technique dont la disponibilite varie entre les
+   groupes compares.** Point decisif : `max_level` est confondu a d=4, ou
+   `static` dispose de T1 (34,4 % de regions eligibles) et `connect` jamais
+   (0,0 %). Comparer deux groupes dont l'un a trois niveaux et l'autre deux
+   n'a pas de sens. T0, lui, est disponible partout.
+
+Normalisee sur les cases **inconnues**, jamais sur la grille : normaliser sur
+la grille la rend confondue par la densite d'indices. Les journaux portent les
+**deux bruts**, pas le ratio -- une normalisation peut changer, un ratio
+journalise ne se recalcule pas.
+
+`canary7` garde ses deux bornes : nulle quand T0 resout tout, strictement
+positive sinon.
 
 ## Etat de la mesure de profondeur -- a lire avant d'en tirer quoi que ce soit
 
