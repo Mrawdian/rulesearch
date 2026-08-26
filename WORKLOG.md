@@ -11,6 +11,56 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - 14ter : la preuve tient, le critere propose non
+
+**Demande** : prouver ou refuter la surete du retrait par inaccessibilite sur
+objet induit, AVANT toute ligne de `Connected`.
+
+**LA CONCLUSION DEMANDEE EST VRAIE** : le retrait par inaccessibilite est sur.
+Toute solution `sigma` a son ensemble de cellules `val` inclus dans `P` et
+connexe ; si `s` est certainement `val`, une cellule inaccessible depuis `s`
+dans `P` ne peut pas etre `val`. **Condition d'amorcage : `|F| >= 1`** -- sans
+ancre, aucun retrait n'est justifie.
+
+**MAIS LA PREMISSE SUR L'ARTICULATION EST FAUSSE, et je le signale parce
+qu'elle changeait une decision.** Le forcage par point d'articulation est
+**sur** (meme argument) **et monotone**. L'intuition « les points
+d'articulation ne sont pas monotones » vaut pour l'ensemble des points
+d'articulation d'un graphe quelconque ; l'objet ici est **l'ensemble des
+sommets par lesquels passe TOUT chemin a-b**, et supprimer des sommets ne cree
+jamais de chemin, donc cet ensemble ne peut que **croitre**.
+
+**Verifie empiriquement AVANT d'etre ecrit** : 1675 tirages de graphes-grilles
+4x4 avec suppressions aleatoires, **zero contre-exemple** pour les deux regles.
+
+**LE BON CRITERE (14ter)** : une inference est sure si elle n'utilise les
+domaines **que comme sur-approximation des valeurs possibles**. 14 en est le
+cas particulier. **Etre induit n'est pas etre dangereux** si l'objet est
+construit par appartenance. La monotonie sert a la **confluence** -- donc a ce
+que la metrique soit bien definie independamment de l'ordre -- **pas a la
+surete**.
+
+**CONSEQUENCE** : l'exclusion de l'articulation avait deux motifs ; le second
+(14bis) s'evapore. Le premier tient entier et suffit -- un `Connected` trop
+fort dissoudrait localement la difficulte mesuree. **L'exclusion est maintenue
+mais repose sur un seul motif, de conception d'experience et non de
+correction.** Il n'y aura plus de preuve a produire si elle est rouverte.
+
+**Fait** : `statut_objet()` rend **trois** issues -- FIXE, INDUIT-PROUVE,
+INDUIT-SANS-PREUVE -- et `SURETE_OBJET_INDUIT` nomme **les regles couvertes**,
+pas seulement la contrainte : une regle non nommee n'est pas couverte, meme sur
+la meme contrainte. `canary3` verifie en plus que **les trois issues sont
+atteignables** (invariant 9 : un chemin jamais execute n'est pas un chemin).
+
+**Verifie** : les neuf propagateurs sont FIXE, `Connected` sort
+**INDUIT-PROUVE**, et la troisieme issue est atteinte sur un `kind` fictif.
+
+**CE QUE « INDUIT » COUTE REELLEMENT** : ni la surete ni la confluence, mais
+**l'incrementalite** -- l'objet doit etre reconstruit a chaque changement de
+domaine. **Pour un chantier de debit c'est le seul cout qui compte.**
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - NoSquare, neuvieme propagateur : 36 croisements, 14bis verifie
 
 **Fait** : `propager_nosquare` -- dans une fenetre 2x2, si trois cellules sont

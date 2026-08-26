@@ -536,15 +536,49 @@ def propager_nosquare(cn, dom):
 # qu'il parcourt. `canary3` verifie MECANIQUEMENT que cet objet est identique
 # avant et apres des rognages arbitraires.
 #
-# Attendu : tous FIXES aujourd'hui. `Connected`, lui, parcourra un graphe dont
-# les sommets passables sont ceux dont le domaine CONTIENT `val` -- objet
-# INDUIT, qui changera sous rognage. Ce test est donc ecrit pour qu'il ECHOUE
-# a l'etape 10 : c'est ainsi qu'on saura que 14bis est engage, au lieu de le
-# decouvrir apres coup.
+# Attendu : les neuf propagateurs actuels sont FIXES. `Connected` est INDUIT --
+# ses sommets passables sont ceux dont le domaine CONTIENT `val`.
+#
+# ETRE INDUIT N'EST PAS ETRE DANGEREUX (invariant 14ter). Ce qui rend une
+# inference sure est qu'elle n'utilise les domaines que comme
+# SUR-APPROXIMATION des valeurs possibles -- donc qu'elle soit valide dans la
+# relaxation « chaque cellule peut prendre n'importe quelle valeur de son
+# domaine ». Un objet induit CONSTRUIT PAR APPARTENANCE satisfait cela.
+#
+# Le test rend donc TROIS issues et non deux : FIXE, INDUIT-PROUVE,
+# INDUIT-SANS-PREUVE. Seule la troisieme interdit.
+
+# Regles dont l'objet d'inference est INDUIT par les domaines, mais dont la
+# SURETE EST PROUVEE (invariant 14ter). La valeur nomme la ou les regles
+# couvertes : une regle non nommee ici n'est PAS couverte, meme sur la meme
+# contrainte. Voir DECISIONS.md, 26/08/2026.
+SURETE_OBJET_INDUIT = {
+    "CONNECTED": ("retrait par inaccessibilite ; forcage par point "
+                  "d'articulation. Les deux sont valides dans la relaxation "
+                  "et monotones sous retrecissement de P."),
+}
+
+
+def statut_objet(kind, fixe):
+    """Trois issues, pas deux (invariant 14ter) :
+      'FIXE'            -- objet independant des domaines, invariant 14 suffit
+      'INDUIT-PROUVE'   -- objet induit, surete etablie et referencee
+      'INDUIT-SANS-PREUVE' -- INTERDIT tant que la preuve n'est pas ecrite
+    """
+    if fixe:
+        return "FIXE"
+    if kind in SURETE_OBJET_INDUIT:
+        return "INDUIT-PROUVE"
+    return "INDUIT-SANS-PREUVE"
+
 
 def objet_inference(cn, dom):
     """Objet parcouru par le propagateur de `cn`, sous l'etat `dom`."""
     k = getattr(cn, "kind", None)
+    if k == "CONNECTED":
+        # INDUIT : les cellules passables sont celles dont le domaine CONTIENT
+        # `val`. L'objet change donc quand les domaines retrecissent.
+        return tuple(i for i in cn.region if cn.val in dom[i])
     if k == "NOTRIPLE":
         return tuple(_fenetres_triples(cn.region))
     if k == "NOSQUARE":

@@ -1736,3 +1736,78 @@ ete constates en faisant echouer le croisement, pas devines.**
 Conforme a l'attribution corrigee : la hausse vient des huit paires a **n=3**
 et du passage a `max_taille = 4` (30 720 essais par execution contre 15 600),
 pas du nombre de paires.
+
+## 2026-08-26 - 14ter : la preuve tient, mais le critere propose n'est pas le bon
+
+**Demande** : prouver ou refuter la surete du retrait par inaccessibilite sur
+un objet induit, AVANT toute ligne de propagateur `Connected`.
+
+### La conclusion demandee est VRAIE
+Le retrait par inaccessibilite est **sur**. Preuve, avec `P` l'ensemble des
+cellules passables (`val` dans `dom[i]`) et `F` celles dont le domaine est
+reduit a `{val}` :
+
+    Soit sigma une solution compatible avec les domaines courants, et
+    S = {i : sigma[i] = val}. Par soundness des domaines, S est inclus dans P.
+    `Connected` impose que S soit connexe. Si s appartient a F, alors s
+    appartient a S, donc tout i de S est relie a s par un chemin DANS S, donc
+    par un chemin dans P. Contraposee : si i n'est pas accessible depuis s
+    dans P, alors sigma[i] != val. Le retrait est valide.
+
+**Condition d'amorcage** : il faut `|F| >= 1`. Sans ancre, aucun retrait n'est
+justifie -- la composante peut etre n'importe ou, ou vide.
+
+### MAIS LA PREMISSE SUR L'ARTICULATION EST FAUSSE
+La formulation proposee -- « une inference sur objet induit est sure si la
+propriete inferee est monotone » -- est **suffisante mais pas necessaire**, et
+surtout elle **ne discrimine pas** : le forcage par point d'articulation la
+satisfait aussi.
+
+**Il est sur.** Meme decor : tout chemin de `a` a `b` dans `S` est un chemin
+dans `P` ; si `x` separe `a` et `b` dans `P`, ce chemin passe par `x`, donc
+`sigma[x] = val`.
+
+**Et il est monotone.** L'intuition « les points d'articulation ne sont pas
+monotones sous suppression de sommets » est vraie **pour l'ensemble des points
+d'articulation d'un graphe quelconque**, mais l'objet ici n'est pas celui-la :
+c'est **l'ensemble des sommets par lesquels passe TOUT chemin `a`-`b`**.
+Supprimer des sommets ne **cree** jamais de chemin, donc cet ensemble ne peut
+que **croitre**. (Cas degenere : si `a` et `b` cessent d'etre relies, le
+systeme est infaisable et c'est une contradiction, pas un forcage.)
+
+**Verifie empiriquement** avant d'etre ecrit : 1675 tirages de graphes-grilles
+4x4 avec suppressions aleatoires de sommets, comparaison des ensembles avant et
+apres. **Zero contre-exemple** pour l'inaccessibilite comme pour l'articulation.
+
+### LE BON CRITERE (invariant 14ter)
+> Une inference est sure si elle n'utilise les domaines **que comme
+> sur-approximation des valeurs possibles** -- si elle est valide dans la
+> relaxation « chaque cellule peut prendre n'importe quelle valeur de son
+> domaine ».
+
+**14 en est le cas particulier** : lire la FORME d'un domaine, c'est affirmer
+sur son contenu quelque chose de plus fort que `sigma[i] dans dom[i]`.
+
+**Etre induit n'est pas etre dangereux.** Un objet induit **construit par
+appartenance** herite de la sur-approximation. La monotonie sert a la
+**confluence** -- unicite du point fixe, donc metrique bien definie
+independamment de l'ordre de propagation -- **pas a la surete**. Les deux
+regles de `Connected` etant monotones, la confluence est acquise aussi.
+
+### CONSEQUENCE SUR L'EXCLUSION DE L'ARTICULATION
+Elle avait **deux motifs**. Le second -- 14bis -- **s'evapore** : l'articulation
+est sure et monotone. Le premier tient entier et **suffit** : un `Connected`
+trop fort **dissoudrait localement** la difficulte que le projet mesure, et la
+force de ce propagateur n'est pas un parametre a maximiser.
+
+**L'exclusion est donc maintenue, mais elle repose desormais sur un seul
+motif, et c'est un motif de conception d'experience, pas de correction.** Le
+critere de reouverture reste celui fixe : insuffisance de debit a n=5 avec
+l'inaccessibilite seule. **Il n'y aura plus de preuve a produire avant** -- elle
+est faite.
+
+### CE QUE « INDUIT » COUTE REELLEMENT
+Ni la surete ni la confluence. Il coute **l'incrementalite** : l'objet doit
+etre reconstruit a chaque changement de domaine, la ou une region fixe se
+parcourt sans recalcul. **Pour un chantier de debit, c'est le seul cout qui
+compte**, et c'est celui-la qu'il faudra mesurer.

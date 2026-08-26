@@ -160,6 +160,24 @@ ete identifies ainsi.
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
 
+14ter. **Le critere de surete n'est pas la forme de l'objet, c'est la
+   SUR-APPROXIMATION.**
+   Une inference est sure si elle n'utilise les domaines **que comme
+   sur-approximation des valeurs possibles** -- autrement dit si elle est
+   valide dans la relaxation « chaque cellule peut prendre n'importe quelle
+   valeur de son domaine ». Rien d'autre n'est requis.
+   **L'invariant 14 en est le cas particulier** : lire la FORME d'un domaine,
+   c'est affirmer sur son contenu quelque chose de **plus fort** que
+   `sigma[i] dans dom[i]`. D'ou l'unsoundness.
+   **Un objet INDUIT n'est pas dangereux en soi.** S'il est construit par
+   APPARTENANCE, toute conclusion valide dans la relaxation vaut pour toutes
+   les solutions. La monotonie est une condition **suffisante et non
+   necessaire** -- utile pour la confluence, pas pour la surete.
+   Trois issues, donc, et non deux : **FIXE**, **INDUIT-PROUVE**,
+   **INDUIT-SANS-PREUVE**. Seule la troisieme interdit, et elle interdit
+   parce que la preuve n'a pas ete ecrite -- pas parce que l'objet est
+   induit.
+
 17. **14bis se VERIFIE mecaniquement, il ne se presume pas.**
    Chaque propagateur declare dans `objet_inference()` l'objet qu'il
    parcourt. `canary3` verifie que cet objet est **identique avant et apres

@@ -53,7 +53,8 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_mono_avant, propager_mono_arriere,
                        propager_pairdiff, propager_pairstep,
                        propager_notriple, propager_nosquare,
-                       objet_inference,
+                       objet_inference, statut_objet,
+                       SURETE_OBJET_INDUIT,
                        PROPAGATEURS)
 
 random.seed(23)
@@ -1255,6 +1256,7 @@ _sys14 = [
     ("PairRatio", RuleSystem(3, 3, [PairRatio([(0, 1)], 1)], "g")),
     ("NoTriple", RuleSystem(3, 3, [NoTriple([0, 1, 2, 3])], "h")),
     ("NoSquare", RuleSystem(3, 3, [NoSquare(3, 1)], "i")),
+    ("Connected", RuleSystem(3, 2, [Connected(3, 1)], "j")),
 ]
 _rnd14 = random.Random(67)
 _induits = []
@@ -1276,17 +1278,37 @@ for nom, rs in _sys14:
         if objet_inference(cn, dom) != ref:
             fixe = False
             break
-    print("  %-10s objet %s (%d elements)"
-          % (nom, "FIXE" if fixe else "INDUIT -- 14bis ENGAGE", len(ref)))
-    if not fixe:
+    st = statut_objet(cn.kind, fixe)
+    print("  %-10s %-19s (%d elements)" % (nom, st, len(ref)))
+    if st == "INDUIT-SANS-PREUVE":
         _induits.append(nom)
 if _induits:
-    print("  ATTENTION : 14bis est engage par %s. Il doit etre tranche AVANT "
-          "d'adopter ce(s) propagateur(s)." % ", ".join(_induits))
+    print("  ECHEC : objet INDUIT sans preuve de surete ecrite : %s."
+          % ", ".join(_induits))
+    print("  L'invariant 14ter exige que la preuve soit ECRITE ET REFERENCEE "
+          "avant d'adopter le propagateur.")
     echecs += 1
 else:
-    print("  OK : les neuf objets d'inference sont FIXES. 14 suffit, 14bis "
-          "n'est pas engage.")
+    print("  OK : aucun objet induit sans preuve.")
+for _k, _quoi in sorted(SURETE_OBJET_INDUIT.items()):
+    print("  preuve declaree pour %s : %s" % (_k, _quoi))
+
+# --- LA TROISIEME ISSUE DOIT ETRE ATTEIGNABLE (invariant 9) ---
+# Un canari jamais vu echouer ne verifie rien. On evalue directement la
+# fonction de decision sur un `kind` fictif, non declare.
+_essais_statut = [
+    ("kind fixe", statut_objet("ALLDIFF", True), "FIXE"),
+    ("kind induit declare", statut_objet("CONNECTED", False), "INDUIT-PROUVE"),
+    ("kind induit NON declare", statut_objet("FICTIF", False),
+     "INDUIT-SANS-PREUVE"),
+]
+print()
+print("-- 14ter : les trois issues sont-elles atteignables ? --")
+for _nom, _obtenu, _attendu in _essais_statut:
+    _ok = (_obtenu == _attendu)
+    print("  %-24s -> %-19s %s" % (_nom, _obtenu, "OK" if _ok else "ECHEC"))
+    if not _ok:
+        echecs += 1
 
 
 # ==========================================================================
