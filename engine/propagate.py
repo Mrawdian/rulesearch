@@ -27,6 +27,7 @@ CORRECT ; un propagateur trop zele produit des solutions FAUSSES. Le risque est
 asymetrique et le canari ne rattrape que le second.
 """
 from rulesearch import UNASSIGNED
+from dsl2 import neighbors4
 
 
 # ---------- CRITERE D'AUDIT (invariant 14 de CLAUDE.md) ----------
@@ -524,6 +525,88 @@ def propager_nosquare(cn, dom):
     return prog, False
 
 
+# ---------- CONNECTED ----------
+#
+# `Connected(n, val)` : les cellules valant `val` forment UNE composante
+# connexe (4-connexite).
+#
+# ===================== LA PREUVE, AVANT LE CODE =====================
+#
+# Notations, a l'etat de domaines courant :
+#   P = { i : val dans dom[i] }        les cellules POSSIBLEMENT `val`
+#   F = { i : dom[i] == {val} }        les cellules CERTAINEMENT `val`
+#   F inclus dans P.
+#
+# Soit `sigma` une solution compatible avec les domaines, et
+# S = { i : sigma[i] = val }.
+#
+#   (1) S est inclus dans P. C'est la SUR-APPROXIMATION (invariant 14ter) :
+#       les domaines ne font qu'ENCADRER les valeurs possibles, donc
+#       sigma[i] = val implique val dans dom[i].
+#   (2) `Connected` impose que S soit connexe pour la 4-connexite.
+#   (3) Si s appartient a F, alors sigma[s] = val, donc s appartient a S.
+#
+# REGLE DE RETRAIT. Soit A l'ensemble des cellules accessibles depuis `s` en ne
+# traversant que des cellules de P. Pour tout i de S, (2) et (3) donnent un
+# chemin de i a s ENTIEREMENT dans S, donc -- par (1) -- entierement dans P.
+# Donc S est inclus dans A. Contraposee : i hors de A implique sigma[i] != val.
+# **Le retrait de `val` hors de A est sur.**
+#
+# REGLE DE CONTRADICTION. Si une cellule de F est hors de A, alors deux
+# cellules certainement `val` ne peuvent pas etre reliees dans P : aucune
+# solution n'existe. **La contradiction est sure.**
+#
+# CONDITION D'AMORCAGE, ET C'EST LE PIEGE. Il faut |F| >= 1. Sans ancre
+# CERTAINE, la composante peut etre n'importe ou -- ou vide, `feasible()`
+# acceptant zero ou une cellule `val`. Un propagateur qui retirerait a partir
+# d'une cellule seulement POSSIBLE serait faux. `canary3` injecte exactement
+# ce bug.
+#
+# 14TER : l'objet parcouru -- le graphe induit sur P -- est INDUIT par les
+# domaines, pas fixe. Il est declare dans `SURETE_OBJET_INDUIT` avec les deux
+# regles ci-dessus, et SEULEMENT elles.
+#
+# CE QUI N'EST DELIBEREMENT PAS FAIT : le forcage par point d'articulation.
+# Il est PROUVE sur (relaxation + monotonie) -- ce n'est pas une question de
+# surete -- mais un `Connected` trop fort dissoudrait localement la difficulte
+# que le projet mesure. Voir DECISIONS.md. Sa reouverture est conditionnee a
+# une insuffisance de debit mesuree, rien d'autre.
+
+
+def propager_connected(cn, dom):
+    val, n = cn.val, cn.n
+    passables = set(i for i in cn.region if val in dom[i])
+    certaines = [i for i in cn.region if dom[i] == {val}]
+    if not certaines:
+        # PAS D'ANCRE : aucun retrait n'est justifie. Ne rien conclure quand
+        # on ne peut pas conclure.
+        return False, False
+
+    depart = certaines[0]
+    vus = {depart}
+    pile = [depart]
+    while pile:
+        x = pile.pop()
+        for y in neighbors4(x, n):
+            if y in passables and y not in vus:
+                vus.add(y)
+                pile.append(y)
+
+    for f in certaines:
+        if f not in vus:
+            return False, True          # deux `val` certaines non reliables
+
+    prog = False
+    for i in passables:
+        if i in vus:
+            continue
+        dom[i].discard(val)
+        prog = True
+        if not dom[i]:
+            return prog, True
+    return prog, False
+
+
 # ---------- 14BIS : l'objet d'inference est-il FIXE ou INDUIT ? ----------
 #
 # L'invariant 14 couvre les inferences dont l'entree est l'appartenance d'une
@@ -553,9 +636,13 @@ def propager_nosquare(cn, dom):
 # couvertes : une regle non nommee ici n'est PAS couverte, meme sur la meme
 # contrainte. Voir DECISIONS.md, 26/08/2026.
 SURETE_OBJET_INDUIT = {
-    "CONNECTED": ("retrait par inaccessibilite ; forcage par point "
-                  "d'articulation. Les deux sont valides dans la relaxation "
-                  "et monotones sous retrecissement de P."),
+    # NE NOMMER QUE LES REGLES REELLEMENT ECRITES. Le forcage par point
+    # d'articulation est prouve sur (relaxation + monotonie) mais DELIBEREMENT
+    # NON ADOPTE : il n'a donc rien a faire dans cette liste, qui autorise.
+    "CONNECTED": ("retrait par inaccessibilite depuis une cellule certainement "
+                  "`val` ; detection de contradiction. Valides dans la "
+                  "relaxation : toute solution a son ensemble de cellules "
+                  "`val` inclus dans P et connexe."),
 }
 
 
@@ -602,6 +689,7 @@ PROPAGATEURS = {
     "PAIRSTEP": propager_pairstep,
     "NOTRIPLE": propager_notriple,
     "NOSQUARE": propager_nosquare,
+    "CONNECTED": propager_connected,
 }
 
 

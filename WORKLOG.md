@@ -11,6 +11,48 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - Connected, dixieme propagateur -- ET A NE REMPLIT PAS SON CRITERE
+
+**Ordre impose et respecte** : preuve ecrite avant le code, `canary3` etendu et
+croisements avant le propagateur, puis mesure de debit immediatement apres.
+
+**Le propagateur** : inaccessibilite depuis une ancre CERTAINE + detection de
+contradiction. Rien d'autre. Piege = la condition d'amorcage `|F| >= 1` ; test
+negatif = ancre prise parmi les POSSIBLES, 2 / 5 / 8 violations.
+Neuf croisements, **45 paires**, `canary3` a **15,4 s**.
+
+**LE VERDICT, prototype EQUIVALENT EN DEDUCTION :**
+
+    125 instances comparables : x0,99      decile le plus couteux : x0,90
+    systemes rendus mesurables: 1 sur 132  aucune ne finit        : 6
+    solutions fausses         : 0
+
+**A ne remplit pas son critere de succes. Il n'y a pas de gain de debit.**
+
+**LE x3,99 PRECEDENT ETAIT DE LA DEDUCTION ABANDONNEE.** Mon prototype
+**remplacait** la saturation par la propagation -- il perdait donc exactement
+les detections de contradiction que les propagateurs omettent deliberement,
+`feasible()` etant l'oracle. 18 deductions perdues, 33 `max_level` plus hauts
+sur population entierement couverte. **C'est le garde impose par l'utilisateur
+qui l'a fait voir.** Corrige en FILTRE devant la saturation : 0 perdue, et le
+gain disparait. **Invariant 21.**
+
+**CE QUE A A PRODUIT, ET QUI N'EST PAS DU DEBIT** : le prototype deduit plus a
+cout egal -- 11 instances resolues par lui seul, 63 `max_level` abaisses, 0
+perdue. Gain de QUALITE, pas de debit. Ce n'est pas ce que A visait.
+
+**Le critere de reouverture de l'articulation, fixe a l'avance, est ATTEINT.**
+La preuve de surete est deja faite (14ter). La decision n'est pas prise ici.
+
+**Non verifie / suppose** :
+- Un seul tirage (graine 5), 30 systemes, une famille.
+- **1 `max_level` plus haut** non explique, sur population couverte. Le filtre
+  garantit « egal ou plus fort » sur les retraits, mais la propagation initiale
+  change l'ORDRE d'examen de T2. 0 deduction perdue, 0 solution fausse.
+- `propagate.py` n'est **toujours pas branche** en production.
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - MESURE DE DEBIT : A vise le bon endroit, et Connected decide
 
 **Demande** : mesurer le cout par systeme a n=5, avec et sans propagation ;

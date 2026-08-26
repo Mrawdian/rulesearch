@@ -1869,3 +1869,96 @@ ne le garantit : `apply_T2` sature `T0+T1` sur chaque hypothese, et le gain
 depend de la **force** du propagateur `Connected` -- dont la regle la plus
 forte a ete deliberement ecartee. **C'est la premiere mesure a refaire apres
 l'etape 10, et c'est elle qui decide du sort de A.**
+
+## 2026-08-26 - l'argument de surete avance contre l'articulation etait FAUX
+
+Rectification d'une entree anterieure de ce fichier, et de la decision qu'elle
+motivait a moitie.
+
+L'exclusion du forcage par point d'articulation avait ete posee sur **deux**
+motifs. Le second etait : « l'articulation infere depuis une propriete non
+monotone d'un objet induit ». **Cet argument est faux.**
+
+Il reposait sur le choix du mauvais objet. L'ensemble des **points
+d'articulation d'un graphe quelconque** n'est effectivement pas monotone sous
+suppression de sommets. Mais l'objet pertinent ici est l'ensemble des **sommets
+separateurs de `a` et `b`** -- ceux par lesquels passe TOUT chemin de `a` a `b`.
+Supprimer des sommets ne **cree** jamais de chemin : cet ensemble ne peut donc
+que **croitre**. Verifie sur 1675 tirages, zero contre-exemple
+(`preuves/monotonie_connected.py`).
+
+Et par 14ter, la monotonie n'etait de toute facon pas le critere : l'inference
+est sure parce qu'elle est valide dans la **relaxation**, ce que l'articulation
+satisfait aussi.
+
+**L'ARTICULATION RESTE ECARTEE, POUR UN SEUL MOTIF, ET IL SUFFIT** : un
+`Connected` trop fort **dissoudrait localement** la difficulte que le projet
+mesure. C'est un motif de **conception d'experience**, pas de correction. Il
+n'y a **plus aucun argument de surete** dans cette decision, et si le critere
+de reouverture se declenche, **rien ne reste a prouver avant** de l'ecrire.
+
+## 2026-08-26 - Connected, dixieme propagateur, et le VERDICT DE A
+
+### Le propagateur
+Deux regles, et rien d'autre : **retrait par inaccessibilite** depuis une
+cellule certainement `val`, et **detection de contradiction** quand deux
+cellules certainement `val` ne sont plus reliables dans `P`. La preuve est
+ecrite dans `engine/propagate.py`, **avant le code**, dans les termes de
+14ter -- validite dans la relaxation.
+
+**LE PIEGE EST LA CONDITION D'AMORCAGE** : il faut `|F| >= 1`. Sans ancre
+CERTAINE, la composante peut etre n'importe ou, ou vide -- `feasible()`
+acceptant zero ou une cellule `val`. Le test negatif prend pour ancre une
+cellule seulement POSSIBLE : 2 / 5 / 8 violations sur les trois cas.
+
+**Objet INDUIT**, declare comme tel, avec les deux regles ecrites et **elles
+seules** : `statut_objet` rend `INDUIT-PROUVE`.
+
+### Les neuf croisements, et deux formes nouvelles de la meme lecon
+- **Sixieme forme** : `Mono x Connected` ne mordait pas parce que
+  `certaines[0]` retient le PLUS PETIT INDICE, et la fausse ancre etait
+  toujours precedee par la VRAIE ancre qui l'avait causee. Il ne suffit donc
+  pas que le domaine partiel voulu soit produit, du bon cote, sur la bonne
+  cellule : il faut encore que cette cellule soit **choisie** par
+  l'implementation. Corrige par `Mono([4, 0])`.
+- **UNE PAIRE PEUT N'ETRE DECLENCHABLE QUE DANS UN SEUL SENS** :
+  `NoSquare x Connected` -- les deux propagateurs ne font que RETIRER `val`,
+  donc aucun ne produit le domaine partiel CONTENANT `val` dont le bug d'ancre
+  a besoin. Le sens inverse marche : `Connected` retire `val=1` et laisse
+  `{0, 2}`, dont le minimum vaut 0, le `val` de `NoSquare`. Le bug a donc
+  change de cote.
+
+`canary3` : 45 paires, **15,4 s**.
+
+### LE VERDICT
+Prototype **equivalent en deduction** (invariant 21) :
+
+    125 instances comparables : x0,99
+    decile le plus couteux    : x0,90
+    systemes rendus mesurables: 1 sur 132
+    aucune ne finit           : 6
+    solutions fausses         : 0
+
+**A ne remplit pas son critere de succes.** Pas de gain de debit.
+
+Le x3,99 mesure auparavant venait d'un prototype qui **remplacait** la
+saturation : 18 deductions perdues. En filtre : 0 perdue, et le gain
+disparait. **Presque tout le gain apparent etait du travail non fait.**
+
+### Ce que A a produit et qui n'est pas nul
+Le prototype **deduit plus a cout egal** : 11 instances resolues par lui seul,
+63 `max_level` abaisses, 0 deduction perdue. C'est une amelioration de la
+QUALITE de deduction, pas du debit -- donc pas ce que A visait.
+
+### Residu non explique
+**1 divergence de `max_level` PLUS HAUTE** sur 132, population entierement
+couverte. Le montage en filtre garantit « egal ou plus fort » sur les
+retraits, mais la propagation initiale assigne des cellules et change donc
+l'ORDRE dans lequel T2 examine les cases : le niveau atteint peut differer
+sans qu'aucune deduction soit perdue (0 perdue, 0 solution fausse). A verifier
+si le chiffre grossit.
+
+### Le critere de reouverture de l'articulation est ATTEINT
+Fixe a l'avance : « si a n=5 le debit reste insuffisant avec l'inaccessibilite
+seule ». La mesure le declenche. La preuve de surete est faite : **rien ne
+reste a etablir avant de l'ecrire.** La decision n'est pas prise ici.

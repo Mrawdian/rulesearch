@@ -1,3 +1,85 @@
+# VERDICT : A NE REMPLIT PAS SON CRITERE DE SUCCES
+
+**Mesure du 26/08/2026, apres l'ecriture des dix propagateurs, `Connected`
+compris. Prototype EQUIVALENT EN DEDUCTION (propagation en filtre devant la
+saturation, jamais en remplacement).**
+
+    n=5, connect,relational, 30 systemes, 12 instances, borne 20 s
+
+    instances ou les deux finissent : 125   ->  x0,99
+    decile le plus couteux                  ->  x0,90
+    systemes rendus MESURABLES              ->  1
+    instances ou AUCUNE ne finit            ->  6
+    solutions fausses                       ->  0
+
+**Il n'y a pas de gain de debit.** Sur les 125 instances comparables, la
+propagation coute exactement ce qu'elle economise. Sur le decile le plus
+couteux, elle est legerement plus lente.
+
+Une seule instance sur 132 passe de « abandon a 20 s » a « terminee ». Six
+restent hors de portee des deux moteurs.
+
+## Le x3,99 precedent etait de la deduction abandonnee
+
+Le meme banc, avec un prototype qui **remplacait** la saturation par la
+propagation, donnait x3,99 -- et **18 deductions perdues**. Corrige en filtre :
+**x0,99, 0 perdue**. Presque tout le gain apparent etait du travail non fait.
+Voir l'invariant 21.
+
+## Ce que A a produit, et qui n'est PAS un debit
+
+Le prototype **deduit davantage** a cout egal : 11 instances resolues par lui
+seul, 63 `max_level` abaisses sur 132, **0 deduction perdue**. C'est un gain de
+QUALITE de deduction -- exactement ce que A avait ete declare NE PAS viser.
+
+## Le critere de reouverture de l'articulation est ATTEINT
+
+Il avait ete fixe a l'avance et en un seul point : « si a n=5 le debit reste
+insuffisant avec l'inaccessibilite seule, et seulement dans ce cas ». La mesure
+le declenche. La preuve de surete est deja faite (14ter) : **rien ne reste a
+etablir avant de l'ecrire**, si la decision est prise. Elle ne l'est pas ici.
+
+---
+
+# CONNECTED N'EST PAS LA DERNIERE ETAPE. C'EST LA SEULE QUI PUISSE VALIDER A.
+
+**A lire en premier, avant meme la section suivante.**
+
+`Connected` avait ete place en dernier parce que c'est le propagateur le plus
+difficile. **Les mesures du 26/08/2026 disent autre chose** : c'est le seul dont
+le gain soit mesurable.
+
+    a n=5 sur `connect`, 97 % du budget part dans `solve_graded`, et les 5
+    systemes qui le brulent portent TOUS `Connected`.
+
+    sur la population entierement COUVERTE par les neuf autres propagateurs,
+    la propagation est PLUS LENTE (x0,43) et ne gagne aucune deduction.
+
+**Les neuf premiers propagateurs ne sont donc pas neuf dixiemes du gain. Ils
+sont la CONDITION D'EXISTENCE du dixieme, pas sa substance.**
+
+## Consequence, et elle doit etre lue litteralement
+
+**A n'est pas un chantier fait aux neuf dixiemes. Il est a ZERO sur son critere
+de succes, avec l'infrastructure en place.**
+
+Neuf propagateurs, 36 croisements, dix invariants ecrits : c'est du **volume de
+travail**, pas de l'**avancement**. Le critere de succes de A est un debit --
+que les systemes pathologiques passent sous la borne de 20 s a n=5 -- et ce
+critere n'a **pas encore recu le moindre commencement de verification**.
+
+Confondre le volume avec l'avancement est precisement le risque signale au
+point d'etape, et il serait d'autant plus facile a commettre que le travail
+accompli est reel et verifie.
+
+## Le chiffre qui decide, et quand le lire
+
+Immediatement apres l'ecriture de `Connected` : la mesure de debit sur les cinq
+systemes qui brulent le budget. **Si ils ne passent pas sous 20 s, A ne suffit
+pas, et il faut le dire sans chercher un angle qui sauve le chantier.**
+
+---
+
 # A EST UN CHANTIER DE DEBIT, PAS UN CHANTIER DE MESURE
 
 **A lire avant tout le reste de ce document.**

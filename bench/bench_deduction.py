@@ -45,7 +45,8 @@ sys.path.insert(0, ENGINE)
 sys.path.insert(0, RACINE)
 
 from rulesearch import UNASSIGNED, random_solution, minimal_clues
-from deduction import solve_graded, apply_T0, apply_T1, apply_T2
+from deduction import (solve_graded, apply_T0, apply_T1, apply_T2,
+                       candidates, saturate_low)
 from propagate import domaines, propager, PROPAGATEURS
 import run as RUN
 
@@ -92,60 +93,90 @@ def _assigner_singletons(dom, g):
             g[i] = next(iter(dom[i]))
 
 
+def _saturation_acceleree(rs, g):
+    """Saturation basse de `apply_T2`, avec la propagation EN FILTRE DEVANT.
+
+    Rend True si contradiction. EGALE OU PLUS FORTE que `saturate_low` :
+      - la propagation ne retire que des valeurs impossibles, donc une
+        contradiction qu'elle trouve en est une ;
+      - si elle n'en trouve pas, on fait le travail complet, inchange.
+    Le gain vient des cas ou elle tranche AVANT que le travail cher commence.
+    """
+    dom = domaines(rs, g)
+    _, contra = propager(rs, dom)
+    if contra:
+        return True
+    for i in range(len(g)):
+        if g[i] == UNASSIGNED and len(dom[i]) == 1:
+            g[i] = next(iter(dom[i]))
+    return saturate_low(rs, g)
+
+
+def _apply_T2_accelere(rs, g):
+    """Copie de `apply_T2` dont le SEUL changement est la saturation interne.
+    Duplication deliberee et locale au banc : `engine/` n'est pas touche."""
+    prog = False
+    for i in range(rs.n * rs.n):
+        if g[i] != UNASSIGNED:
+            continue
+        cand = candidates(rs, g, i)
+        alive = []
+        for v in cand:
+            trial = list(g)
+            trial[i] = v
+            if not _saturation_acceleree(rs, trial):
+                alive.append(v)
+        if not alive:
+            return prog, True
+        if len(alive) < len(cand):
+            if len(alive) == 1:
+                g[i] = alive[0]
+            prog = True
+    return prog, False
+
+
 def solve_graded_prop(rs, puzzle):
-    """Meme forme que `solve_graded`, mais la saturation basse est la
-    propagation. Sain : la propagation ne retire que des valeurs impossibles,
-    donc une contradiction qu'elle detecte en est une. Elle est en revanche
-    INCOMPLETE la ou une contrainte n'a pas de propagateur."""
+    """Copie de `solve_graded` dont le seul changement est `apply_T2`.
+    Une passe de propagation est faite en entree : elle ne peut que retirer des
+    valeurs impossibles, donc elle n'ote aucune solution."""
     n2 = rs.n * rs.n
     g = list(puzzle)
     dom = domaines(rs, g)
-    top = -1
     _, contra = propager(rs, dom)
     if contra:
-        return {"solved": False, "contradiction": True, "max_level": top, "grille": None}
-    _assigner_singletons(dom, g)
+        return {"solved": False, "contradiction": True, "max_level": -1,
+                "grille": None}
+    for i in range(n2):
+        if g[i] == UNASSIGNED and len(dom[i]) == 1:
+            g[i] = next(iter(dom[i]))
 
+    top = -1
     while True:
-        avance = False
-        # --- niveau 0 : le point fixe de propagation ---
-        _, contra = propager(rs, dom)
-        if contra:
-            return {"solved": False, "contradiction": True, "max_level": top, "grille": None}
-        avant = sum(len(x) for x in dom)
-        _assigner_singletons(dom, g)
-        if any(len(dom[i]) == 1 and puzzle[i] == UNASSIGNED for i in range(n2)):
+        p0, c0 = apply_T0(rs, g)
+        if c0:
+            return {"solved": False, "contradiction": True, "max_level": top,
+                    "grille": None}
+        if p0:
             top = max(top, 0)
-
-        # --- niveau 2 : contradiction a profondeur 1, sur domaines ---
-        for i in range(n2):
-            if len(dom[i]) <= 1:
-                continue
-            morts = []
-            for v in sorted(dom[i]):
-                d2 = [set(x) for x in dom]
-                d2[i] = {v}
-                _, ct = propager(rs, d2)
-                if ct or any(not d2[k] for k in range(n2)):
-                    morts.append(v)
-            if morts:
-                for v in morts:
-                    dom[i].discard(v)
-                if not dom[i]:
-                    return {"solved": False, "contradiction": True,
-                            "max_level": top}
-                top = max(top, 2)
-                avance = True
-        apres = sum(len(x) for x in dom)
-        _assigner_singletons(dom, g)
-        if not avance and apres == avant:
-            break
-
-    solved = all(len(dom[i]) == 1 for i in range(n2))
-    grille = [next(iter(dom[i])) if len(dom[i]) == 1 else UNASSIGNED
-              for i in range(n2)]
+            continue
+        p1, c1 = apply_T1(rs, g)
+        if c1:
+            return {"solved": False, "contradiction": True, "max_level": top,
+                    "grille": None}
+        if p1:
+            top = max(top, 1)
+            continue
+        p2, c2 = _apply_T2_accelere(rs, g)
+        if c2:
+            return {"solved": False, "contradiction": True, "max_level": top,
+                    "grille": None}
+        if p2:
+            top = max(top, 2)
+            continue
+        break
+    solved = all(x != UNASSIGNED for x in g)
     return {"solved": solved, "contradiction": False, "max_level": top,
-            "grille": grille}
+            "grille": list(g)}
 
 
 def grille_base(rs, puzzle):
@@ -192,15 +223,17 @@ def main():
           % (a.n, a.d, a.families, a.systems))
     print("  base = solve_graded (T0/T1/T2, moteur actuel)")
     print("  prop = meme hierarchie, saturation par propagation")
-    if "connect" in a.families:
+    manquants = sorted({k for k in ("ALLDIFF", "COUNT", "SUM", "NEQADJ",
+                                    "MONO", "PAIRDIFF", "PAIRSTEP",
+                                    "NOTRIPLE", "NOSQUARE", "CONNECTED")
+                        if k not in PROPAGATEURS})
+    if manquants:
         print()
-        print("  *** FAMILLE connect : `Connected` N'A PAS DE PROPAGATEUR "
-              "(etape 10).")
-        print("  *** La propagation y est structurellement plus faible : tout "
-              "gain")
-        print("  *** mesure ici est un MINORANT de ce que A donnera. Un "
-              "chiffre faible")
-        print("  *** sur cette famille n'est PAS un echec de A.")
+        print("  *** CONTRAINTES SANS PROPAGATEUR : %s" % ", ".join(manquants))
+        print("  *** Sur les systemes qui en portent une, la propagation ne la")
+        print("  *** voit pas du tout : un gain de temps y est CONFONDU, pas")
+        print("  *** conservateur -- une part du temps economise est du travail")
+        print("  *** NON FAIT. Voir la ventilation COUVERT / NON COUVERT.")
     print()
     rng = random.Random(a.seed)
     mesures = []
@@ -344,10 +377,18 @@ def main():
         if res_perdu:
             print("    Une part du gain de temps est payee en deduction "
                   "perdue.")
-            print("    Attendu sur `connect` : Connected n'a pas de "
-                  "propagateur, donc")
-            print("    la saturation interne de T2 y est plus faible. "
-                  "MINORANT.")
+            if couv[False][0]:
+                print("    Attendu sur la population NON COUVERTE : la "
+                      "saturation interne")
+                print("    de T2 y est plus faible, le rapport de temps est "
+                      "CONFONDU.")
+            else:
+                print("    TOUTE la population est COUVERTE : cette perte "
+                      "n'est PAS")
+                print("    imputable a une contrainte non propagee. Le "
+                      "prototype est donc")
+                print("    plus faible que T0 sur au moins une regle -- a "
+                      "comprendre.")
     print("  divergences de max_level      : %d / %d instances" % (div_niv, NI))
     if div_niv:
         print("    sens : %d plus BAS (attendu : la propagation absorbe ce que"
@@ -355,6 +396,13 @@ def main():
         print("           %d plus HAUT %s" % (niv_haut,
               "" if not niv_haut else "<-- INATTENDU, a comprendre avant "
               "d'aller plus loin"))
+        if niv_haut and not couv[False][0]:
+            print("           sur population ENTIEREMENT COUVERTE : le "
+                  "prototype est")
+            print("           plus FAIBLE que T0 au niveau bas, il n'y a pas "
+                  "d'excuse")
+            print("           de couverture. Ne pas lire le rapport de temps "
+                  "comme un gain.")
     print()
     print("  POPULATION COUVERTE vs CONFONDUE :")
     for cle, nom in ((True, "COUVERT (tous propagateurs presents)"),

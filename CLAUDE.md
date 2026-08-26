@@ -221,6 +221,24 @@ ete identifies ainsi.
    lorsque l'autre propagateur tourne, l'interaction est demontree sans
    dependre d'une geometrie.
 
+21. **Un prototype qui REMPLACE l'oracle mesure la vitesse d'un moteur qui
+   deduit moins.**
+   Les propagateurs omettent **deliberement** les detections de
+   contradiction que `feasible()` fait -- « un propagateur incomplet est
+   correct, `feasible()` reste l'oracle ». C'est juste **dans le moteur**,
+   ou `feasible()` est toujours consultee. Un prototype qui substitue la
+   propagation a la saturation perd donc **exactement ces detections**, et
+   son gain de temps est paye en deduction.
+   Montage correct, et c'est celui qu'un vrai branchement fera :
+   **la propagation est un FILTRE BON MARCHE PLACE DEVANT la saturation,
+   jamais un remplacement.** Propager d'abord ; si contradiction, c'est
+   fini pour presque rien ; sinon, faire le travail complet inchange.
+   Le resultat est alors **egal ou plus fort par construction**, et tout
+   gain de temps est un vrai gain de debit.
+   Mesure : le meme banc donnait **x3,99 en remplacement** (18 deductions
+   perdues) et **x0,99 en filtre** (0 perdue). Presque tout le « gain »
+   etait de la deduction abandonnee.
+
 19. **Avant de mesurer un cout, REGARDER SA DISTRIBUTION.**
    Une moyenne n'a de sens que si la dispersion en a un. Sur une
    distribution a queue lourde -- mediane 14 ms, p99 20 000 ms dans ce

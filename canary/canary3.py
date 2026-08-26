@@ -53,6 +53,7 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_mono_avant, propager_mono_arriere,
                        propager_pairdiff, propager_pairstep,
                        propager_notriple, propager_nosquare,
+                       propager_connected,
                        objet_inference, statut_objet,
                        SURETE_OBJET_INDUIT,
                        PROPAGATEURS)
@@ -1312,6 +1313,102 @@ for _nom, _obtenu, _attendu in _essais_statut:
 
 
 # ==========================================================================
+# Connected -- objet INDUIT, et le piege est la CONDITION D'AMORCAGE.
+# ==========================================================================
+#
+# La preuve est dans `engine/propagate.py`, ecrite avant le code. Ici on la
+# met a l'epreuve, en construisant a la main les configurations que le
+# generateur ne produit pas.
+
+# CA : d = 2 -- le regime naturel de Connected : `val` ou pas `val`.
+casCA = RuleSystem(3, 2, [Connected(3, 1)], "CA d=2")
+# CB : d = 2 avec un Count qui force une composante de taille moyenne, donc
+#      des ancres CERTAINES apparaissent souvent.
+casCB = RuleSystem(3, 2, [Connected(3, 1),
+                          Count(list(range(9)), 1, 3, 5)], "CB ancre")
+# CC : d = 3 -- `val` minoritaire, donc |F| reste souvent VIDE : c'est le cas
+#      ou aucun retrait n'est justifie, et ou un propagateur trop zele mord.
+casCC = RuleSystem(3, 3, [Connected(3, 1)], "CC d=3")
+
+CO_CAS = (("CA d = 2", casCA), ("CB ancre", casCB), ("CC d = 3", casCC))
+
+print()
+print("-- Connected : surete --")
+for nom, rs in CO_CAS:
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- Connected : la regle doit etre INVOQUEE --")
+_inv = _contra = 0
+for nom, rs in CO_CAS:
+    rnd9 = random.Random(71)
+    for sol in echantillon(toutes_solutions(rs) or [], 60):
+        for k in (3, 4, 5):
+            dom = domaines(rs, indices(sol, k, rnd9))
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) == "CONNECTED":
+                    pp, ct = propager_connected(cn, dom)
+                    if pp:
+                        _inv += 1
+                    if ct:
+                        _contra += 1
+print("  retraits = %d   contradictions = %d" % (_inv, _contra))
+if not _inv:
+    print("  ECHEC : le retrait par inaccessibilite est inerte.")
+    echecs += 1
+else:
+    print("  OK : la regle est operante.")
+
+
+# ---- TEST NEGATIF : L'ANCRE OUBLIEE -------------------------------------
+# LE piege de cette contrainte. Sans cellule CERTAINEMENT `val`, la composante
+# peut etre n'importe ou -- ou vide, `feasible()` acceptant zero ou une seule
+# cellule `val`. Partir d'une cellule seulement POSSIBLE est donc faux.
+
+def _connected_sans_ancre(cn, dom):
+    val, n = cn.val, cn.n
+    passables = set(i for i in cn.region if val in dom[i])
+    certaines = [i for i in cn.region if dom[i] == {val}]
+    depart = certaines[0] if certaines else (
+        min(passables) if passables else None)      # LE BUG
+    if depart is None:
+        return False, False
+    vus, pile = {depart}, [depart]
+    while pile:
+        x = pile.pop()
+        for y in neighbors4(x, n):
+            if y in passables and y not in vus:
+                vus.add(y)
+                pile.append(y)
+    prog = False
+    for i in passables:
+        if i in vus:
+            continue
+        dom[i].discard(val)
+        prog = True
+        if not dom[i]:
+            return prog, True
+    return prog, False
+
+
+print()
+print("-- test negatif Connected : ancre PRISE PARMI LES POSSIBLES --")
+_det = False
+for nom, rs in CO_CAS:
+    v = cas_surete("sans-ancre " + nom, rs,
+                   prop=_moteur_simple({"CONNECTED": _connected_sans_ancre}))
+    if v:
+        _det = True
+if _det:
+    print("  OK : le canari mord -- l'ancre doit etre CERTAINE.")
+else:
+    print("  ECHEC : une ancre seulement possible passe le canari.")
+    echecs += 1
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -1979,6 +2076,114 @@ for _titre, _autre, _kind in (
         _titre,
         RuleSystem(3, 3, [_autre, NoSquare(3, 1)], "NSc"),
         _kind, _bug_ns)
+
+
+# ---- paires impliquant Connected ----------------------------------------
+#
+# Comme `NoSquare`, `Connected` porte sur TOUTE la grille : aucun temoin
+# disjoint n'est constructible. Meme controle, strictement plus fort : le meme
+# systeme avec le propagateur de l'autre contrainte DESACTIVE.
+
+def _connected_bugue_forme(d):
+    """BUG D'INTERACTION, classe de l'invariant 14 : deduire le CONTENU d'un
+    domaine de sa FORME. Ici, une cellule au domaine deja rogne est tenue pour
+    CERTAINEMENT `val` -- donc utilisable comme ancre. Exige qu'un AUTRE
+    propagateur ait rogne partiellement une cellule."""
+    def f(cn, dom):
+        val, n = cn.val, cn.n
+        passables = set(i for i in cn.region if val in dom[i])
+        certaines = [i for i in cn.region
+                     if dom[i] == {val}
+                     or (1 < len(dom[i]) < d and val in dom[i])]   # LE BUG
+        if not certaines:
+            return False, False
+        depart = certaines[0]
+        vus, pile = {depart}, [depart]
+        while pile:
+            x = pile.pop()
+            for y in neighbors4(x, n):
+                if y in passables and y not in vus:
+                    vus.add(y)
+                    pile.append(y)
+        for c in certaines:
+            if c not in vus:
+                return False, True
+        prog = False
+        for i in passables:
+            if i in vus:
+                continue
+            dom[i].discard(val)
+            prog = True
+            if not dom[i]:
+                return prog, True
+        return prog, False
+    return f
+
+
+def _paire_connected(titre, rs, autre_kind, bug_fn, kind_bugue="CONNECTED"):
+    print()
+    print("-- croisement %s  x  Connected (controle : autre propagateur OFF) --"
+          % titre)
+    faute = 0
+    v = croisement_surete("  surete (tout actif)", rs,
+                          max_sols=120, max_taille=NS_TAILLE)
+    if v is None or v > 0:
+        faute += 1
+    avec = croisement_surete(
+        "  bug, autre ACTIF  ", rs,
+        prop=_moteur_restreint({kind_bugue: bug_fn},
+                               {autre_kind, "CONNECTED"}),
+        max_sols=120, max_taille=NS_TAILLE)
+    sans = croisement_surete(
+        "  bug, autre INACTIF", rs,
+        prop=_moteur_restreint({kind_bugue: bug_fn}, {kind_bugue}),
+        max_sols=120, max_taille=NS_TAILLE)
+    if not avec:
+        print("  ECHEC : le bug d'interaction ne mord pas.")
+        faute += 1
+    elif sans:
+        print("  ECHEC : il mord AUSSI sans l'autre propagateur (%d) -- bug "
+              "simple, pas interaction." % sans)
+        faute += 1
+    else:
+        print("  OK : mord avec l'autre propagateur (%d), muet sans lui (%d)."
+              % (avec, sans))
+    return faute
+
+
+_bug_co = _connected_bugue_forme(3)
+
+for _titre, _autre, _kind in (
+        ("AllDiff |R|<d", AllDiff([0, 1]), "ALLDIFF"),
+        ("Count val=0", Count([0, 1], 0, 1, 1), "COUNT"),
+        ("SumRange plancher", SumRange([0, 1], 3, 4, 3), "SUM"),
+        ("NeqAdj", NeqAdj([0, 1]), "NEQADJ"),
+        # CINQUIEME LECON, SIXIEME FORME. Le bug prend pour ancre une cellule
+        # au domaine partiel CONTENANT `val`, et `certaines[0]` retient le PLUS
+        # PETIT INDICE. Avec `Mono([1, 0])`, la fausse ancre (indice 1) est
+        # toujours precedee par la VRAIE ancre (indice 0) qui l'a causee : le
+        # bug est MASQUE. `Mono([4, 0])` place la fausse ancre en 0 et la vraie
+        # en 4. Constate en faisant echouer le croisement.
+        ("Mono", Mono([4, 0]), "MONO"),
+        ("PairDiff", PairDiff([(0, 1)], 1, 3), "PAIRDIFF"),
+        ("PairRatio", PairRatio([(0, 1)], 1), "PAIRSTEP"),
+        ("NoTriple", NoTriple([0, 1, 2, 3]), "NOTRIPLE"),
+):
+    echecs += _paire_connected(
+        _titre,
+        RuleSystem(3, 3, [_autre, Connected(3, 1)], "COc"),
+        _kind, _bug_co)
+
+# NoSquare x Connected : LE BUG CHANGE DE COTE, et la raison est structurelle.
+# Les deux propagateurs ne font que RETIRER `val` ; aucun ne produit jamais un
+# domaine partiel CONTENANT `val`, qui est ce dont le bug d'ancre a besoin.
+# Le sens Connected -> NoSquare, lui, se declenche : Connected retire `val=1`
+# et laisse {0, 2}, dont le MINIMUM vaut 0 -- le `val` de NoSquare. Le bug de
+# forme de NoSquare y lit une cellule « certaine » qui ne l'est pas.
+# UNE PAIRE PEUT N'ETRE DECLENCHABLE QUE DANS UN SEUL SENS.
+echecs += _paire_connected(
+    "NoSquare(v0)", RuleSystem(3, 3, [NoSquare(3, 0), Connected(3, 1)], "COn"),
+    "NOSQUARE", _nosquare_bugue_forme(3), kind_bugue="NOSQUARE")
 
 
 print()
