@@ -11,6 +11,79 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - RELEVE PRELIMINAIRE, NON CONCLUANT : T1 a d=4
+
+**Statut : preliminaire. Ne rien en conclure.** 150 systemes et 11 candidats
+sur les tags `-d4`, tres en dessous des 20 candidats par groupe qu'exige
+l'invariant 4. Ce releve est consigne parce qu'il oriente la suite, pas parce
+qu'il etablit quoi que ce soit.
+
+**Contexte** : la file est passee a quatre configurations pour rendre a T1 un
+domaine d'application, T1 n'ayant jamais ete invoquee a d=3 (ALLDIFF
+infaisable sur 4 cases avec 3 valeurs).
+
+    tag            systemes  candidats       T0      T1      T2
+    connect (d=3)     13318       1340    39735       0    5112
+    static-ref (d=3)  13036       2001    90688       0    6954
+    connect-d4           75          3      134       0      20
+    static-d4            75          8      390       1      32
+    baseline (d=4)      124          7      341       0      32
+
+**Ce que ca montre** : T1 s'est declenchee **une fois**, sur `static-d4`.
+Premiere invocation de T1 en production depuis le debut du projet. Le critere
+de reouverture inscrit precedemment -- "si T1 reste a 0 sur les tags -d4, la
+cause n'est pas le domaine" -- **ne se declenche donc pas** : la cause etait
+bien le domaine, et passer a d=4 le restitue.
+
+**Ce que ca ne montre pas** : que le trou se comble. 1 invocation sur 150
+systemes, et le `max_level` des 11 candidats `-d4` vaut `{2: 11}` -- tous a T2,
+aucun palier intermediaire cree. Rendre son domaine a T1 le rend non vide, pas
+utile.
+
+**Le point a creuser, et ce n'est PAS le chiffre de T1** : `baseline` tourne a
+d=4 avec **21 % de systemes possedant une region T1 eligible** (mesure sur 600
+systemes generes), et affiche pourtant **0 invocation** sur 124 systemes. Avoir
+un domaine ne suffit donc pas : **T0 arrive avant**. La technique la plus
+faible resout la grille avant que la suivante ait l'occasion de servir.
+
+**MESURE A AJOUTER AU PROCHAIN RELEVE** (demandee, non implementee -- ne rien
+coder pour l'obtenir) : parmi les instances resolues, **quelle fraction de la
+grille T0 remplit-il a lui seul avant que quoi que ce soit d'autre s'invoque ?**
+
+Hypothese que cette mesure testerait : si c'est proche de 100 %, alors **n=4
+est trop petit pour qu'une hierarchie de deduction ait une structure fine** --
+seize cases se resolvent par la technique la plus faible, et aucune technique
+intermediaire n'y changera rien.
+
+**Ce serait un RESULTAT, pas un echec.** Il dirait que la profondeur n'est
+mesurable qu'a n=5 ou n=6. Donc que le debit redevient le probleme -- et que
+l'architecture A (etat de candidats explicite) se justifie par un chemin tout
+autre que celui envisage jusqu'ici : non plus pour debloquer une technique
+d'elimination, mais parce que le recalcul integral de `candidates()` devient
+le goulot des qu'on quitte n=4.
+
+**Non verifie / suppose** :
+- Tout ce releve porte sur 150 systemes `-d4`. Les proportions peuvent changer
+  d'un ordre de grandeur.
+- L'interpretation "T0 arrive avant" est une **lecture**, pas une mesure : la
+  mesure qui la testerait est celle listee ci-dessus, et elle n'est pas faite.
+- Les 21 % de regions eligibles a d=4 viennent de systemes **regeneres**, pas
+  des systemes exactement journalises.
+- Rien n'exclut que T1 se declenche davantage sur un echantillon plus large.
+
+**Bloque sur** : rien. Consigne : laisser tourner sans rien changer jusqu'a ce
+que `connect-d4` et `static-d4` aient chacun **20 candidats**.
+
+**Pour Claude chat** :
+- Ce releve est **preliminaire et non concluant**. Ne pas le citer comme
+  resultat, ni pour ni contre.
+- T1 fonctionne a d=4 : elle n'a jamais ete cassee, seulement privee de
+  domaine. Ne pas la "reparer".
+- La question ouverte n'est plus "T1 a-t-elle un domaine" mais "**une
+  hierarchie de deduction a-t-elle une structure fine a n=4**". Ce sont deux
+  questions differentes et la seconde peut se conclure par un non qui serait
+  un resultat.
+
 ## 2026-08-26 - absence de resultat, canary6 discrimine, file corrigee a d=4
 
 **Demande** : traiter comme une absence de resultat le fait que seule une serie
