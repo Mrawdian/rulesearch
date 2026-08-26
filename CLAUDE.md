@@ -160,6 +160,29 @@ ete identifies ainsi.
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
 
+17. **14bis se VERIFIE mecaniquement, il ne se presume pas.**
+   Chaque propagateur declare dans `objet_inference()` l'objet qu'il
+   parcourt. `canary3` verifie que cet objet est **identique avant et apres
+   des rognages arbitraires** des domaines.
+   Objet **FIXE** -> l'invariant 14 s'applique tel quel. Objet **INDUIT** ->
+   14bis est engage et doit etre **tranche avant** d'adopter le propagateur.
+   Les neuf propagateurs actuels sont tous FIXES. **Le test est ecrit pour
+   ECHOUER sur `Connected`**, dont le graphe des cases passables depend des
+   domaines : c'est ainsi qu'on saura que 14bis est engage, au lieu de le
+   decouvrir apres coup.
+   Un propagateur qui ne declare aucun objet fait echouer le canari : on ne
+   peut pas ne pas repondre a la question.
+
+18. **Quand le temoin disjoint est impossible, le controle devient : le meme
+   systeme, l'autre propagateur DESACTIVE.**
+   `NoSquare` couvre toute la grille, donc aucune contrainte ne peut lui
+   etre disjointe -- et `Connected` aura la meme propriete. Le controle par
+   geometrie est alors remplace par un controle **strictement plus fort** :
+   les deux mondes ont **exactement le meme ensemble de solutions**, seule
+   change la capacite de l'autre propagateur a rogner. Si le bug ne mord que
+   lorsque l'autre propagateur tourne, l'interaction est demontree sans
+   dependre d'une geometrie.
+
 16. **Une coincidence entre verifications INDEPENDANTES est un defaut commun,
    pas un fait.**
    Quand plusieurs verifications independantes rendent **le meme verdict

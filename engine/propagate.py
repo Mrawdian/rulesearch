@@ -477,6 +477,85 @@ def propager_notriple(cn, dom):
     return prog, False
 
 
+# ---------- NOSQUARE ----------
+#
+# `NoSquare(n, val)` : aucun carre 2x2 monochrome de valeur `val`.
+#
+# Regle unique : dans une fenetre 2x2, si TROIS cellules sont reduites au
+# singleton `{val}`, la quatrieme ne peut pas valoir `val`.
+#
+# LES FENETRES SONT CONSTRUITES ICI, A PARTIR DE `n`. La contrainte declare
+# `region = toute la grille`, ce qui est **sur-inclusif mais correct** : cela
+# ne rend `touch[i]` que trop large, jamais trop etroit. **`dsl2.py` n'est pas
+# modifie** -- son diff vide reste la preuve mecanique que `feasible()` est
+# conservee pendant tout A, et cette preuve vaut plus qu'une optimisation
+# d'indexation. Voir DECISIONS.md.
+#
+# AUDIT DE FORME (invariant 14) : une seule lecture, `dom[i] == {val}`, la
+# forme admise.
+#
+# 14BIS : les fenetres se calculent depuis `cn.n` **seul** -- elles ne
+# regardent jamais `dom`. Objet FIXE. C'est verifie **mecaniquement** par
+# `canary3` via `objet_inference()` ci-dessous, pas seulement affirme.
+
+
+def _fenetres_carres(cn):
+    n = cn.n
+    return [(r * n + c, r * n + c + 1, (r + 1) * n + c, (r + 1) * n + c + 1)
+            for r in range(n - 1) for c in range(n - 1)]
+
+
+def propager_nosquare(cn, dom):
+    val = cn.val
+    cible_val = {val}
+    prog = False
+    for fenetre in _fenetres_carres(cn):
+        surs = [i for i in fenetre if dom[i] == cible_val]
+        if len(surs) != 3:
+            continue
+        reste = [i for i in fenetre if i not in surs]
+        cible = reste[0]
+        if val not in dom[cible]:
+            continue
+        dom[cible].discard(val)
+        prog = True
+        if not dom[cible]:
+            return prog, True
+    return prog, False
+
+
+# ---------- 14BIS : l'objet d'inference est-il FIXE ou INDUIT ? ----------
+#
+# L'invariant 14 couvre les inferences dont l'entree est l'appartenance d'une
+# valeur a un domaine. **14bis** -- non tranche -- porte sur celles dont
+# l'entree est une propriete d'un objet construit a partir de PLUSIEURS
+# domaines et non monotone sous retrecissement.
+#
+# Le critere operatoire se teste : **l'objet sur lequel porte l'inference
+# depend-il des domaines courants ?** Chaque propagateur declare ici l'objet
+# qu'il parcourt. `canary3` verifie MECANIQUEMENT que cet objet est identique
+# avant et apres des rognages arbitraires.
+#
+# Attendu : tous FIXES aujourd'hui. `Connected`, lui, parcourra un graphe dont
+# les sommets passables sont ceux dont le domaine CONTIENT `val` -- objet
+# INDUIT, qui changera sous rognage. Ce test est donc ecrit pour qu'il ECHOUE
+# a l'etape 10 : c'est ainsi qu'on saura que 14bis est engage, au lieu de le
+# decouvrir apres coup.
+
+def objet_inference(cn, dom):
+    """Objet parcouru par le propagateur de `cn`, sous l'etat `dom`."""
+    k = getattr(cn, "kind", None)
+    if k == "NOTRIPLE":
+        return tuple(_fenetres_triples(cn.region))
+    if k == "NOSQUARE":
+        return tuple(_fenetres_carres(cn))
+    if k in ("PAIRDIFF", "PAIRSTEP"):
+        return tuple(tuple(p) for p in cn.pairs)
+    if k in ("ALLDIFF", "COUNT", "SUM", "NEQADJ", "MONO"):
+        return tuple(cn.region)
+    return None
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
@@ -488,6 +567,7 @@ PROPAGATEURS = {
     "PAIRDIFF": propager_pairdiff,
     "PAIRSTEP": propager_pairstep,
     "NOTRIPLE": propager_notriple,
+    "NOSQUARE": propager_nosquare,
 }
 
 

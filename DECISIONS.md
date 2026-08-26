@@ -1665,3 +1665,74 @@ qu'il faut surveiller, pas l'arrivee du dixieme propagateur.
 
 Consigne parce que la mauvaise attribution etait ecrite, et qu'une prevision
 de cout fausse conduit a optimiser le mauvais terme.
+
+## 2026-08-26 - NoSquare : 14bis verifie mecaniquement sur les NEUF propagateurs
+
+### Le propagateur
+Dans une fenetre 2x2, si **trois** cellules sont reduites au singleton `{val}`,
+la quatrieme ne peut pas valoir `val`. Les fenetres sont construites **dans le
+propagateur**, a partir de `cn.n` : `dsl2.py` n'est pas touche, conformement a
+la decision prise. Son diff vide reste la preuve mecanique que `feasible()` est
+conservee pendant tout A.
+
+Test negatif, le bug de granularite une fois de plus : declencher a **deux**
+singletons au lieu de trois, c'est-a-dire interdire une paire monochrome alors
+que seule la fenetre **complete** est interdite.
+
+### 14BIS : VERIFIE, ET MECANIQUEMENT
+Plutot que d'argumenter que les fenetres sont geometriques, chaque propagateur
+**declare** dans `objet_inference()` l'objet qu'il parcourt, et `canary3`
+verifie que cet objet est **identique avant et apres des rognages arbitraires**
+des domaines.
+
+    AllDiff FIXE   Count FIXE   SumRange FIXE   NeqAdj FIXE   Mono FIXE
+    PairDiff FIXE  PairRatio FIXE   NoTriple FIXE   NoSquare FIXE
+
+**Les neuf objets sont fixes : 14 suffit, 14bis n'est pas engage.** La
+presomption est remplacee par une verification qui tourne a chaque canari.
+
+**Et le test est ecrit pour ECHOUER sur `Connected`** -- dont le graphe des
+cases passables depend des domaines. C'est ainsi qu'on saura que 14bis est
+engage, au lieu de le decouvrir apres coup. Un propagateur qui ne declare aucun
+objet fait echouer le canari : **on ne peut pas ne pas repondre a la question**.
+
+### Le temoin disjoint devient IMPOSSIBLE, et le controle s'ameliore
+Les fenetres de `NoSquare` couvrent **toute la grille** : aucune contrainte ne
+peut lui etre disjointe. Le temoin geometrique utilise pour les huit
+propagateurs precedents ne peut pas etre construit -- **et `Connected` aura
+exactement la meme propriete.**
+
+Remplace par un controle **strictement plus fort** : le meme systeme, avec le
+propagateur de l'autre contrainte **desactive**. Les deux mondes ont alors
+**exactement le meme ensemble de solutions** ; seule change la capacite de
+l'autre propagateur a rogner. C'est mieux que le controle geometrique, qui
+faisait varier le systeme en meme temps que le chevauchement.
+
+### CINQUIEME FORME DE LA MEME LECON, et elle se lit sans tatonner
+Trois croisements ont echoue. Le bug lit `min(dom) == val` avec `val = 1` : il
+lui faut donc un domaine partiel **egal a `{1, 2}`**, c'est-a-dire dont la
+valeur 0 a ete retiree.
+
+- `Count([0,1], val=1, ...)` ne retire **jamais que la valeur 1 elle-meme** : il
+  produit `{0, 2}`, jamais `{1, 2}`. **Structurellement incapable.**
+- `SumRange([0,1], lo=0, ...)` n'a que son **plafond** actif -- `lo = 0` rend le
+  plancher inerte -- donc il ne retire que les **grandes** valeurs. Idem.
+- `NoTriple x NoSquare` : la chaine a besoin de **quatre** cellules posees pour
+  s'amorcer -- deux pour que NoTriple retire une valeur, deux de plus pour
+  completer la fenetre 2x2. A `max_taille = 3` c'etait une **couverture
+  aveugle**, pas un bug inerte (invariant 15).
+
+Corriges en `Count(val=0)`, `SumRange(lo=3)` et `NS_TAILLE = 4`. **Les trois ont
+ete constates en faisant echouer le croisement, pas devines.**
+
+    AllDiff   x NoSquare :  15 / 0     Mono      x NoSquare :  96 / 0
+    Count     x NoSquare :  15 / 0     PairDiff  x NoSquare :  15 / 0
+    SumRange  x NoSquare : 531 / 0     PairRatio x NoSquare :  15 / 0
+    NeqAdj    x NoSquare :  15 / 0     NoTriple  x NoSquare :   3 / 0
+                        (avec l'autre propagateur / sans lui)
+
+### Cout
+    28 paires : 3,39 s      36 paires : 8,23 s
+Conforme a l'attribution corrigee : la hausse vient des huit paires a **n=3**
+et du passage a `max_taille = 4` (30 720 essais par execution contre 15 600),
+pas du nombre de paires.

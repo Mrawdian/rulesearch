@@ -52,7 +52,8 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_neqadj, propager_mono,
                        propager_mono_avant, propager_mono_arriere,
                        propager_pairdiff, propager_pairstep,
-                       propager_notriple,
+                       propager_notriple, propager_nosquare,
+                       objet_inference,
                        PROPAGATEURS)
 
 random.seed(23)
@@ -1152,6 +1153,143 @@ else:
 
 
 # ==========================================================================
+# NoSquare -- et la VERIFICATION MECANIQUE de 14bis sur les neuf propagateurs.
+# ==========================================================================
+
+# BA : n = 2 -- une seule fenetre, la contrainte dans sa forme minimale.
+casBA = RuleSystem(2, 2, [NoSquare(2, 1)], "BA n=2")
+# BB : n = 3, d = 2 -- QUATRE fenetres qui se chevauchent deux a deux.
+casBB = RuleSystem(3, 2, [NoSquare(3, 1)], "BB n=3 d=2")
+# BC : n = 3, d = 3 -- la contrainte mord moins ; verifie qu'elle ne mord pas
+#      quand elle ne doit pas.
+casBC = RuleSystem(3, 3, [NoSquare(3, 1)], "BC n=3 d=3")
+
+NS_CAS = (("BA n = 2", casBA), ("BB n=3 d=2", casBB), ("BC n=3 d=3", casBC))
+
+print()
+print("-- NoSquare : surete --")
+for nom, rs in NS_CAS:
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- NoSquare : la regle doit etre INVOQUEE --")
+_inv = 0
+for nom, rs in NS_CAS:
+    rnd8 = random.Random(61)
+    for sol in echantillon(toutes_solutions(rs) or [], 40):
+        for k in (2, 3):
+            dom = domaines(rs, indices(sol, k, rnd8))
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) == "NOSQUARE":
+                    pp, _ = propager_nosquare(cn, dom)
+                    if pp:
+                        _inv += 1
+print("  declenchements = %d" % _inv)
+if not _inv:
+    print("  ECHEC : NoSquare est inerte.")
+    echecs += 1
+else:
+    print("  OK : la regle est operante.")
+
+
+# ---- test negatif : DEUX cellules suffiraient ---------------------------
+# Le bug de granularite, une fois de plus : declencher a partir de DEUX
+# singletons au lieu de trois, c'est-a-dire interdire une paire monochrome
+# alors que seule la fenetre COMPLETE est interdite.
+
+def _nosquare_a_deux(cn, dom):
+    val = cn.val
+    prog = False
+    n = cn.n
+    for r in range(n - 1):
+        for c in range(n - 1):
+            f = (r * n + c, r * n + c + 1, (r + 1) * n + c, (r + 1) * n + c + 1)
+            surs = [i for i in f if dom[i] == {val}]
+            if len(surs) < 2:                  # LE BUG : deux suffisent
+                continue
+            for cible in f:
+                if cible in surs or val not in dom[cible]:
+                    continue
+                dom[cible].discard(val)
+                prog = True
+                if not dom[cible]:
+                    return prog, True
+    return prog, False
+
+
+print()
+print("-- test negatif NoSquare : declenche a DEUX au lieu de trois --")
+_det = False
+for nom, rs in NS_CAS:
+    v = cas_surete("a-deux " + nom, rs,
+                   prop=_moteur_simple({"NOSQUARE": _nosquare_a_deux}))
+    if v:
+        _det = True
+if _det:
+    print("  OK : le canari mord.")
+else:
+    print("  ECHEC : NoSquare declenche a deux passe le canari.")
+    echecs += 1
+
+
+# ---- 14BIS : VERIFICATION MECANIQUE, PAS PRESOMPTION --------------------
+# Pour chaque propagateur, l'objet parcouru doit etre IDENTIQUE avant et apres
+# des rognages arbitraires des domaines. Un objet FIXE releve de l'invariant 14
+# tel quel ; un objet INDUIT engage 14bis, qui n'est pas tranche.
+#
+# Ce test est ecrit pour ECHOUER a l'etape 10 sur `Connected`, dont le graphe
+# des cases passables depend des domaines. C'est ainsi qu'on saura que 14bis
+# est engage, au lieu de le decouvrir apres coup.
+
+print()
+print("-- 14bis : l'objet d'inference est-il FIXE sous rognage ? --")
+_sys14 = [
+    ("AllDiff", RuleSystem(3, 3, [AllDiff([0, 1])], "a")),
+    ("Count", RuleSystem(3, 3, [Count([0, 1], 1, 1, 1)], "b")),
+    ("SumRange", RuleSystem(3, 3, [SumRange([0, 1], 0, 2, 3)], "c")),
+    ("NeqAdj", RuleSystem(3, 3, [NeqAdj([0, 1])], "d")),
+    ("Mono", RuleSystem(3, 3, [Mono([0, 1])], "e")),
+    ("PairDiff", RuleSystem(3, 3, [PairDiff([(0, 1)], 1, 3)], "f")),
+    ("PairRatio", RuleSystem(3, 3, [PairRatio([(0, 1)], 1)], "g")),
+    ("NoTriple", RuleSystem(3, 3, [NoTriple([0, 1, 2, 3])], "h")),
+    ("NoSquare", RuleSystem(3, 3, [NoSquare(3, 1)], "i")),
+]
+_rnd14 = random.Random(67)
+_induits = []
+for nom, rs in _sys14:
+    cn = rs.constraints[0]
+    N = rs.n * rs.n
+    ref = objet_inference(cn, domaines(rs, [UNASSIGNED] * N))
+    if ref is None:
+        print("  %-10s AUCUN objet declare -- 14bis non verifiable" % nom)
+        echecs += 1
+        continue
+    fixe = True
+    for _ in range(40):
+        dom = domaines(rs, [UNASSIGNED] * N)
+        for i in range(N):                       # rognages arbitraires
+            for v in range(rs.d):
+                if len(dom[i]) > 1 and _rnd14.random() < 0.4:
+                    dom[i].discard(v)
+        if objet_inference(cn, dom) != ref:
+            fixe = False
+            break
+    print("  %-10s objet %s (%d elements)"
+          % (nom, "FIXE" if fixe else "INDUIT -- 14bis ENGAGE", len(ref)))
+    if not fixe:
+        _induits.append(nom)
+if _induits:
+    print("  ATTENTION : 14bis est engage par %s. Il doit etre tranche AVANT "
+          "d'adopter ce(s) propagateur(s)." % ", ".join(_induits))
+    echecs += 1
+else:
+    print("  OK : les neuf objets d'inference sont FIXES. 14 suffit, 14bis "
+          "n'est pas engage.")
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -1685,6 +1823,140 @@ for _titre, _autre in (
         RuleSystem(3, 3, [_autre, NoTriple([0, 1, 2, 3])], "NTc"),
         RuleSystem(3, 3, [_autre, NoTriple([5, 6, 7, 8])], "NTd"),
         _bug_nt, max_sols=120, max_taille=3)
+
+
+# ---- paires impliquant NoSquare -----------------------------------------
+#
+# PROBLEME STRUCTUREL, ET IL ANNONCE CELUI DE `Connected` : les fenetres de
+# `NoSquare` couvrent **toute la grille**. Aucune autre contrainte ne peut donc
+# lui etre DISJOINTE, et le temoin disjoint utilise pour les huit propagateurs
+# precedents est **impossible a construire**.
+#
+# Il est remplace par un controle **strictement plus fort** : le meme systeme,
+# avec le propagateur de l'autre contrainte DESACTIVE. Les deux mondes ont
+# alors exactement le meme ensemble de solutions -- seule change la capacite de
+# l'autre propagateur a rogner. Si le bug ne mord que lorsque l'autre
+# propagateur tourne, l'interaction est demontree sans dependre d'une geometrie.
+
+def _moteur_restreint(remplacants, kinds_actifs):
+    """Comme `_moteur`, mais seuls les `kind` listes sont propages du tout.
+    Les autres contraintes restent PRESENTES -- donc les solutions sont les
+    memes -- mais ne filtrent pas."""
+    def _p(rs, dom):
+        for _ in range(60):
+            prog = False
+            for cn in rs.constraints:
+                k = getattr(cn, "kind", None)
+                if k not in kinds_actifs:
+                    continue
+                f = remplacants.get(k) or PROPAGATEURS.get(k)
+                if f is None:
+                    continue
+                pp, c = f(cn, dom)
+                if c:
+                    return True, True
+                prog = prog or pp
+            if not prog:
+                break
+        return True, False
+    return _p
+
+
+def _nosquare_bugue_forme(d):
+    """BUG D'INTERACTION, classe de l'invariant 14 : « domaine deja rogne =
+    cellule decidee a son minimum », substitue au test de singleton."""
+    def _est_val(dm, val):
+        if len(dm) == 1:
+            return val in dm
+        if 1 < len(dm) < d:
+            return min(dm) == val              # LE BUG
+        return False
+
+    def f(cn, dom):
+        val = cn.val
+        prog = False
+        n = cn.n
+        for r in range(n - 1):
+            for c in range(n - 1):
+                fen = (r * n + c, r * n + c + 1,
+                       (r + 1) * n + c, (r + 1) * n + c + 1)
+                surs = [i for i in fen if _est_val(dom[i], val)]
+                if len(surs) != 3:
+                    continue
+                cible = [i for i in fen if i not in surs][0]
+                if val not in dom[cible]:
+                    continue
+                dom[cible].discard(val)
+                prog = True
+                if not dom[cible]:
+                    return prog, True
+        return prog, False
+    return f
+
+
+# La chaine `NoTriple -> NoSquare` a besoin de QUATRE cellules posees pour
+# s'amorcer : deux pour que NoTriple retire une valeur, deux de plus pour
+# completer la fenetre 2x2. A `max_taille = 3` le croisement ne pouvait pas
+# se declencher -- couverture aveugle, pas bug inerte (invariant 15).
+NS_TAILLE = 4
+
+
+def _paire_nosquare(titre, rs, autre_kind, bug_fn):
+    """Croisement sans temoin disjoint : le controle est le meme systeme avec
+    le propagateur de l'autre contrainte desactive."""
+    print()
+    print("-- croisement %s  x  NoSquare (controle : autre propagateur OFF) --"
+          % titre)
+    faute = 0
+    v = croisement_surete("  surete (tout actif)", rs,
+                          max_sols=120, max_taille=NS_TAILLE)
+    if v is None or v > 0:
+        faute += 1
+    avec = croisement_surete(
+        "  bug, autre ACTIF  ", rs,
+        prop=_moteur_restreint({"NOSQUARE": bug_fn}, {autre_kind, "NOSQUARE"}),
+        max_sols=120, max_taille=NS_TAILLE)
+    sans = croisement_surete(
+        "  bug, autre INACTIF", rs,
+        prop=_moteur_restreint({"NOSQUARE": bug_fn}, {"NOSQUARE"}),
+        max_sols=120, max_taille=NS_TAILLE)
+    if not avec:
+        print("  ECHEC : le bug d'interaction ne mord pas.")
+        faute += 1
+    elif sans:
+        print("  ECHEC : il mord AUSSI sans l'autre propagateur (%d) -- bug "
+              "simple, pas interaction." % sans)
+        faute += 1
+    else:
+        print("  OK : mord avec l'autre propagateur (%d), muet sans lui (%d)."
+              % (avec, sans))
+    return faute
+
+
+_bug_ns = _nosquare_bugue_forme(3)
+
+# CINQUIEME FORME DE LA MEME LECON, et elle se lit maintenant sans tatonner.
+# Le bug lit `min(dom) == val` avec `val = 1` : il lui faut donc un domaine
+# partiel EGAL A {1, 2}, c'est-a-dire dont la valeur 0 a ete retiree.
+#   - `Count([0,1], val=1, ...)` ne retire jamais que la valeur 1 elle-meme :
+#     il produit {0, 2}, jamais {1, 2}. STRUCTURELLEMENT incapable.
+#   - `SumRange([0,1], lo=0, ...)` n'a que son PLAFOND actif (lo = 0 rend le
+#     plancher inerte), donc il ne retire que les GRANDES valeurs. Idem.
+# Corriges en `Count(val=0)` et `SumRange(lo=3)`, qui retirent la valeur 0.
+# Les deux ont ete constates en faisant echouer le croisement, pas devines.
+for _titre, _autre, _kind in (
+        ("AllDiff |R|<d", AllDiff([0, 1]), "ALLDIFF"),
+        ("Count val=0", Count([0, 1], 0, 1, 1), "COUNT"),
+        ("SumRange plancher", SumRange([0, 1], 3, 4, 3), "SUM"),
+        ("NeqAdj", NeqAdj([0, 1]), "NEQADJ"),
+        ("Mono", Mono([1, 0]), "MONO"),
+        ("PairDiff", PairDiff([(0, 1)], 1, 3), "PAIRDIFF"),
+        ("PairRatio", PairRatio([(0, 1)], 1), "PAIRSTEP"),
+        ("NoTriple", NoTriple([0, 1, 2, 3]), "NOTRIPLE")):
+    echecs += _paire_nosquare(
+        _titre,
+        RuleSystem(3, 3, [_autre, NoSquare(3, 1)], "NSc"),
+        _kind, _bug_ns)
 
 
 print()

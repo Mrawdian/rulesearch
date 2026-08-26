@@ -11,6 +11,62 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - NoSquare, neuvieme propagateur : 36 croisements, 14bis verifie
+
+**Fait** : `propager_nosquare` -- dans une fenetre 2x2, si trois cellules sont
+au singleton `{val}`, la quatrieme ne peut pas valoir `val`. Les fenetres sont
+construites **dans le propagateur** a partir de `cn.n` : **`dsl2.py` n'est pas
+touche**. Huit croisements de plus : **trente-six paires**.
+
+**14BIS VERIFIE MECANIQUEMENT SUR LES NEUF PROPAGATEURS.** Plutot qu'argumenter,
+chaque propagateur declare dans `objet_inference()` l'objet qu'il parcourt, et
+`canary3` verifie qu'il est **identique avant et apres des rognages
+arbitraires**. Les neuf sont **FIXES** : 14 suffit, 14bis n'est pas engage.
+**Le test est ecrit pour ECHOUER sur `Connected`**, dont le graphe depend des
+domaines -- on saura que 14bis est engage au lieu de le decouvrir apres coup.
+
+**LE TEMOIN DISJOINT DEVIENT IMPOSSIBLE, ET LE CONTROLE S'AMELIORE.** Les
+fenetres de `NoSquare` couvrent toute la grille : aucune contrainte ne peut lui
+etre disjointe -- **et `Connected` aura la meme propriete**. Remplace par un
+controle **strictement plus fort** : meme systeme, autre propagateur
+**desactive**. Les deux mondes ont exactement le meme ensemble de solutions ;
+seule change la capacite de l'autre a rogner. Meilleur que le controle
+geometrique, qui faisait varier le systeme en meme temps que le chevauchement.
+Invariant 18.
+
+**TROIS CROISEMENTS ONT ECHOUE, CINQUIEME FORME DE LA MEME LECON** -- et cette
+fois elle se lit sans tatonner. Le bug lit `min(dom) == 1`, il lui faut donc un
+domaine partiel egal a `{1, 2}` :
+- `Count(val=1)` ne retire jamais que la valeur 1 : il produit `{0, 2}`.
+  **Structurellement incapable.**
+- `SumRange(lo=0)` n'a que son plafond actif : il ne retire que les grandes
+  valeurs. Idem.
+- `NoTriple x NoSquare` a besoin de **quatre** cellules posees pour s'amorcer :
+  couverture aveugle a `max_taille = 3`, pas bug inerte (invariant 15).
+
+Corriges en `Count(val=0)`, `SumRange(lo=3)`, `NS_TAILLE = 4`.
+
+**Verifie** :
+
+    AllDiff   x NoSquare :  15 / 0     Mono      x NoSquare :  96 / 0
+    Count     x NoSquare :  15 / 0     PairDiff  x NoSquare :  15 / 0
+    SumRange  x NoSquare : 531 / 0     PairRatio x NoSquare :  15 / 0
+    NeqAdj    x NoSquare :  15 / 0     NoTriple  x NoSquare :   3 / 0
+    declenche a DEUX au lieu de trois : le canari mord
+
+**COUT** : 3,39 s (28 paires) -> **8,23 s (36 paires)**. Conforme a
+l'attribution corrigee : huit paires a n=3 et `max_taille = 4` (30 720 essais
+par execution contre 15 600), pas le nombre de paires.
+
+**Non verifie / suppose** :
+- Les croisements de `NoTriple` et `NoSquare` sont **echantillonnes**, regime
+  imprime a chaque ligne.
+- `propagate.py` n'est **toujours pas branche**. Aucune mesure n'a encore ete
+  produite par A.
+
+**Bloque sur** : rien. **LES NEUF PROPAGATEURS FACILES ET MOYENS SONT FINIS.**
+Point d'etape demande avant `Connected`.
+
 ## 2026-08-26 - NoTriple, huitieme propagateur, et un HUITIEME CAS DU MOTIF
 
 **Fait** : `propager_notriple` -- dans une fenetre de trois consecutives, si
