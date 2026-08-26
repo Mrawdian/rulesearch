@@ -132,6 +132,20 @@ ete identifies ainsi.
    Vrai dans le monde du forward-checking d'ou l'on vient, **faux** des qu'un
    autre propagateur a rogne PARTIELLEMENT une cellule partagee.
    C'est le gabarit du test negatif de chaque croisement.
+   **ET C'EST D'ABORD UN CRITERE DE RELECTURE, PAS DE TEST.** Tout propagateur
+   s'audite **avant d'ecrire la moindre ligne de test** : chercher chaque
+   endroit ou il teste une propriete de **forme** d'un domaine --
+   `len(dom) == 1`, `len(dom) == d`, `len(dom) > 1`, « intact », « deja
+   rogne » -- plutot que l'**appartenance** d'une valeur. Chaque occurrence est
+   un point d'unsoundness potentiel par interaction.
+   Un propagateur qui ne raisonne que sur `v in dom[i]`, `min(dom[i])`,
+   `max(dom[i])` est **sur par construction** vis-a-vis des interactions : ces
+   lectures portent sur le contenu, et le contenu ne fait que retrecir.
+   **Seule forme admise : `len(dom) == 1`**, et uniquement parce qu'elle
+   **determine** le contenu exactement -- un singleton a un unique membre,
+   qu'on lit ensuite. Toute autre taille est un **proxy** du contenu, et un
+   proxy est faux des qu'un autre propagateur a rogne partiellement la cellule.
+   Le critere est ecrit en tete de `engine/propagate.py`, la ou on le relit.
 
 13. **Chaque propagateur ajoute un CROISEMENT contre TOUS les precedents.**
    Les cas limites sont construits a la main (invariant 8), mais leurs

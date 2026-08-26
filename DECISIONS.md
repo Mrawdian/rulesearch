@@ -1247,3 +1247,74 @@ effectivement **ROGNER** une cellule partagee -- pas seulement la partager.
 ### Cout des croisements, mesure
 `canary3` complet : **0,20 s** avec trois paires. La croissance quadratique
 annoncee est, a ce stade, sans effet pratique. A remesurer, pas a supposer.
+
+## 2026-08-26 - QUESTION OUVERTE : l'invariant 14 tient-il pour Connected ?
+
+**A trancher au moment de Connected (etape 10), pas avant. Mais a savoir AVANT
+d'y arriver, pas pendant.**
+
+L'invariant 14 dit que l'unsoundness par interaction ne peut venir que d'une
+inference sur la **forme** d'un domaine plutot que sur son contenu, la
+monotonie rendant toute lecture perimee inerte. Il a tenu pour les quatre
+premiers propagateurs. **Il y a une raison serieuse de penser qu'il ne couvre
+pas Connected.**
+
+**Ce qui est conforme** : `Connected` raisonne sur l'accessibilite dans un
+graphe dont les sommets passables sont ceux dont le domaine **contient** `val`.
+C'est une inference sur l'**appartenance**, donc couverte par 14 -- et la
+regle de retrait par inaccessibilite l'est aussi.
+
+**Ce qui ne l'est peut-etre pas** : le **forcage par point d'articulation**
+infere depuis la **structure du graphe induit**, laquelle depend de **quels
+domaines ont ete rognes**. C'est une propriete de forme **collective**, pas
+individuelle -- et l'invariant 14, tel qu'il est enonce, ne parle que de la
+forme d'**un** domaine.
+
+Autrement dit : 14 pourrait etre correct et **incomplet**. Un propagateur peut
+ne faire que des lectures d'appartenance, cellule par cellule, et neanmoins
+tirer une conclusion d'une propriete **globale** du graphe que ces
+appartenances induisent. La monotonie protege chaque lecture ; elle ne dit rien
+sur la monotonie de la propriete collective.
+
+**Ce qu'il faudra etablir a l'etape 10** :
+- la structure induite evolue-t-elle **monotonement** quand les domaines
+  retrecissent ? (un sommet passable ne peut que le rester ou cesser de
+  l'etre -- donc le graphe ne fait que **perdre** des sommets, ce qui est
+  monotone ; mais l'ensemble des **points d'articulation** n'est PAS monotone
+  sous suppression de sommets, et c'est la que le doute porte) ;
+- si la reponse est non, l'invariant 14 doit etre **etendu** a la forme
+  collective, et le test negatif de tous les croisements impliquant Connected
+  doit etre construit sur cette classe-la, pas sur celle de la forme
+  individuelle.
+
+**Ne pas traiter maintenant.** Consigne pour que l'etape 10 commence par cette
+question au lieu de la decouvrir.
+
+
+## 2026-08-26 - NeqAdj : le piege de T1 sous un troisieme habit
+
+Une seule regle : une cellule reduite a `{v}` interdit `v` a ses **voisines
+immediates** dans l'ordre de la region. Une seule lecture de forme,
+`len(dom) == 1`, la forme admise.
+
+**LE PIEGE** : `NeqAdj` n'est **pas** un `AllDiff`. Sur une region de trois
+cellules ou plus, les **extremites peuvent etre egales**. Un propagateur qui
+retirerait `v` de toute la region serait faux des que `|region| >= 3`.
+
+C'est **le meme piege que T1**, sous un troisieme habit : appliquer a toute une
+region un raisonnement qui n'est valide que localement. Le test negatif le
+verifie :
+
+    NeqAdj traite comme un AllDiff :
+      0 violation sur |R| = 2 (ou les deux coincident effectivement)
+      58 sur |R| = 3
+      14 sur |R| = 3, d = 2
+
+Zero sur `|R| = 2`, ou la confusion est sans effet : le canari discrimine.
+
+**Trois croisements ajoutes** (contre AllDiff, Count, SumRange), meme gabarit,
+bug d'interaction de la classe de l'invariant 14 :
+
+    AllDiff x NeqAdj  : chevauchant 42, temoin disjoint 0
+    Count   x NeqAdj  : chevauchant 12, temoin disjoint 0
+    SumRange x NeqAdj : chevauchant 18, temoin disjoint 0

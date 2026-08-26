@@ -49,7 +49,7 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_count_interdiction,
                        propager_count_forcage, propager_sum,
                        propager_sum_plafond, propager_sum_plancher,
-                       PROPAGATEURS)
+                       propager_neqadj, PROPAGATEURS)
 
 random.seed(23)
 n = 4
@@ -195,6 +195,28 @@ def cas_surete(nom, rs, prop=None, verbeux=True):
         print("  %-22s solutions=%-5d essais=%-4d VIOLATIONS=%d"
               % (nom, len(sols), essais, viol))
     return viol
+
+
+def _moteur_simple(remplacants):
+    """Propagateur complet ou seuls les `kind` listes sont remplaces par une
+    version fausse ; les autres gardent leur propagateur de production. Une
+    violation est donc imputable au remplacant."""
+    def _p(rs, dom):
+        for _ in range(60):
+            prog = False
+            for cn in rs.constraints:
+                k = getattr(cn, "kind", None)
+                f = remplacants.get(k) or PROPAGATEURS.get(k)
+                if f is None:
+                    continue
+                pp, c = f(cn, dom)
+                if c:
+                    return True, True
+                prog = prog or pp
+            if not prog:
+                break
+        return True, False
+    return _p
 
 
 print()
@@ -628,6 +650,81 @@ for etiquette, faux in (
 
 
 # ==========================================================================
+# NeqAdj -- une seule regle, et LE PIEGE est que ce n'est PAS un AllDiff.
+# ==========================================================================
+
+# J : region de 2 -- degenere, NeqAdj y coincide avec AllDiff.
+casJ = RuleSystem(2, 3, [NeqAdj([0, 1])], "J |R|=2")
+# K : region de 3 -- LE PIEGE. Les extremites peuvent etre EGALES. Tout
+#     propagateur qui traite la region comme un AllDiff est faux ici.
+casK = RuleSystem(2, 3, [NeqAdj([0, 1, 2])], "K |R|=3")
+# L : region de 3 avec d = 2 -- l'alternance est forcee, cas le plus tendu.
+casL = RuleSystem(2, 2, [NeqAdj([0, 1, 2])], "L |R|=3, d=2")
+
+print()
+print("-- NeqAdj : surete --")
+for nom, rs in (("J |R| = 2", casJ), ("K |R| = 3", casK), ("L |R|=3, d=2", casL)):
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- NeqAdj : la regle doit etre INVOQUEE --")
+_inv = 0
+for nom, rs in (("J", casJ), ("K", casK), ("L", casL)):
+    rnd3 = random.Random(41)
+    for sol in (toutes_solutions(rs) or [])[:40]:
+        for k in (1, 2):
+            dom = domaines(rs, indices(sol, k, rnd3))
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) == "NEQADJ":
+                    pp, _ = propager_neqadj(cn, dom)
+                    if pp:
+                        _inv += 1
+print("  declenchements = %d" % _inv)
+if not _inv:
+    print("  ECHEC : NeqAdj est inerte.")
+    echecs += 1
+else:
+    print("  OK : la regle est operante.")
+
+
+# ---- test negatif : NeqAdj traite comme un AllDiff ----------------------
+# C'est le bug T1 sous un troisieme habit : appliquer a toute la region un
+# raisonnement qui n'est valide qu'entre voisines immediates.
+
+def _neqadj_zele(cn, dom):
+    R = cn.region
+    prog = False
+    for a in R:
+        if len(dom[a]) != 1:
+            continue
+        v = next(iter(dom[a]))
+        for b in R:                      # LE BUG : toute la region, pas les voisines
+            if b == a or v not in dom[b]:
+                continue
+            dom[b].discard(v)
+            prog = True
+            if not dom[b]:
+                return prog, True
+    return prog, False
+
+
+print()
+print("-- test negatif NeqAdj : traite comme un AllDiff --")
+_det = False
+for nom, rs in (("J |R| = 2", casJ), ("K |R| = 3", casK), ("L |R|=3, d=2", casL)):
+    v = cas_surete("zele " + nom, rs, prop=_moteur_simple({"NEQADJ": _neqadj_zele}))
+    if v:
+        _det = True
+if _det:
+    print("  OK : le canari mord.")
+else:
+    print("  ECHEC : NeqAdj traite comme un AllDiff passe le canari.")
+    echecs += 1
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -796,26 +893,7 @@ else:
 
 # ---- paires impliquant SumRange (invariant 13 : contre TOUS les precedents)
 
-def _moteur(remplacants):
-    """Propagateur complet ou seuls les `kind` listes sont remplaces par une
-    version fausse. Les autres gardent leur propagateur de production : une
-    violation est donc imputable au remplacant."""
-    def _p(rs, dom):
-        for _ in range(60):
-            prog = False
-            for cn in rs.constraints:
-                k = getattr(cn, "kind", None)
-                f = remplacants.get(k) or PROPAGATEURS.get(k)
-                if f is None:
-                    continue
-                pp, c = f(cn, dom)
-                if c:
-                    return True, True
-                prog = prog or pp
-            if not prog:
-                break
-        return True, False
-    return _p
+_moteur = _moteur_simple
 
 
 def _sum_bugue_forme(d):
@@ -892,6 +970,55 @@ echecs += _paire(
     RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), SumRange([1, 2], 2, 4, 3)], "P4c"),
     RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), SumRange([2, 3], 2, 4, 3)], "P4d"),
     _moteur({"SUM": _sum_bugue_forme(3)}))
+
+
+# ---- paires impliquant NeqAdj -------------------------------------------
+
+def _neq_bugue_forme(d):
+    """BUG D'INTERACTION, classe de l'invariant 14 : deduire le CONTENU d'un
+    domaine de sa FORME. Ici « domaine deja rogne = cellule decidee », donc on
+    prend son minimum comme si la valeur etait fixee. Exige qu'un AUTRE
+    propagateur ait rogne partiellement une cellule partagee."""
+    def f(cn, dom):
+        R = cn.region
+        prog = False
+        for k in range(len(R) - 1):
+            for a, b in ((R[k], R[k + 1]), (R[k + 1], R[k])):
+                if len(dom[a]) == 1:
+                    v = next(iter(dom[a]))
+                elif 1 < len(dom[a]) < d:
+                    v = min(dom[a])          # LE BUG
+                else:
+                    continue
+                if v not in dom[b]:
+                    continue
+                dom[b].discard(v)
+                prog = True
+                if not dom[b]:
+                    return prog, True
+        return prog, False
+    return f
+
+
+_bug_neq = _moteur({"NEQADJ": _neq_bugue_forme(3)})
+
+echecs += _paire(
+    "AllDiff |R|<d  x  NeqAdj",
+    RuleSystem(2, 3, [AllDiff([0, 1]), NeqAdj([1, 2])], "N1c"),
+    RuleSystem(2, 3, [AllDiff([0, 1]), NeqAdj([2, 3])], "N1d"),
+    _bug_neq)
+
+echecs += _paire(
+    "Count lo=hi=1  x  NeqAdj",
+    RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), NeqAdj([1, 2])], "N2c"),
+    RuleSystem(2, 3, [Count([0, 1], 1, 1, 1), NeqAdj([2, 3])], "N2d"),
+    _bug_neq)
+
+echecs += _paire(
+    "SumRange  x  NeqAdj",
+    RuleSystem(2, 3, [SumRange([0, 1], 0, 2, 3), NeqAdj([1, 2])], "N3c"),
+    RuleSystem(2, 3, [SumRange([0, 1], 0, 2, 3), NeqAdj([2, 3])], "N3d"),
+    _bug_neq)
 
 
 print()

@@ -11,6 +11,56 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - NeqAdj, quatrieme propagateur, + trois croisements
+
+**Demande** : NeqAdj puis Mono, meme gabarit, croisements contre tous les
+precedents ; faire de l'invariant 14 un **critere de relecture** ; consigner la
+question ouverte de Connected ; **remesurer** le cout de canary3.
+
+**Fait** :
+- `propager_neqadj` : une cellule reduite a `{v}` interdit `v` a ses **voisines
+  immediates**. Une seule lecture de forme, `len(dom) == 1`.
+- **Critere d'audit ecrit en tete de `engine/propagate.py`**, la ou on le relit
+  avant d'ecrire un test : chercher chaque test de FORME d'un domaine, chacun
+  est un point d'unsoundness potentiel. Seule forme admise `len(dom) == 1`,
+  parce qu'elle **determine** le contenu au lieu d'en etre un proxy.
+- Trois croisements de plus (AllDiff, Count, SumRange x NeqAdj). Six paires.
+
+**LE PIEGE, et c'est T1 sous un troisieme habit** : `NeqAdj` n'est pas un
+`AllDiff`. Sur trois cellules ou plus les **extremites peuvent etre egales**.
+
+    NeqAdj traite comme un AllDiff : 0 / 58 / 14 violations
+                                     (|R|=2 / |R|=3 / |R|=3,d=2)
+    AllDiff x NeqAdj  : chevauchant 42, temoin disjoint 0
+    Count   x NeqAdj  : chevauchant 12, temoin disjoint 0
+    SumRange x NeqAdj : chevauchant 18, temoin disjoint 0
+
+Zero sur `|R| = 2`, ou la confusion est effectivement sans effet.
+
+**QUESTION OUVERTE CONSIGNEE, a trancher a l'etape 10 et pas avant** :
+l'invariant 14 pourrait etre **correct et incomplet** pour Connected. Le
+retrait par inaccessibilite lit de l'**appartenance**, donc il est couvert.
+Mais le forcage par **point d'articulation** infere depuis la structure du
+graphe induit -- une propriete de forme **collective**, alors que 14 ne parle
+que de la forme d'**un** domaine. Le graphe ne fait que perdre des sommets,
+ce qui est monotone, mais **l'ensemble des points d'articulation n'est pas
+monotone sous suppression de sommets**. C'est la que porte le doute.
+
+**COUT DE canary3, REMESURE et non suppose** (consigne demandee, tous les
+deux propagateurs) :
+
+    3 paires (SumRange) : 0,20 s
+    6 paires (NeqAdj)   : 0,21 s
+
+Le doublement du nombre de paires ne se voit pas. Les grilles de
+croisement sont a n=2, donc l'enumeration exhaustive y coute quelques
+centaines d'essais, negligeable devant la partie 1. La croissance
+quadratique est reelle mais part de tres bas. **A remesurer apres Mono et
+PairRatio** -- et surtout apres NoSquare et Connected, dont les regions
+sont bien plus grandes.
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - SumRange, troisieme propagateur, + deux croisements
 
 **Demande** : SumRange, meme famille de bornes que Count, gabarit a deux sens.

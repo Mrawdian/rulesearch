@@ -29,6 +29,25 @@ asymetrique et le canari ne rattrape que le second.
 from rulesearch import UNASSIGNED
 
 
+# ---------- CRITERE D'AUDIT (invariant 14 de CLAUDE.md) ----------
+#
+# Tout propagateur de ce module doit pouvoir etre relu ainsi, AVANT tout test :
+#
+#   chercher chaque endroit ou il teste une propriete de FORME d'un domaine
+#   -- `len(dom[i]) == 1`, `len(dom[i]) == d`, `len(dom[i]) > 1`, « domaine
+#   intact », « domaine deja rogne » -- plutot que l'APPARTENANCE d'une valeur.
+#   Chaque occurrence est un point d'unsoundness potentiel par interaction.
+#
+# Un propagateur qui ne raisonne que sur `v in dom[i]`, `min(dom[i])`,
+# `max(dom[i])` est SUR PAR CONSTRUCTION vis-a-vis des interactions : ces
+# lectures portent sur le contenu, et le contenu ne fait que retrecir.
+#
+# LA SEULE FORME ADMISE est `len(dom[i]) == 1`, et seulement parce qu'elle
+# DETERMINE le contenu exactement : un singleton a un unique membre, qu'on lit
+# ensuite. Toutes les autres tailles sont des proxys du contenu, et un proxy
+# est faux des qu'un autre propagateur a rogne PARTIELLEMENT la cellule.
+
+
 # ---------- representation ----------
 
 def domaines(rs, g):
@@ -232,12 +251,47 @@ def propager_sum(cn, dom):
     return (p1 or p2), c2
 
 
+# ---------- NEQADJ ----------
+#
+# `NeqAdj(region)` : deux cellules consecutives DANS L'ORDRE DE LA REGION
+# doivent differer.
+#
+# UNE SEULE regle : une cellule dont le domaine est reduit a `{v}` interdit `v`
+# a ses VOISINES IMMEDIATES -- pas au reste de la region.
+#
+# LE PIEGE, et il est celui de T1 sous un autre habit : `NeqAdj` n'est PAS un
+# `AllDiff`. Sur une region de trois cellules ou plus, les extremites peuvent
+# parfaitement etre egales. Un propagateur qui retirerait `v` de toute la
+# region serait faux des que `|region| >= 3`, et le cas est construit a la main
+# dans canary3 pour cette raison.
+#
+# Audit de forme : un seul test, `len(dom[a]) == 1`, la forme admise.
+
+
+def propager_neqadj(cn, dom):
+    R = cn.region
+    prog = False
+    for k in range(len(R) - 1):
+        for a, b in ((R[k], R[k + 1]), (R[k + 1], R[k])):
+            if len(dom[a]) != 1:
+                continue
+            v = next(iter(dom[a]))
+            if v not in dom[b]:
+                continue
+            dom[b].discard(v)
+            prog = True
+            if not dom[b]:
+                return prog, True
+    return prog, False
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
     "ALLDIFF": propager_alldiff,
     "COUNT": propager_count,
     "SUM": propager_sum,
+    "NEQADJ": propager_neqadj,
 }
 
 
