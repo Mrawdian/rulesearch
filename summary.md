@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 10:07 UTC — 37984 systemes evalues
+genere 2026-08-26 10:07 UTC — 37999 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 29010 systemes
+- `89c65c03c4ad` : 29025 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 16167 | 8070 | 1050 | 556 | 1609 | 1285 | 1766 | 1627 | 10.1% |
-| d4 | 4 | 4 | 5856 | 2693 | 1485 | 30 | 410 | 393 | 275 | 422 | 7.2% |
+| d4 | 4 | 4 | 5871 | 2697 | 1492 | 30 | 411 | 393 | 275 | 425 | 7.2% |
 | ref | 4 | 3 | 15837 | 3722 | 6692 | 11 | 2171 | 803 | 7 | 2431 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -33,7 +33,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1751, dont T2 : 100%
-- candidats SANS connectivite : 2736, dont T2 : 100%
+- candidats SANS connectivite : 2739, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -54,11 +54,11 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*197 candidats sur 4487 portent les champs bruts (4%).*
+*200 candidats sur 4490 portent les champs bruts (4%).*
 
-- `89c65c03c4ad` — 197 candidats
+- `89c65c03c4ad` — 200 candidats
   - AVEC connectivite (74) : resistance **48.2%**
-  - SANS connectivite (123) : resistance **21.3%**
+  - SANS connectivite (126) : resistance **21.6%**
   - test de permutation : **p = 0.0005** — significatif.
 
 ## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)
@@ -73,9 +73,9 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 3322 candidats
+- `89c65c03c4ad` — 3325 candidats
   - AVEC connectivite (1272) : T0=13.04 T1=0.00 T2=2.97 — pondere **5.93**
-  - SANS connectivite (2050) : T0=15.85 T1=0.02 T2=2.66 — pondere **5.33**
+  - SANS connectivite (2053) : T0=15.84 T1=0.02 T2=2.66 — pondere **5.33**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
