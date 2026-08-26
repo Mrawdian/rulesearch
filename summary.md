@@ -1,11 +1,11 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 12:16 UTC — 43401 systemes evalues
+genere 2026-08-26 12:16 UTC — 43415 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `e3baecf8377b` : 4808 systemes
+- `e3baecf8377b` : 4822 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
@@ -22,7 +22,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 18845 | 9406 | 1230 | 653 | 1877 | 1498 | 2042 | 1906 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 18441 | 4333 | 7766 | 13 | 2536 | 953 | 7 | 2833 | 15.4% |
+| ref | 4 | 3 | 18455 | 4335 | 7774 | 13 | 2538 | 955 | 7 | 2833 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
