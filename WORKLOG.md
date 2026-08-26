@@ -11,6 +11,64 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - NoTriple, huitieme propagateur, et un HUITIEME CAS DU MOTIF
+
+**Fait** : `propager_notriple` -- dans une fenetre de trois consecutives, si
+deux sont au meme singleton, la troisieme ne peut pas valoir cette valeur.
+Sept croisements de plus : **vingt-huit paires**.
+
+**14BIS VERIFIE SUR NoTriple** : les fenetres sont les triplets consecutifs de
+la region, donc un objet **FIXE par la contrainte** -- il ne depend pas des
+domaines et ne bouge pas quand ils retrecissent. **14 suffit.** La lecture
+preliminaire est confirmee ; reste `NoSquare`.
+
+**LE PIEGE** : `NoTriple` n'est pas un `NeqAdj` -- deux valeurs identiques
+consecutives sont licites. Meme piege que `NeqAdj` traite comme `AllDiff`, d'un
+cran plus fin. Traite comme un NeqAdj : 80 / 109 / 32 violations.
+
+**HUITIEME CAS DU MOTIF, ET IL ETAIT DANS LE CANARI LUI-MEME.** Les sept
+croisements ont d'abord rendu **zero violation** sous un bug reel. Pas un bug
+inerte : **l'echantillon ne couvrait rien.** `NoTriple` exige quatre cellules
+et un temoin disjoint, donc n=3, donc un echantillon au lieu de l'exhaustif --
+et cet echantillon etait `sols[:30]` sur une enumeration **lexicographique**.
+Toutes les grilles retenues partagent les memes petites valeurs en tete : un
+**coin** de l'espace.
+
+    sols[:30]                     : 0 violation
+    tirage aleatoire, meme taille : des centaines
+
+**Introduit dans le commit meme qui ajoutait la couverture qu'il annulait.**
+Ce qui l'a fait voir : refuser de conclure « bug inerte » sur sept echecs
+simultanes -- sept croisements independants ne deviennent pas tous inertes en
+meme temps. Diagnostic separe avant toute correction.
+
+**Corrige** : `echantillon()`, tirage aleatoire a graine fixe, partout ou un
+prefixe etait pris. **Invariant 15**, plus la regle generale : quand une
+couverture est reduite, verifier que la reduction est **independante de l'ordre
+dans lequel les cas ont ete produits**. Et : un croisement qui rend zero peut
+etre un bug inerte **ou** une couverture aveugle -- **les deux impriment la
+meme ligne**.
+
+**Verifie** :
+
+    AllDiff  x NoTriple :  48 / 0      Mono      x NoTriple : 290 / 0
+    Count    x NoTriple :  60 / 0      PairDiff  x NoTriple :  48 / 0
+    SumRange x NoTriple :  72 / 0      PairRatio x NoTriple : 513 / 0
+    NeqAdj   x NoTriple :  48 / 0
+
+**COUT REMESURE** : 0,42 s (21 paires) -> **3,39 s (28 paires)**. Le saut vient
+de la **taille de grille**, pas du nombre de paires : les croisements a n=3
+font 15 600 essais contre ~600 a n=2. La croissance n'est donc pas quadratique
+en paires -- elle est dominee par n. A surveiller a `NoSquare`.
+
+**Non verifie / suppose** :
+- Les croisements de `NoTriple` sont **echantillonnes** (120 solutions,
+  sous-ensembles <= 3), pas exhaustifs. Le regime est **imprime a chaque
+  ligne** pour qu'on ne les lise pas comme les autres.
+- `propagate.py` toujours pas branche.
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - DECISIONS DE CADRAGE : A est un chantier de debit
 
 **Aucun code.** Quatre decisions prises apres questions, consignees avant

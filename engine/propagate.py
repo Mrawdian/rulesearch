@@ -426,6 +426,57 @@ def propager_pairstep(cn, dom):
         cn.pairs, lambda v, w: abs(v - w) in (0, delta), dom)
 
 
+# ---------- NOTRIPLE ----------
+#
+# `NoTriple(region)` : pas trois valeurs identiques consecutives dans la region.
+#
+# Regle unique : dans une fenetre (a, b, c) de trois cellules consecutives, si
+# DEUX d'entre elles sont reduites au meme singleton `{v}`, la troisieme ne
+# peut pas valoir `v`. Les trois positions sont symetriques -- ce n'est pas
+# « trois regles » mais une seule, appliquee aux trois choix de la cellule
+# restante.
+#
+# LE PIEGE : `NoTriple` n'est PAS un `NeqAdj`. **Deux** valeurs identiques
+# consecutives sont parfaitement licites. Un propagateur qui interdirait `v` a
+# la voisine d'une cellule valant `v` serait faux. C'est le meme piege que
+# `NeqAdj` traite comme un `AllDiff`, d'un cran plus fin : appliquer une regle
+# a la mauvaise granularite.
+#
+# AUDIT DE FORME (invariant 14) : une seule lecture, `len(dom[i]) == 1`, la
+# forme admise.
+#
+# 14BIS : les fenetres sont les triplets **consecutifs de la region**, donc un
+# objet **FIXE par la contrainte** -- il ne depend pas des domaines courants et
+# ne bouge pas quand ils retrecissent. L'inference porte cellule par cellule
+# sur un index fixe. **14 suffit, 14bis n'est pas engage.**
+
+
+def _fenetres_triples(region):
+    return [(region[k], region[k + 1], region[k + 2])
+            for k in range(len(region) - 2)]
+
+
+def propager_notriple(cn, dom):
+    prog = False
+    for fenetre in _fenetres_triples(cn.region):
+        for i in range(3):
+            cible = fenetre[i]
+            autres = [fenetre[j] for j in range(3) if j != i]
+            a, b = autres
+            if len(dom[a]) != 1 or len(dom[b]) != 1:
+                continue
+            va = next(iter(dom[a]))
+            if va != next(iter(dom[b])):
+                continue
+            if va not in dom[cible]:
+                continue
+            dom[cible].discard(va)
+            prog = True
+            if not dom[cible]:
+                return prog, True
+    return prog, False
+
+
 # ---------- orchestration ----------
 
 PROPAGATEURS = {
@@ -436,6 +487,7 @@ PROPAGATEURS = {
     "MONO": propager_mono,
     "PAIRDIFF": propager_pairdiff,
     "PAIRSTEP": propager_pairstep,
+    "NOTRIPLE": propager_notriple,
 }
 
 

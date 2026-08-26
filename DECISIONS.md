@@ -1573,3 +1573,73 @@ preuve mecanique vaut plus qu'une optimisation.
 
 Le propagateur construit donc ses fenetres 2x2 lui-meme, a partir de `n`. Le
 commit preparatoire de decomposition qui etait prevu **n'a plus lieu d'etre**.
+
+## 2026-08-26 - NoTriple : 14bis verifie, et un huitieme cas du motif
+
+### Le propagateur
+Regle unique : dans une fenetre de trois cellules consecutives, si **deux**
+sont reduites au meme singleton `{v}`, la troisieme ne peut pas valoir `v`.
+Les trois positions sont symetriques -- une seule regle, trois choix de cible.
+
+**LE PIEGE** : `NoTriple` n'est **pas** un `NeqAdj`. **Deux** valeurs
+identiques consecutives sont licites. C'est le meme piege que `NeqAdj` traite
+comme un `AllDiff`, d'un cran plus fin : la regle appliquee a la mauvaise
+granularite.
+
+    traite comme un NeqAdj : 80 / 109 / 32 violations
+                             (|R|=3 / |R|=4 / d=2)
+
+### 14BIS : VERIFIE, PAS SUPPOSE
+Les fenetres sont les **triplets consecutifs de la region** -- un objet **FIXE
+par la contrainte**. Il ne depend pas des domaines et **ne bouge pas** quand ils
+retrecissent ; l'inference porte cellule par cellule sur un index fixe.
+**14 suffit ; 14bis n'est pas engage.** La lecture preliminaire est confirmee
+pour `NoTriple` ; reste `NoSquare`.
+
+### HUITIEME CAS DU MOTIF, ET IL EST DANS LE CANARI LUI-MEME
+Les sept croisements de `NoTriple` ont d'abord rendu **zero violation** sous un
+bug reel. Ce n'etait pas un bug inerte : **l'echantillon ne couvrait rien.**
+
+`NoTriple` exige une region de quatre cellules pour avoir deux fenetres, et le
+temoin disjoint doit loger ailleurs -- il a donc fallu passer les croisements a
+n=3, donc a un **echantillon** au lieu de l'enumeration exhaustive. Et
+l'echantillon etait `sols[:30]` sur une enumeration **lexicographique** :
+toutes les grilles retenues partagent les memes petites valeurs en tete de
+grille. **Un coin de l'espace, pas l'espace.**
+
+    sols[:30]                      : 0 violation
+    tirage aleatoire, meme taille  : des centaines
+
+**C'est le motif du projet a l'etage de l'echantillonnage du canari, et il a
+ete introduit dans le commit meme qui ajoutait la couverture qu'il annulait.**
+Ce qui l'a fait voir : refuser de conclure « bug inerte » sur sept echecs
+simultanes -- sept croisements independants ne deviennent pas tous inertes en
+meme temps.
+
+**Correction** : `echantillon()`, tirage aleatoire a graine fixe, applique
+**partout** ou un prefixe etait pris (`cas_surete`, `croisement_surete`, les
+compteurs de declenchement). Invariant 15.
+
+**Regle generale qui en sort** : quand une couverture est reduite, verifier que
+la reduction est **independante de l'ordre dans lequel les cas ont ete
+produits**. Une troncature suit toujours l'ordre du generateur, et l'ordre du
+generateur est structure.
+
+**Et : quand un croisement rend zero, distinguer « bug inerte » de « couverture
+aveugle » AVANT de conclure.** Les deux impriment exactement la meme ligne.
+
+### Le regime d'echantillonnage est IMPRIME
+`croisement_surete` affiche desormais `exhaustif` ou `ECHANTILLON<=k` a chaque
+ligne. Un croisement echantillonne ne doit pas etre lu comme exhaustif.
+
+    AllDiff  x NoTriple :  48 / 0      Mono      x NoTriple : 290 / 0
+    Count    x NoTriple :  60 / 0      PairDiff  x NoTriple :  48 / 0
+    SumRange x NoTriple :  72 / 0      PairRatio x NoTriple : 513 / 0
+    NeqAdj   x NoTriple :  48 / 0      (chevauchant / temoin disjoint)
+
+### Cout, remesure
+    21 paires : 0,42 s        28 paires : 3,39 s
+Le saut vient des croisements a n=3, pas du nombre de paires : chacun fait
+15 600 essais contre ~600 a n=2. **La croissance n'est pas quadratique en
+paires, elle est dominee par la taille de grille.** A surveiller a `NoSquare`,
+qui exigera au moins n=3 lui aussi.

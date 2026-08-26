@@ -87,14 +87,22 @@ Les sept cas, pour que la liste ne se reconstitue pas de memoire :
 7. **Test negatif de `canary8` vide** — il renforcait T0 avec **T1**, qui est
    un no-op dans cet espace. Zero divergence detectee : le test ne prouvait
    rien tout en ayant l'air de conclure.
+8. **Echantillon de `canary3` aligne sur l'enumeration** -- les sept
+   croisements de `NoTriple` rendaient **zero violation** sous un bug reel.
+   Cause : `sols[:k]` sur une enumeration **lexicographique** n'est pas un
+   echantillon, c'est un **coin** de l'espace -- toutes les grilles retenues
+   partagent les memes petites valeurs en tete. Sur un tirage **aleatoire de
+   meme taille**, le meme bug produit des centaines de violations.
 
-Le septieme est le plus instructif : c'est le motif **applique au dispositif
-cense le prevenir**. Un test negatif qui ne teste rien est une metrique
+Le septieme et le huitieme sont les plus instructifs : c'est le motif
+**applique au dispositif cense le prevenir**. Le huitieme est pire encore --
+il ne touchait pas la mesure mais **l'echantillonnage du canari**, et il a
+ete introduit dans le commit meme qui ajoutait la couverture qu'il annulait. Un test negatif qui ne teste rien est une metrique
 confondue a l'etage du meta-outillage. Rien ne protege automatiquement de ce
 motif, pas meme les regles ecrites pour s'en proteger.
 
-**Ce septieme cas a ete trouve par Claude Code, sans que l'utilisateur le
-demande.** C'est le **mode de travail attendu**, pas une exception : signaler
+**Les septieme et huitieme cas ont ete trouves par Claude Code, sans que
+l'utilisateur le demande.** C'est le **mode de travail attendu**, pas une exception : signaler
 ce qui contredit l'hypothese ou rend une mesure douteuse fait partie de la
 tache, meme hors de ce qui a ete demande. La moitie des cas de cette liste ont
 ete identifies ainsi.
@@ -138,6 +146,19 @@ ete identifies ainsi.
    Regle generale : **une duplication documentee comme deliberee est un
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
+
+15. **Un PREFIXE d'enumeration n'est jamais un echantillon.**
+   `toutes_solutions` enumere dans l'ordre lexicographique. `sols[:k]` retient
+   donc des grilles qui partagent toutes les memes petites valeurs en tete :
+   un **coin** de l'espace, pas l'espace. Utiliser `echantillon()`, tirage
+   aleatoire a graine fixe -- reproductible, et **non aligne sur l'ordre
+   d'enumeration**.
+   Corollaire general : **quand une couverture est reduite, verifier que la
+   reduction est independante de l'ordre dans lequel les cas ont ete
+   produits.** Une troncature suit toujours l'ordre du generateur, et l'ordre
+   du generateur est structure.
+   Et quand un croisement rend zero, **distinguer bug inerte de couverture
+   aveugle avant de conclure** : les deux impriment exactement la meme ligne.
 
 14. **La classe des bugs d'interaction est CERNEE : deduire le CONTENU d'un
    domaine de sa FORME.**

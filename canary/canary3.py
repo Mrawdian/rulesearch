@@ -52,6 +52,7 @@ from propagate import (domaines, domaines_contiennent, propager,
                        propager_neqadj, propager_mono,
                        propager_mono_avant, propager_mono_arriere,
                        propager_pairdiff, propager_pairstep,
+                       propager_notriple,
                        PROPAGATEURS)
 
 random.seed(23)
@@ -162,6 +163,26 @@ def toutes_solutions(rs, plafond=200000):
     return out if rec(0) else None
 
 
+def echantillon(sols, combien, graine=20260826):
+    """UN PREFIXE D'ENUMERATION LEXICOGRAPHIQUE N'EST PAS UN ECHANTILLON.
+
+    `toutes_solutions` enumere dans l'ordre lexicographique : ses premiers
+    elements partagent tous les memes petites valeurs en tete de grille.
+    Prendre `sols[:k]` echantillonne donc un COIN de l'espace, pas l'espace.
+
+    Constate le 26/08/2026 : les sept croisements de `NoTriple` rendaient ZERO
+    violation sous un bug qui, sur un tirage ALEATOIRE de meme taille, en
+    produit des centaines. Le canari avait l'air de couvrir et ne couvrait
+    rien -- le motif du projet, applique cette fois a l'echantillonnage.
+
+    Tirage a graine fixe : reproductible, et non aligne sur l'ordre
+    d'enumeration.
+    """
+    if combien is None or combien >= len(sols):
+        return sols
+    return random.Random(graine).sample(sols, combien)
+
+
 def indices(sol, k, rnd):
     """Grille partielle : k cellules d'une solution reelle, le reste inconnu."""
     N = len(sol)
@@ -187,7 +208,7 @@ def cas_surete(nom, rs, prop=None, verbeux=True):
         return 0
     rnd = random.Random(101)
     viol = essais = 0
-    for sol in sols[:60]:
+    for sol in echantillon(sols, 60):
         for k in (0, 1, 2, 3, len(sol) // 2):
             essais += 1
             dom = domaines(rs, indices(sol, k, rnd))
@@ -377,7 +398,7 @@ def _declenchements(rs):
     rnd2 = random.Random(31)
     sols = toutes_solutions(rs) or []
     ci = cf = 0
-    for sol in sols[:60]:
+    for sol in echantillon(sols, 60):
         for k in (0, 1, 2, 3):
             dom = domaines(rs, indices(sol, k, rnd2))
             for _ in range(20):
@@ -529,7 +550,7 @@ def _declenchements_sum(rs):
     rnd2 = random.Random(37)
     sols = toutes_solutions(rs) or []
     cp = cq = 0
-    for sol in sols[:60]:
+    for sol in echantillon(sols, 60):
         for k in (0, 1, 2, 3):
             dom = domaines(rs, indices(sol, k, rnd2))
             for _ in range(20):
@@ -676,7 +697,7 @@ print("-- NeqAdj : la regle doit etre INVOQUEE --")
 _inv = 0
 for nom, rs in (("J", casJ), ("K", casK), ("L", casL)):
     rnd3 = random.Random(41)
-    for sol in (toutes_solutions(rs) or [])[:40]:
+    for sol in echantillon(toutes_solutions(rs) or [], 40):
         for k in (1, 2):
             dom = domaines(rs, indices(sol, k, rnd3))
             for cn in rs.constraints:
@@ -754,7 +775,7 @@ def _declenchements_mono(rs):
     rnd4 = random.Random(43)
     sols = toutes_solutions(rs) or []
     ca = cb = 0
-    for sol in sols[:60]:
+    for sol in echantillon(sols, 60):
         for k in (1, 2):
             dom = domaines(rs, indices(sol, k, rnd4))
             for _ in range(20):
@@ -903,7 +924,7 @@ print("-- PairDiff : la regle doit etre INVOQUEE --")
 _inv = 0
 for nom, rs in PD_CAS:
     rnd5 = random.Random(47)
-    for sol in (toutes_solutions(rs) or [])[:40]:
+    for sol in echantillon(toutes_solutions(rs) or [], 40):
         for k in (1, 2):
             dom = domaines(rs, indices(sol, k, rnd5))
             for cn in rs.constraints:
@@ -990,7 +1011,7 @@ print("-- PairRatio : la regle doit etre INVOQUEE --")
 _inv = 0
 for nom, rs in PR_CAS:
     rnd6 = random.Random(53)
-    for sol in (toutes_solutions(rs) or [])[:40]:
+    for sol in echantillon(toutes_solutions(rs) or [], 40):
         for k in (1, 2):
             dom = domaines(rs, indices(sol, k, rnd6))
             for cn in rs.constraints:
@@ -1046,6 +1067,91 @@ else:
 
 
 # ==========================================================================
+# NoTriple -- LE PIEGE : ce n'est PAS un NeqAdj.
+# ==========================================================================
+#
+# 14BIS, VERIFIE ET NON SUPPOSE : les fenetres sont les triplets CONSECUTIFS
+# de la region -- un objet FIXE par la contrainte, qui ne depend pas des
+# domaines et ne bouge pas quand ils retrecissent. L'inference porte cellule
+# par cellule sur un index fixe. 14 suffit ; 14bis n'est pas engage.
+
+# AA : |R| = 3, une seule fenetre.
+casAA = RuleSystem(2, 3, [NoTriple([0, 1, 2])], "AA |R|=3")
+# AB : |R| = 4, DEUX fenetres qui se chevauchent -- la propagation doit
+#      traverser le chevauchement.
+casAB = RuleSystem(2, 3, [NoTriple([0, 1, 2, 3])], "AB |R|=4")
+# AC : d = 2 -- le cas le plus tendu : deux valeurs seulement, donc la
+#      contrainte mord souvent.
+casAC = RuleSystem(2, 2, [NoTriple([0, 1, 2, 3])], "AC d=2")
+
+NT_CAS = (("AA |R| = 3", casAA), ("AB |R| = 4", casAB), ("AC d = 2", casAC))
+
+print()
+print("-- NoTriple : surete --")
+for nom, rs in NT_CAS:
+    v = cas_surete(nom, rs)
+    if v is None or v > 0:
+        echecs += 1
+
+print()
+print("-- NoTriple : la regle doit etre INVOQUEE --")
+_inv = 0
+for nom, rs in NT_CAS:
+    rnd7 = random.Random(59)
+    for sol in echantillon(toutes_solutions(rs) or [], 40):
+        for k in (2, 3):
+            dom = domaines(rs, indices(sol, k, rnd7))
+            for cn in rs.constraints:
+                if getattr(cn, "kind", None) == "NOTRIPLE":
+                    pp, _ = propager_notriple(cn, dom)
+                    if pp:
+                        _inv += 1
+print("  declenchements = %d" % _inv)
+if not _inv:
+    print("  ECHEC : NoTriple est inerte.")
+    echecs += 1
+else:
+    print("  OK : la regle est operante.")
+
+
+# ---- test negatif : NoTriple traite comme un NeqAdj ---------------------
+# DEUX valeurs identiques consecutives sont licites. Interdire `v` a la voisine
+# d'une cellule valant `v` est le meme piege que NeqAdj traite comme AllDiff,
+# d'un cran plus fin : la regle appliquee a la mauvaise granularite.
+
+def _notriple_comme_neqadj(cn, dom):
+    R = cn.region
+    prog = False
+    for k in range(len(R) - 1):
+        for a, b in ((R[k], R[k + 1]), (R[k + 1], R[k])):
+            if len(dom[a]) != 1:
+                continue
+            v = next(iter(dom[a]))
+            if v not in dom[b]:
+                continue
+            dom[b].discard(v)              # LE BUG : deux suffiraient
+            prog = True
+            if not dom[b]:
+                return prog, True
+    return prog, False
+
+
+print()
+print("-- test negatif NoTriple : traite comme un NeqAdj --")
+_det = False
+for nom, rs in NT_CAS:
+    v = cas_surete("neqadj " + nom, rs,
+                   prop=_moteur_simple({"NOTRIPLE": _notriple_comme_neqadj}))
+    if v:
+        _det = True
+if _det:
+    print("  OK : le canari mord.")
+else:
+    print("  ECHEC : NoTriple traite comme un NeqAdj passe le canari.")
+    echecs += 1
+
+
+# ==========================================================================
 # CROISEMENTS DE PROPAGATEURS -- construits a la main, contre le generateur.
 # ==========================================================================
 #
@@ -1086,21 +1192,31 @@ CROISEMENTS = (("X1 |R|<d x lo=0 (chevauche)", croiX1),
                ("X3 meme paire, DISJOINT", croiX3))
 
 
-def croisement_surete(nom, rs, prop=None, verbeux=True):
-    """Surete par enumeration EXHAUSTIVE : toutes les solutions croisees avec
-    tous les sous-ensembles d'indices possibles. Les grilles de croisement sont
-    minuscules exprès pour que ce soit calculable en entier -- un echantillon
-    aleatoire raterait precisement la configuration rare qui declenche
-    l'interaction."""
+def croisement_surete(nom, rs, prop=None, verbeux=True,
+                      max_sols=None, max_taille=None):
+    """Surete sur toutes les solutions x tous les sous-ensembles d'indices.
+
+    REGIME EXHAUSTIF par defaut : les grilles de croisement sont minuscules
+    expres pour que ce soit calculable en entier -- un echantillon aleatoire
+    raterait precisement la configuration rare qui declenche l'interaction.
+
+    REGIME ECHANTILLON quand `max_sols` ou `max_taille` est donne. Necessaire
+    des que la contrainte exige une region de plus de trois cellules, donc une
+    grille de plus de quatre cases (`NoTriple`, `NoSquare`). Le regime est
+    IMPRIME a chaque ligne : un croisement echantillonne ne doit pas etre lu
+    comme un croisement exhaustif.
+    """
     fonction = prop or propager
     sols = toutes_solutions(rs)
     if sols is None:
         print("  %-30s INDETERMINE : au-dela du plafond" % nom)
         return None
     N = rs.n * rs.n
+    tmax = N if max_taille is None else min(max_taille, N)
+    retenues = echantillon(sols, max_sols)
     viol = essais = 0
-    for sol in sols:
-        for taille in range(N + 1):
+    for sol in retenues:
+        for taille in range(tmax + 1):
             for pris in itertools.combinations(range(N), taille):
                 essais += 1
                 g = [sol[i] if i in pris else UNASSIGNED for i in range(N)]
@@ -1109,8 +1225,10 @@ def croisement_surete(nom, rs, prop=None, verbeux=True):
                 if contra or not domaines_contiennent(dom, sol):
                     viol += 1
     if verbeux:
-        print("  %-30s solutions=%-4d essais=%-5d VIOLATIONS=%d"
-              % (nom, len(sols), essais, viol))
+        exhaustif = (max_sols is None and max_taille is None)
+        print("  %-30s sols=%d/%d essais=%-6d %s VIOLATIONS=%d"
+              % (nom, len(retenues), len(sols), essais,
+                 "exhaustif" if exhaustif else "ECHANTILLON<=%d" % tmax, viol))
     return viol
 
 
@@ -1247,18 +1365,21 @@ def _sum_bugue_forme(d):
     return f
 
 
-def _paire(titre, rs_chev, rs_disj, bug):
+def _paire(titre, rs_chev, rs_disj, bug, max_sols=None, max_taille=None):
     """Un croisement complet : surete des deux cotes, puis le bug injecte, qui
     doit mordre sur le CHEVAUCHANT et rester muet sur le TEMOIN disjoint."""
     print()
     print("-- croisement %s --" % titre)
     faute = 0
     for etiq, rs in (("surete chevauche", rs_chev), ("surete disjoint ", rs_disj)):
-        v = croisement_surete("  " + etiq, rs)
+        v = croisement_surete("  " + etiq, rs,
+                              max_sols=max_sols, max_taille=max_taille)
         if v is None or v > 0:
             faute += 1
-    vc = croisement_surete("  bug chevauche  ", rs_chev, prop=bug)
-    vd = croisement_surete("  bug disjoint   ", rs_disj, prop=bug)
+    vc = croisement_surete("  bug chevauche  ", rs_chev, prop=bug,
+                           max_sols=max_sols, max_taille=max_taille)
+    vd = croisement_surete("  bug disjoint   ", rs_disj, prop=bug,
+                           max_sols=max_sols, max_taille=max_taille)
     if not vc:
         print("  ECHEC : le bug d'interaction ne mord pas sur le chevauchant.")
         faute += 1
@@ -1510,6 +1631,60 @@ for _titre, _autre in (
         RuleSystem(2, 3, [_autre, PairRatio([(2, 1)], 1)], "PRc"),
         RuleSystem(2, 3, [_autre, PairRatio([(3, 2)], 1)], "PRd"),
         _bug_pr)
+
+
+# ---- paires impliquant NoTriple -----------------------------------------
+#
+# Ces croisements sont a n=3 : `NoTriple` exige une region de 4 cellules pour
+# avoir deux fenetres, et le TEMOIN disjoint doit loger ailleurs. Une grille de
+# 4 cases n'y suffit pas. Le regime devient donc ECHANTILLON, et il est
+# imprime a chaque ligne -- une couverture echantillonnee ne doit pas etre lue
+# comme exhaustive.
+
+def _notriple_bugue_forme(d):
+    """BUG D'INTERACTION : « domaine deja rogne = cellule decidee a son
+    minimum », substitue au test de singleton. Exige qu'un AUTRE propagateur
+    ait rogne partiellement une cellule de la fenetre."""
+    def _valeur(dm):
+        if len(dm) == 1:
+            return next(iter(dm))
+        if 1 < len(dm) < d:
+            return min(dm)                 # LE BUG
+        return None
+
+    def f(cn, dom):
+        prog = False
+        for k in range(len(cn.region) - 2):
+            fenetre = (cn.region[k], cn.region[k + 1], cn.region[k + 2])
+            for i in range(3):
+                cible = fenetre[i]
+                a, b = [fenetre[j] for j in range(3) if j != i]
+                va, vb = _valeur(dom[a]), _valeur(dom[b])
+                if va is None or va != vb or va not in dom[cible]:
+                    continue
+                dom[cible].discard(va)
+                prog = True
+                if not dom[cible]:
+                    return prog, True
+        return prog, False
+    return f
+
+
+_bug_nt = _moteur({"NOTRIPLE": _notriple_bugue_forme(3)})
+
+for _titre, _autre in (
+        ("AllDiff |R|<d", AllDiff([0, 1])),
+        ("Count lo=hi=1", Count([0, 1], 1, 1, 1)),
+        ("SumRange", SumRange([0, 1], 0, 2, 3)),
+        ("NeqAdj", NeqAdj([0, 1])),
+        ("Mono", Mono([0, 1])),
+        ("PairDiff", PairDiff([(0, 1)], 1, 3)),
+        ("PairRatio", PairRatio([(0, 1)], 1))):
+    echecs += _paire(
+        "%s  x  NoTriple" % _titre,
+        RuleSystem(3, 3, [_autre, NoTriple([0, 1, 2, 3])], "NTc"),
+        RuleSystem(3, 3, [_autre, NoTriple([5, 6, 7, 8])], "NTd"),
+        _bug_nt, max_sols=120, max_taille=3)
 
 
 print()
