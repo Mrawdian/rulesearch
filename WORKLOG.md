@@ -11,6 +11,26 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - gain_propagation : prediction posee, mesure pas encore lancee
+
+**Aucun resultat. Ce commit n'existe que pour horodater la prediction.**
+
+L'hypothese centrale n'exigeait pas n=5 -- c'est la PROFONDEUR qui l'exigeait.
+La decomposabilite locale se teste par la **recuperation** : des propagateurs
+locaux plus forts recuperent la resistance d'un systeme decomposable, pas
+celle d'un systeme qui ne l'est pas. **A a livre cet instrument sans le
+viser.**
+
+**PREDICTION** : gain **FORT** sur `static-ref`, **FAIBLE** sur `connect`.
+La faiblesse relative de `Connected` est le **signal attendu**, pas un defaut.
+
+**Trois gardes** : canari de non-redondance d'abord (et garde de saturation) ;
+la prediction etant directionnelle et ecrite, un resultat qui la confirme
+recevra le controle qu'aurait recu son contraire -- c'est le regime du dixieme
+cas ; aucun branchement en production.
+
+**Non etabli** : tout. Rien n'a encore tourne.
+
 ## 2026-08-26 - CLOTURE DE A : ce qui est etabli, ce qui ne l'est pas
 
 **Aucun code. Verdict, et etat des lieux.**

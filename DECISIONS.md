@@ -2014,3 +2014,48 @@ unsoundness. **Non explique, et volontairement non explique ce soir.**
 ### Ce qui suit n'est pas technique
 Si A ne debloque pas n=5, la voie vers la profondeur mesurable n'existe plus
 dans sa forme actuelle. **C'est une question de recherche, pas d'ingenierie.**
+
+## 2026-08-26 - gain_propagation : PREDICTION ECRITE AVANT LA MESURE
+
+**Ce paragraphe est ecrit et pousse AVANT que la mesure ne tourne. C'est la
+moitie du garde : une prediction posee apres coup n'en est pas une.**
+
+### Pourquoi cette mesure existe, et pourquoi elle n'a pas besoin de n=5
+L'hypothese centrale n'a jamais exige n=5 -- c'est la **profondeur** qui
+l'exigeait. La **decomposabilite locale** se teste autrement :
+
+> des propagateurs locaux plus forts **recuperent** la resistance d'un systeme
+> localement decomposable, et **pas** celle d'un systeme qui ne l'est pas.
+> Par definition.
+
+A a livre cet instrument **sans le viser** : le chantier a echoue sur le debit
+et produit une mesure de qualite.
+
+### LA PREDICTION
+    gain_propagation = (resistance_T0 - resistance_prop) / resistance_T0
+
+    gain FORT   sur `static-ref`
+    gain FAIBLE sur `connect`
+
+La faiblesse relative de `Connected` -- deux regles seulement, l'articulation
+ecartee -- n'est pas un defaut ici : **c'est le signal attendu**. Un systeme
+non decomposable ne doit pas voir sa resistance recuperee par des propagateurs
+locaux, si forts soient-ils.
+
+### LES TROIS GARDES, tires de la journee
+1. **Canari de non-redondance D'ABORD.** Si les deux resistances coincident
+   partout, le gain ne mesure rien et **on s'arrete la**. Et s'il sature -- 0 %
+   ou 100 % des deux cotes -- c'est le troisieme cas du motif qui recommence.
+2. **La prediction ci-dessus est directionnelle et ecrite.** Si le resultat la
+   confirme, il merite **EXACTEMENT le controle qu'aurait recu son contraire**.
+   C'est le regime du dixieme cas : un resultat favorable est moins reverifie.
+3. **Aucun branchement en production.** La mesure tourne a part ; `t0_legacy`
+   reste la reference de la serie, `engine_active_hash` ne bouge pas.
+
+### Ce qui se decidera apres, et pas avant
+Si le gain **discrimine**, une file lente a n=5 devient justifiee -- borne
+300 s, quelques centaines de systemes, en parallele de la production n=4,
+objectif **vingt candidats par groupe et non un debit**.
+
+**S'il ne discrimine pas, l'hypothese a un probleme plus profond que le debit**,
+et la file lente mesurerait cher une question mal posee. Elle n'est pas lancee.
