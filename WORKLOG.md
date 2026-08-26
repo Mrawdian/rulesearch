@@ -11,6 +11,62 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - MESURE DE DEBIT : A vise le bon endroit, et Connected decide
+
+**Demande** : mesurer le cout par systeme a n=5, avec et sans propagation ;
+puis, avant toute conclusion, la ventilation par phase avec le moteur seul --
+la propagation n'accelerant que `solve_graded`.
+
+**LE CHIFFRE** (n=5, `connect`, 30 systemes, borne 20 s, moteur seul) :
+
+    BUDGET REEL   solve_graded  100,20 s  96,8 %   <-- 5 systemes coupes
+                  random_solution 2,41 s   2,3 %
+                  minimal_clues   0,70 s   0,7 %
+
+**`solve_graded` porte 97 % du budget : A vise le bon endroit.**
+
+**LE NEUVIEME CAS S'EST REPETE DANS LE BANC ECRIT POUR L'EVITER.** Le banc
+calculait sa repartition sur les systemes **TERMINES seuls** et concluait
+« solve_graded ne represente que 6 % » -- l'inverse de la verite. Un systeme
+interrompu consomme la borne **entiere**, dans la phase ou il a ete coupe.
+Et le banc imprimait juste en dessous l'avertissement qui aurait du l'empecher.
+**Ecrire la mise en garde ne suffit pas : c'est le chiffre MIS EN AVANT qui
+doit porter sur la bonne population.**
+
+**CE QUE LES DEUX MESURES POINTENT, ET C'EST LE MEME ENDROIT** : les 5 systemes
+qui brulent le budget sont tous des `CONNECTED` ; les 3 systemes que le
+prototype « debloque » aussi -- debloques parce qu'il **ne voit pas** la
+contrainte. Sur la population **couverte**, le prototype est **plus lent**
+(x0,43) et ne perd aucune deduction.
+
+**`Connected` n'est pas le dernier propagateur : c'est le seul qui puisse
+valider A.** Les neuf autres sont la condition d'existence de celui-la.
+
+**CORRECTION D'UNE FORMULATION TROP FAVORABLE** : « tout gain sur `connect` est
+un minorant » supposait un prototype equivalent plus rapide. Il est
+**strictement plus faible** -- il ignore `Connected`. Le rapport n'est pas
+conservateur, il est **CONFONDU**. 27 instances sur 63 ou la base resout et pas
+le prototype ; 2 `max_level` plus hauts.
+
+**Controles bloquants, tous negatifs** : **0 solution fausse** sur les deux
+implementations, et 25 divergences de niveau sur 27 vers le **bas** (attendu).
+
+**Fait** : `bench/bench_debit.py`, `bench/bench_deduction.py`,
+`bench/bench_phases.py`. Hors `engine/` : `dsl_hash` inchange.
+Bornes SIGALRM identiques a la production, appliquees **separement aux deux
+implementations** ; quatre issues par instance ; populations couverte et
+confondue separees ; sens des divergences affiche a chaque execution.
+
+**Non verifie / suppose** :
+- **Que `Connected` propage assez pour faire passer ces 5 systemes sous 20 s.**
+  Rien ne le garantit, et la regle la plus forte a ete ecartee. **Premiere
+  mesure a refaire apres l'etape 10.**
+- Les mesures sont a n=5 sur un seul tirage de 30 systemes.
+- Le prototype de `bench_deduction` n'est PAS le moteur : il sert a decider si
+  le branchement vaut la peine.
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - 14ter : la preuve tient, le critere propose non
 
 **Demande** : prouver ou refuter la surete du retrait par inaccessibilite sur

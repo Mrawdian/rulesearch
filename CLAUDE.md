@@ -93,9 +93,29 @@ Les sept cas, pour que la liste ne se reconstitue pas de memoire :
    echantillon, c'est un **coin** de l'espace -- toutes les grilles retenues
    partagent les memes petites valeurs en tete. Sur un tirage **aleatoire de
    meme taille**, le meme bug produit des centaines de violations.
+9. **Banc de debit moyennant sur une distribution a queue lourde** -- le
+   premier banc de mesure de A a conclu que la propagation ne servait a
+   rien, en mesurant `count_solutions` et `minimal_clues`. Or les journaux
+   de production disent que **les 3135 abandons TROP-CHER se declenchent
+   TOUS dans `solve_graded`**, aucun ailleurs. Le banc mesurait une phase
+   qui n'est pas le goulot, sur une population qui ne consomme pas le
+   budget : mediane 14 ms, p90 149 ms, **p99 20 000 ms**.
+   **Une moyenne sur une distribution ou 1 % porte l'essentiel du cout
+   mesure les 99 % qui ne sont pas le probleme.**
+   **ET IL S'EST REPETE, DANS LE BANC ECRIT POUR L'EVITER.** Le second
+   banc calculait sa repartition sur les systemes **TERMINES seuls** et
+   concluait « `solve_graded` ne represente que 6 % du cout ». Or un
+   systeme interrompu consomme la **borne entiere**, dans la phase ou il a
+   ete coupe : a n=5 sur `connect`, 5 systemes sur 30 brulent 100 s des
+   103,5 s du budget, **tous dans `solve_graded`**. La part reelle est de
+   **96,8 %**, pas 5,7 % -- la conclusion imprimee etait l'INVERSE de la
+   verite.
+   Le banc imprimait pourtant, juste en dessous, l'avertissement qui
+   aurait du l'empecher. **Ecrire la mise en garde ne suffit pas : c'est
+   le CHIFFRE MIS EN AVANT qui doit porter sur la bonne population.**
 
-Le septieme et le huitieme sont les plus instructifs, et le huitieme est d'un
-cran au-dessus de tous les autres :
+Les septieme, huitieme et neuvieme sont les plus instructifs, et ils sont
+d'un cran au-dessus des autres :
 
     le septieme faussait un TEST. Le huitieme faussait la MESURE DE
     COUVERTURE des tests -- il ne disait pas une chose fausse sur le moteur,
@@ -114,8 +134,8 @@ couverture qu'il annulait**. Un test negatif qui ne teste rien est une metrique
 confondue a l'etage du meta-outillage. Rien ne protege automatiquement de ce
 motif, pas meme les regles ecrites pour s'en proteger.
 
-**Les septieme et huitieme cas ont ete trouves par Claude Code, sans que
-l'utilisateur le demande.** C'est le **mode de travail attendu**, pas une exception : signaler
+**Les septieme, huitieme et neuvieme cas ont ete trouves par Claude Code,
+sans que l'utilisateur le demande.** C'est le **mode de travail attendu**, pas une exception : signaler
 ce qui contredit l'hypothese ou rend une mesure douteuse fait partie de la
 tache, meme hors de ce qui a ete demande. La moitie des cas de cette liste ont
 ete identifies ainsi.
@@ -200,6 +220,28 @@ ete identifies ainsi.
    change la capacite de l'autre propagateur a rogner. Si le bug ne mord que
    lorsque l'autre propagateur tourne, l'interaction est demontree sans
    dependre d'une geometrie.
+
+19. **Avant de mesurer un cout, REGARDER SA DISTRIBUTION.**
+   Une moyenne n'a de sens que si la dispersion en a un. Sur une
+   distribution a queue lourde -- mediane 14 ms, p99 20 000 ms dans ce
+   projet -- moyenner revient a mesurer la population qui **n'est pas le
+   probleme**, et un banc peut ainsi conclure a l'inutilite d'une
+   optimisation qui ne s'applique qu'a la queue.
+   Procedure : **ventiler par phase**, identifier ou le budget part
+   REELLEMENT (ici : le champ `phase` des verdicts TROP-CHER), et mesurer
+   le **decile le plus couteux** separement de la moyenne.
+   Corollaire : un banc de mesure est un instrument comme un autre, donc
+   justiciable du motif -- **c'est le neuvieme cas**.
+
+20. **Un banc doit afficher ce qui rend ses chiffres ininterpretables.**
+   Un gain de temps obtenu en **deduisant moins** n'est pas un gain de
+   debit. Le banc de deduction affiche donc a CHAQUE execution : le sens
+   des divergences de `max_level`, et la **coincidence des solutions** --
+   pas seulement des verdicts resolu/non-resolu.
+   Il affiche aussi ce qui **minore** ses propres resultats : sur la
+   famille `connect`, `Connected` n'ayant pas de propagateur, tout gain
+   mesure est un **minorant**. Un lecteur futur ne doit pas pouvoir
+   prendre un chiffre faible pour un echec de A.
 
 16. **Une coincidence entre verifications INDEPENDANTES est un defaut commun,
    pas un fait.**

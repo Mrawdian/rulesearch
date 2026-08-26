@@ -1811,3 +1811,61 @@ Ni la surete ni la confluence. Il coute **l'incrementalite** : l'objet doit
 etre reconstruit a chaque changement de domaine, la ou une region fixe se
 parcourt sans recalcul. **Pour un chantier de debit, c'est le seul cout qui
 compte**, et c'est celui-la qu'il faudra mesurer.
+
+## 2026-08-26 - OU LE BUDGET PART REELLEMENT A n=5, ET CE QUE CA IMPOSE A L'ETAPE 10
+
+### Le chiffre
+Ventilation a n=5, `connect,relational`, 30 systemes, borne 20 s, moteur
+actuel **seul** :
+
+    systemes terminees : 25  ->    3,56 s
+    systemes coupes    :  5  ->  100,00 s, TOUS dans solve_graded
+
+    BUDGET REEL          solve_graded     100,202 s   96,8 %
+                         random_solution    2,410 s    2,3 %
+                         minimal_clues      0,704 s    0,7 %
+                         count_solutions    0,209 s    0,2 %
+
+**`solve_graded` porte 97 % du budget. A vise donc le bon endroit**, et c'est
+la seule phase que la propagation accelere.
+
+### La lecture inverse, et pourquoi elle etait fausse
+Sur les systemes **terminees seuls**, `random_solution` pese 67,7 % et
+`solve_graded` 5,7 %. C'est la population qui ne coute rien -- mediane 125 ms
+par systeme. **Le banc a d'abord imprime cette lecture-la en conclusion**, donc
+l'inverse de la verite. Recurrence du neuvieme cas, dans l'outil ecrit pour
+l'eviter. Corrige : le budget est calcule interrompus inclus, et c'est ce
+chiffre-la qui est mis en avant.
+
+### CE QUE LES DEUX MESURES POINTENT, ET C'EST LE MEME ENDROIT
+- Les **5 systemes** qui brulent le budget sont **tous des `CONNECTED`**.
+- Les **3 systemes** que le prototype « debloque » (base coupee a 20 s,
+  prototype instantane) sont **tous des `CONNECTED`** aussi -- debloques parce
+  qu'il **ne voit pas** la contrainte.
+- Sur la population **COUVERTE** (toutes contraintes propagees), le prototype
+  est **plus lent** : x0,43, et il ne perd aucune deduction.
+
+**`Connected` n'est donc pas le dernier propagateur du chantier : c'est le seul
+qui puisse valider A.** Les neuf autres ne produisent aucun gain de debit
+mesurable -- ils sont la **condition d'existence** d'un propagateur qui, lui,
+agit sur la population qui decide.
+
+### Correction d'une formulation trop favorable
+Il avait ete ferme que « tout gain mesure sur `connect` est un MINORANT ».
+C'est trop favorable. Un minorant supposerait un prototype **equivalent** plus
+rapide ; celui-ci est **strictement plus faible** -- il ne voit pas `Connected`
+du tout. Une part du temps economise est du **travail non fait** : le rapport
+n'est pas conservateur, il est **CONFONDU**.
+
+Preuve dans les chiffres : 27 instances sur 63 ou la base resout et pas le
+prototype, et 2 `max_level` **plus hauts** -- le prototype, plus faible au
+niveau bas, doit monter au niveau 2 la ou T0 suffisait.
+
+Le banc separe desormais les deux populations a chaque execution.
+
+### Ce qui n'est PAS etabli
+Que la propagation `Connected` fasse passer ces cinq systemes sous 20 s. Rien
+ne le garantit : `apply_T2` sature `T0+T1` sur chaque hypothese, et le gain
+depend de la **force** du propagateur `Connected` -- dont la regle la plus
+forte a ete deliberement ecartee. **C'est la premiere mesure a refaire apres
+l'etape 10, et c'est elle qui decide du sort de A.**
