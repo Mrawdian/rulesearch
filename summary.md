@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 06:24 UTC — 28392 systemes evalues
+genere 2026-08-26 06:24 UTC — 28407 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 19418 systemes
+- `89c65c03c4ad` : 19433 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 13760 | 6885 | 899 | 480 | 1346 | 1091 | 1496 | 1383 | 10.1% |
-| d4 | 4 | 4 | 1031 | 484 | 253 | 4 | 78 | 72 | 45 | 65 | 6.3% |
+| d4 | 4 | 4 | 1046 | 488 | 258 | 4 | 82 | 73 | 45 | 66 | 6.3% |
 | ref | 4 | 3 | 13477 | 3209 | 5662 | 9 | 1846 | 680 | 5 | 2066 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -29,7 +29,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1401, dont T2 : 100%
-- candidats SANS connectivite : 2120, dont T2 : 100%
+- candidats SANS connectivite : 2121, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -51,10 +51,10 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 2356 candidats
+- `89c65c03c4ad` — 2357 candidats
   - AVEC connectivite (922) : T0=13.21 T1=0.00 T2=2.87 — pondere **5.75**
-  - SANS connectivite (1434) : T0=15.90 T1=0.00 T2=2.64 — pondere **5.29**
-  - test de permutation : **p = 0.0020** — ecart significatif au seuil 0.05, sur une serie reproductible.
+  - SANS connectivite (1435) : T0=15.90 T1=0.00 T2=2.64 — pondere **5.29**
+  - test de permutation : **p = 0.0015** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
@@ -74,7 +74,7 @@ qui ne sature pas.
 
 ### ce que les series reproductibles etablissent
 
-**1 serie(s) reproductible(s) sur 3 etablissent l'ecart** : `89c65c03c4ad` (p=0.0020).
+**1 serie(s) reproductible(s) sur 3 etablissent l'ecart** : `89c65c03c4ad` (p=0.0015).
 
 *Test de permutation bilateral, 2000 melanges, stdlib seule. Un ecart non*
 *significatif ne dit pas qu'il n'y a pas d'effet : il dit que ces donnees*
