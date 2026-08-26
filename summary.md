@@ -1,12 +1,12 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 14:06 UTC — 48125 systemes evalues
+genere 2026-08-26 14:06 UTC — 48139 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `e3baecf8377b` : 5149 systemes
-- `06fe04a859f1` : 2942 systemes
+- `06fe04a859f1` : 2956 systemes
 - `e40600351a72` : 1441 systemes
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -17,7 +17,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (4383 systemes) : `06fe04a859f1`, `e40600351a72`
+- moteur actif `0caa9267db60` (4397 systemes) : `06fe04a859f1`, `e40600351a72`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -33,7 +33,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 21231 | 10595 | 1410 | 731 | 2102 | 1687 | 2270 | 2167 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 20779 | 4847 | 8771 | 13 | 2884 | 1075 | 7 | 3182 | 15.3% |
+| ref | 4 | 3 | 20793 | 4852 | 8777 | 13 | 2885 | 1075 | 7 | 3184 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -45,7 +45,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2294, dont T2 : 100%
-- candidats SANS connectivite : 3492, dont T2 : 100%
+- candidats SANS connectivite : 3494, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -66,7 +66,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*1496 candidats sur 5786 portent les champs bruts (26%).*
+*1498 candidats sur 5788 portent les champs bruts (26%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -76,9 +76,9 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (268) : resistance **42.1%**
   - SANS connectivite (389) : resistance **21.0%**
   - test de permutation : **p = 0.0005** — significatif.
-- `06fe04a859f1` — 381 candidats
+- `06fe04a859f1` — 383 candidats
   - AVEC connectivite (156) : resistance **39.3%**
-  - SANS connectivite (225) : resistance **21.2%**
+  - SANS connectivite (227) : resistance **21.1%**
   - test de permutation : **p = 0.0005** — significatif.
 - `e40600351a72` — 194 candidats
   - AVEC connectivite (87) : resistance **40.0%**
@@ -109,10 +109,10 @@ qui ne sature pas.
   - AVEC connectivite (268) : T0=13.02 T1=0.00 T2=3.09 — pondere **6.18**
   - SANS connectivite (389) : T0=16.01 T1=0.00 T2=2.62 — pondere **5.23**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
-- `06fe04a859f1` — 381 candidats
+- `06fe04a859f1` — 383 candidats
   - AVEC connectivite (156) : T0=13.38 T1=0.00 T2=2.93 — pondere **5.86**
-  - SANS connectivite (225) : T0=16.09 T1=0.00 T2=2.69 — pondere **5.39**
-  - test de permutation : **p = 0.1399** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
+  - SANS connectivite (227) : T0=16.07 T1=0.00 T2=2.69 — pondere **5.37**
+  - test de permutation : **p = 0.1349** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
 - `e40600351a72` — 194 candidats
   - AVEC connectivite (87) : T0=12.83 T1=0.00 T2=2.89 — pondere **5.77**
   - SANS connectivite (107) : T0=16.52 T1=0.00 T2=2.63 — pondere **5.25**
