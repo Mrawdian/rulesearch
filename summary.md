@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 10:04 UTC — 37850 systemes evalues
+genere 2026-08-26 10:04 UTC — 37865 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 28876 systemes
+- `89c65c03c4ad` : 28891 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 16137 | 8055 | 1049 | 553 | 1605 | 1285 | 1763 | 1624 | 10.1% |
-| d4 | 4 | 4 | 5781 | 2658 | 1472 | 30 | 404 | 387 | 272 | 411 | 7.1% |
+| d4 | 4 | 4 | 5796 | 2665 | 1474 | 30 | 404 | 390 | 272 | 414 | 7.1% |
 | ref | 4 | 3 | 15808 | 3716 | 6680 | 11 | 2167 | 802 | 7 | 2425 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -32,13 +32,13 @@ ci-dessous.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 1743, dont T2 : 100%
+- candidats AVEC connectivite : 1746, dont T2 : 100%
 - candidats SANS connectivite : 2724, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
 
-- **2025 systemes avec CONNECTED sur 15601 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **2025 systemes avec CONNECTED sur 15611 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -54,10 +54,10 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*177 candidats sur 4467 portent les champs bruts (4%).*
+*180 candidats sur 4470 portent les champs bruts (4%).*
 
-- `89c65c03c4ad` — 177 candidats
-  - AVEC connectivite (66) : resistance **47.5%**
+- `89c65c03c4ad` — 180 candidats
+  - AVEC connectivite (69) : resistance **47.8%**
   - SANS connectivite (111) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
 
@@ -73,8 +73,8 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 3302 candidats
-  - AVEC connectivite (1264) : T0=13.05 T1=0.00 T2=2.96 — pondere **5.92**
+- `89c65c03c4ad` — 3305 candidats
+  - AVEC connectivite (1267) : T0=13.04 T1=0.00 T2=2.96 — pondere **5.92**
   - SANS connectivite (2038) : T0=15.85 T1=0.02 T2=2.66 — pondere **5.33**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
