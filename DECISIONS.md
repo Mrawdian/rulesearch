@@ -1044,3 +1044,60 @@ meme que **le comportement de production est inchange** -- `propagate.py`
 n'est pas branche sur la hierarchie de deduction. Une serie se clot pour un
 module inerte. C'est le prix de hacher le repertoire plutot que le chemin
 d'execution, et c'est preferable a l'inverse.
+
+## 2026-08-26 - engine_active : attenuer les ruptures de serie SANS toucher au hash
+
+**Constat** : `dsl_hash` porte sur tout `engine/`. Pendant A, chaque
+propagateur ajoute rompt la serie **alors qu'il ne tourne pas**. Neuf ruptures
+pour des modules inertes.
+
+**Decision : la regle du hash ne change pas.** L'asymetrie est ecrasante -- un
+hash qui **rate** un changement est catastrophique, un hash qui en **signale un
+inoffensif** coute une rupture de serie. Neuf ruptures est un prix acceptable.
+
+**Attenuation, a cote et non a la place** : le record porte desormais
+`engine_active` (liste des modules reellement sur le chemin d'execution) et
+`engine_active_hash` (hash de leur **contenu**). `summarize.py` peut alors
+proposer un regroupement de series a `dsl_hash` differents, **en le disant
+explicitement**. Le hash reste l'invariant dur ; le regroupement est une
+**lecture**, documentee comme telle.
+
+**Le regroupement se fait sur le hash du CONTENU, jamais sur la liste de
+noms.** Deux series peuvent declarer les memes modules actifs avec du code
+different : regrouper sur les noms fusionnerait des series incomparables --
+exactement le mode de defaillance que `dsl_hash` existe pour empecher,
+reintroduit un etage plus bas. C'est le motif du projet applique au dispositif
+cense l'attenuer, et il fallait le voir avant de l'ecrire.
+
+**`ENGINE_ACTIVE` est une liste TENUE A LA MAIN**, et ne peut pas etre autre
+chose : aucune detection automatique ne distingue un module **importe** d'un
+module **actif**. `propagate.py` doit y etre absent tant qu'il n'est pas
+branche. `run.py` journalise aussi `engine_inertes` dans `config.json` pour que
+l'omission soit visible plutot que silencieuse.
+
+**Benefice retrospectif, qui est la vraie raison** : sans ce champ, on ne
+saurait plus, une fois le chantier fini, quelle serie a tourne avec quels
+propagateurs branches.
+
+**Enregistrements anterieurs** : ils n'ont pas le champ. Ils forment un groupe
+"inconnu" a part et ne sont **jamais** fusionnes avec les autres.
+
+
+## 2026-08-26 - le risque d'interaction a n grand ne se couvre pas par canary3
+
+**Point ferme maintenant plutot qu'au sixieme propagateur.**
+
+Les cas limites de `canary3` sont a n=2 et n=3, parce que **l'enumeration
+exhaustive des solutions est non negociable** comme verite de reference : la
+valider contre `feasible()` seule ferait comparer le propagateur a lui-meme.
+Les cas limites **resteront donc petits**, et c'est acquis, pas une dette.
+
+Le risque qu'un bug d'interaction n'apparaisse qu'a n plus grand est reel et
+**ne se couvre pas la**. Il se couvre par le **solveur exhaustif lui-meme** :
+
+    au moment du branchement des propagateurs sur la hierarchie, un systeme
+    resolu par propagation doit avoir la MEME solution unique que celle
+    comptee par `count_solutions`.
+
+**A ajouter au moment du branchement, PAS avant** : tant qu'aucun propagateur
+n'est sur le chemin d'execution, ce controle n'aurait rien a comparer.

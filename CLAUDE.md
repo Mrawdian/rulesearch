@@ -119,6 +119,19 @@ ete identifies ainsi.
    invariant, pas un defaut.** Avant de factoriser deux fonctions semblables
    dans `engine/`, verifier qu'aucune n'est declaree gelee.
 
+12. **`dsl_hash` ne se relache jamais. Le regroupement est une LECTURE.**
+   Le hash porte sur tout `engine/`, y compris des modules inertes : pendant A
+   chaque propagateur rompt la serie sans rien changer au comportement. On ne
+   corrige PAS le hash pour autant -- un hash qui rate un changement est
+   catastrophique, un hash qui en signale un inoffensif coute une rupture.
+   L'attenuation est **a cote** : `engine_active_hash` (hash du **contenu** des
+   modules reellement sur le chemin d'execution) permet a `summarize.py` de
+   proposer un regroupement, **en le disant a chaque fois**. Jamais de
+   regroupement sur la liste de **noms** : deux series peuvent declarer les
+   memes modules avec du code different.
+   `ENGINE_ACTIVE` dans `run.py` est **tenue a la main**. Y ajouter un module
+   non branche est un mensonge journalise.
+
 11. **`canary3` GROSSIT a chaque propagateur. Jamais de canari separe.**
    Ce que `canary3` verifie -- la deduction retrouve EXACTEMENT la solution
    d'origine -- est une propriete du **systeme de deduction entier**, pas de

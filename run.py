@@ -57,6 +57,55 @@ def dsl_hash():
     return h.hexdigest()[:12]
 
 
+# ---------- modules REELLEMENT sur le chemin d'execution ----------
+
+# LISTE TENUE A LA MAIN, et elle ne peut pas etre autre chose : aucune
+# detection automatique ne distingue un module IMPORTE d'un module ACTIF.
+# Pendant tout le projet A, `propagate.py` existera, sera verrouille par
+# canary3, et ne tournera pas -- il ne doit donc PAS figurer ici tant qu'il
+# n'est pas branche sur la hierarchie de deduction.
+#
+# Ce champ N'EST PAS un second dsl_hash et ne l'affaiblit pas. `dsl_hash`
+# reste l'invariant dur : deux series de hash differents ne sont pas
+# comparables, point. `engine_active` permet a summarize.py de proposer un
+# REGROUPEMENT, en le disant explicitement -- c'est une lecture, pas une
+# equivalence.
+ENGINE_ACTIVE = (
+    "rulesearch.py",
+    "dsl2.py",
+    "deduction.py",
+    "prefilter.py",
+    "t0_legacy.py",
+)
+
+
+def engine_active_hash():
+    """Hash du CONTENU des modules actifs.
+
+    Le regroupement de summarize.py se fait sur ce hash, jamais sur la liste
+    de noms seule. Regrouper sur les noms fusionnerait deux series dont le
+    code actif differe -- exactement le mode de defaillance que `dsl_hash`
+    existe pour empecher, reintroduit un etage plus bas.
+    """
+    h = hashlib.sha256()
+    for fn in ENGINE_ACTIVE:
+        chemin = os.path.join(ENGINE, fn)
+        if not os.path.exists(chemin):
+            # Un module actif absent est une anomalie, pas un cas a ignorer :
+            # on la fait remonter dans le hash plutot que de la taire.
+            h.update(b"ABSENT:" + fn.encode())
+            continue
+        with open(chemin, "rb") as f:
+            h.update(f.read())
+    return h.hexdigest()[:12]
+
+
+def modules_inertes():
+    """Modules .py presents dans ENGINE mais PAS declares actifs."""
+    return sorted(fn for fn in os.listdir(ENGINE)
+                  if fn.endswith(".py") and fn not in ENGINE_ACTIVE)
+
+
 def run_canaries():
     ok = True
     env = dict(os.environ)
@@ -270,12 +319,16 @@ def main():
         sys.exit("canaris en echec : run refuse")
 
     dh = dsl_hash()
+    eah = engine_active_hash()
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     rundir = os.path.join(HERE, "runs", f"{stamp}-{dh}-{a.tag}")
     os.makedirs(rundir, exist_ok=True)
     os.makedirs(os.path.join(HERE, "found"), exist_ok=True)
     with open(os.path.join(rundir, "config.json"), "w") as f:
-        json.dump({**vars(a), "dsl_hash": dh}, f, indent=2)
+        json.dump({**vars(a), "dsl_hash": dh,
+                   "engine_active": list(ENGINE_ACTIVE),
+                   "engine_active_hash": eah,
+                   "engine_inertes": modules_inertes()}, f, indent=2)
 
     families = a.families.split(",")
     rng = random.Random(a.seed)
@@ -318,6 +371,8 @@ def main():
         finally:
             signal.alarm(0)
         rec = {"ts": time.time(), "dsl_hash": dh, "seed": a.seed, "idx": i,
+               "engine_active": list(ENGINE_ACTIVE),
+               "engine_active_hash": eah,
                "inst_seed": inst_seed,
                "n": a.n, "d": a.d, "sys": rs.label,
                "ms": int(1000 * (time.time() - t0)), **res}

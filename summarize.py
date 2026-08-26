@@ -102,6 +102,57 @@ for h, c in by_hash.most_common():
         w("- `%s` : %d systemes" % (h, c))
 w("")
 w("Les lignes de dsl_hash differents ne sont pas comparables entre elles.")
+
+# --- REGROUPEMENT PAR MOTEUR ACTIF -------------------------------------
+# `dsl_hash` porte sur TOUT engine/, y compris des modules qui n'ont pas
+# tourne. Pendant le projet A, chaque propagateur ajoute rompt la serie sans
+# rien changer au comportement. On ne touche PAS au hash pour autant :
+# l'asymetrie est ecrasante -- un hash qui rate un changement est
+# catastrophique, un hash qui en signale un inoffensif coute une rupture.
+#
+# Ce qui suit est donc une LECTURE, pas une equivalence. Le regroupement se
+# fait sur `engine_active_hash`, hash du CONTENU des modules actifs, jamais
+# sur la liste de noms : deux series peuvent declarer les memes modules avec
+# du code different.
+#
+# Les enregistrements anterieurs au champ n'en ont pas : ils forment un
+# groupe "inconnu" a part et ne sont JAMAIS fusionnes avec les autres.
+_par_actif = collections.defaultdict(set)
+_sans_champ = 0
+for r in recs:
+    _eah = r.get("engine_active_hash")
+    if _eah is None:
+        _sans_champ += 1
+        continue
+    _par_actif[_eah].add(r.get("dsl_hash"))
+
+_groupes = {k: v for k, v in _par_actif.items() if len(v) > 1}
+if _groupes:
+    w("")
+    w("### regroupement possible par moteur ACTIF (lecture, pas equivalence)")
+    w("")
+    for _eah, _hs in sorted(_groupes.items(),
+                            key=lambda kv: -sum(by_hash[h] for h in kv[1])):
+        _n = sum(by_hash[h] for h in _hs)
+        _mods = None
+        for r in recs:
+            if r.get("engine_active_hash") == _eah:
+                _mods = r.get("engine_active")
+                break
+        w("- moteur actif `%s` (%d systemes) : %s" %
+          (_eah, _n, ", ".join("`%s`" % h for h in sorted(_hs))))
+        if _mods:
+            w("  modules actifs : %s" % ", ".join(_mods))
+    w("")
+    w("Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient "
+      "pas sur le chemin d'execution**. Les regrouper est defendable et doit "
+      "etre **dit explicitement** a chaque fois qu'on le fait. "
+      "**`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas "
+      "regrouper.")
+if _sans_champ:
+    w("")
+    w("*%d enregistrements sont anterieurs au champ `engine_active_hash` et "
+      "ne peuvent etre regroupes avec aucun autre.*" % _sans_champ)
 if reproductibles is None:
     w("")
     w("*(git indisponible : reproductibilite non verifiee)*")

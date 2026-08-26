@@ -11,6 +11,43 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - engine_active : lire par-dessus les ruptures de serie
+
+**Demande** : ne pas toucher a `dsl_hash` -- l'asymetrie est ecrasante -- mais
+attenuer la rupture en journalisant les modules **reellement** sur le chemin
+d'execution, pour que `summarize.py` puisse regrouper en le disant.
+
+**Fait** :
+- `run.py` : `ENGINE_ACTIVE` (liste tenue a la main), `engine_active_hash()`,
+  `modules_inertes()`. Le record porte `engine_active` et
+  `engine_active_hash` ; `config.json` porte en plus `engine_inertes`.
+- `summarize.py` : section « regroupement possible par moteur ACTIF (lecture,
+  pas equivalence) », qui n'apparait que si au moins deux `dsl_hash` partagent
+  un meme moteur actif.
+
+**POINT DE CONCEPTION** : le regroupement se fait sur le hash du **contenu**
+des modules actifs, **jamais sur la liste de noms**. Regrouper sur les noms
+fusionnerait deux series dont le code actif differe -- le mode de defaillance
+que `dsl_hash` existe pour empecher, reintroduit un etage plus bas.
+
+**Verifie** : `dsl_hash e40600351a72`, `engine_active 0caa9267db60`,
+inertes = `['propagate.py']`. `summarize.py` tourne, 45068 enregistrements ;
+la section de regroupement **ne s'affiche pas encore** (un seul moteur actif
+connu) et 45054 enregistrements sont signales comme anterieurs au champ.
+
+**Non verifie / suppose** :
+- La section de regroupement n'a **jamais ete vue s'afficher**. Elle le sera au
+  commit de `Count`, qui changera `dsl_hash` sans changer le moteur actif :
+  c'est son premier test reel. **A verifier a ce moment-la, pas avant.**
+- `run.py` n'etant pas dans `engine/`, ce commit **ne change pas** `dsl_hash`.
+
+**Ferme** : le risque d'interaction a n plus grand ne se couvre pas par
+`canary3` -- l'enumeration exhaustive impose des cas petits -- mais par le
+controle croise `propagation vs count_solutions`, **a ajouter au moment du
+branchement, pas avant**. Consigne dans DECISIONS.md.
+
+**Bloque sur** : rien.
+
 ## 2026-08-26 - AllDiff, premier propagateur, avec canary3 etendu AVANT
 
 **Demande** : etendre `canary3` (pas de `canary9` separe), puis ecrire AllDiff,
