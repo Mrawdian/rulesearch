@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 08:46 UTC — 34293 systemes evalues
+genere 2026-08-26 08:46 UTC — 34308 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 25319 systemes
+- `89c65c03c4ad` : 25334 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 15240 | 7606 | 993 | 524 | 1495 | 1220 | 1667 | 1542 | 10.1% |
-| d4 | 4 | 4 | 3998 | 1822 | 1031 | 22 | 289 | 266 | 200 | 272 | 6.8% |
+| d4 | 4 | 4 | 4013 | 1827 | 1037 | 22 | 290 | 266 | 200 | 275 | 6.9% |
 | ref | 4 | 3 | 14931 | 3531 | 6273 | 9 | 2051 | 762 | 6 | 2299 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -29,7 +29,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 1619, dont T2 : 100%
-- candidats SANS connectivite : 2501, dont T2 : 100%
+- candidats SANS connectivite : 2504, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -51,9 +51,9 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 2955 candidats
+- `89c65c03c4ad` — 2958 candidats
   - AVEC connectivite (1140) : T0=13.17 T1=0.00 T2=2.91 — pondere **5.82**
-  - SANS connectivite (1815) : T0=15.89 T1=0.01 T2=2.66 — pondere **5.33**
+  - SANS connectivite (1818) : T0=15.89 T1=0.01 T2=2.66 — pondere **5.32**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
