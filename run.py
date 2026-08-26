@@ -294,6 +294,15 @@ def main():
         if rs is None or rs.label in seen:
             continue
         seen.add(rs.label)
+        # Graine d'instance. `random_solution` et `minimal_clues` vivent dans
+        # engine/ et consomment le `random` GLOBAL : on ne peut pas leur passer
+        # un generateur local sans toucher au moteur. On reseme donc le global
+        # de facon deterministe avant chaque systeme, et on journalise la
+        # graine. Rejouer un systeme = gen_system(idx fois) puis
+        # random.seed(inst_seed). Sans cela les instances d'un bloc dependent
+        # de tout ce qui a ete evalue avant, donc ne sont pas rejouables.
+        inst_seed = a.seed * 1000 + i
+        random.seed(inst_seed)
         t0 = time.time()
         # SIGALRM interrompt l'appel en cours ou qu'il en soit. Les gardes
         # entre appels ne peuvent rien quand le blocage est DANS un appel.
@@ -309,6 +318,7 @@ def main():
         finally:
             signal.alarm(0)
         rec = {"ts": time.time(), "dsl_hash": dh, "seed": a.seed, "idx": i,
+               "inst_seed": inst_seed,
                "n": a.n, "d": a.d, "sys": rs.label,
                "ms": int(1000 * (time.time() - t0)), **res}
         jl.write(json.dumps(rec) + "\n")

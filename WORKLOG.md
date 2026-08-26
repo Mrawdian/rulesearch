@@ -11,6 +11,97 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - invariant 7bis applique a la resistance a T0 : ACQUISE
+
+**Demande** : la resistance des candidats `static` (18,1 %) etant tres
+superieure a celle des systemes `static` en general (5 %), la metrique
+pourrait mesurer le filtre de candidature plutot que la connectivite.
+Appliquer 7bis a la metrique elle-meme, dans l'ordre : circularite,
+`total_grids`, `n`, `d`. Et journaliser la graine d'instance.
+
+**1. CIRCULARITE -- ECARTEE.** C'etait le risque le plus serieux, et
+l'inquietude etait fondee sur le mecanisme : la resistance est bel et bien
+liee au verdict (PLAT 0,9 %, LIBRE 7,2 %, SUR-CONTRAINT 34,0 %, CANDIDAT
+36,1 %, DEVINETTE 56,2 %). Le filtre selectionne de la resistance.
+
+Mais l'ecart connect/static n'en vient pas -- il **survit hors du filtre et y
+est plus grand** :
+
+    CANDIDATS seuls   connect 44,4 %  static 26,8 %   p=0,0030   facteur 1,7
+    NON candidats     connect 19,8 %  static  5,1 %   p=0,0005   facteur 3,9
+    TOUS evaluables   connect 24,5 %  static  8,9 %   p=0,0005   facteur 2,8
+
+Controle severe **a verdict egal** : LIBRE p=0,0010, CANDIDAT p=0,0005. PLAT
+ne montre aucun ecart (1,3 % contre 2,1 %, p=0,5077) -- normal, PLAT designe
+les systemes que T0 resout, la mesure y est au plancher dans les deux
+familles. C'est une verification de coherence, pas un echec.
+
+**2. total_grids -- premiere tentative INVALIDE, refaite.** Les terciles se
+sont effondres (`<=13, <=13, >13`) : `total_grids` est **censure a droite** par
+`cap = MIN_GRIDS+1 = 13`. Distribution reelle `{1:2, 2:39, 3:13, 4:24, 13:442}`.
+Je ne l'ai pas compte comme reussi.
+
+Refait sur la seule coupure possible :
+
+    au plafond (>=13)  connect 23,7 % (n=185)  static 7,8 % (n=257)  p=0,0005
+    sous le plafond    connect 33,8 % (n= 75)  static 33,3 % (n=  3)  NON TESTABLE
+
+85 % des donnees sont au plafond et l'ecart y survit. Le confondant etait
+fortement desequilibre -- `connect` au plafond a 71 %, `static` a 99 % -- ce
+qui rendait ce controle indispensable.
+
+**3. d -- PASSE**, avec une stabilite frappante : d=3 24,4 contre 8,6
+(p=0,0005), d=4 24,7 contre 9,1 (p=0,0005).
+
+**4. n -- NON TESTABLE.** `n` vaut 4 partout : aucune variance. **Marque non
+teste, pas reussi.**
+
+**Controle ajoute de moi-meme, `clue_frac` stratifie** : le confondant
+precedent restait desequilibre (0,507 contre 0,618) apres normalisation.
+Terciles : faible p=0,0120, moyen p=0,0005, eleve p=0,1454 (n=31 connect,
+manque de puissance, meme sens). Correlation residuelle resistance/clue_frac
+**dans** chaque famille : r=-0,29 connect, -0,31 static -- elle joue des deux
+cotes, donc ne fabrique pas l'ecart.
+
+**Verdict : ACQUISE**, avec quatre limites explicitement listees dans
+DECISIONS.md.
+
+**Verifie** (execute et observe) :
+- 520 systemes evaluables rejoues, rejeu exact valide par concordance de
+  `rs.label` avec le champ `sys`.
+- Les sept canaris passent depuis la racine ET depuis `engine/` : 14/14.
+- `run.py` journalise `inst_seed`. Syntaxe validee.
+- `dsl_hash` inchange : `run.py` n'est pas dans `engine/`.
+
+**Non verifie / suppose** :
+- **`n` n'est pas teste** et ne peut pas l'etre a n=4 seul.
+- La strate `total_grids` **sous le plafond n'est pas testee** (static n=3).
+- Le tercile de forte densite d'indices **n'est pas significatif**.
+- Aucune correction pour tests multiples ; environ quinze tests ont ete
+  effectues sur ces donnees. Avec un seuil a 0,05, on attendrait moins d'un
+  faux positif -- mais les p a 0,0005 sont a la borne inferieure du test de
+  permutation (2000 melanges), donc non resolus plus finement.
+- Les candidats d'une meme serie ne sont pas independants (memes graines).
+- Le rejeu utilise des instances fraiches : les systemes sont exacts, les
+  puzzles evalues a l'epoque ne sont pas reconstitues. C'est precisement ce
+  que `inst_seed` corrige **pour l'avenir**, pas retroactivement.
+
+**Bloque sur** : rien. Aucun redemarrage requis.
+
+**Pour Claude chat** :
+- **La resistance a T0 est acquise**, pas provisoire. Elle survit a la
+  candidature, au verdict, au domaine, au nombre de grilles et a la densite
+  d'indices.
+- Elle n'est **pas testee contre `n`** : toute extension a n=5 doit refaire ce
+  controle avant de comparer quoi que ce soit entre tailles.
+- `total_grids` est **censure a 13** (`cap = MIN_GRIDS+1`). Ne jamais le
+  traiter comme une variable continue : 85 % des systemes sont au plafond.
+- La resistance est **fortement liee au verdict** (PLAT 0,9 %, DEVINETTE
+  56,2 %). Comparer des groupes de composition en verdicts differente sans
+  stratifier reproduirait un confondant.
+- Les evaluations posterieures au 26/08/2026 portent `inst_seed` : rejouer
+  une evaluation = `gen_system` x `idx`, puis `random.seed(inst_seed)`.
+
 ## 2026-08-26 - resistance a T0 normalisee : metrique principale, canary7
 
 **Demande** : la resistance a T0 etait confondue par la densite d'indices.

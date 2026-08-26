@@ -643,3 +643,116 @@ trouver d'instance resistante signifierait que la mesure est constante, donc
 sans pouvoir discriminant. C'est la meme exigence que le controle B de
 `canary6` -- se declencher, ou ici se calculer, ne suffit pas : il faut
 separer.
+
+## 2026-08-26 - resistance a T0 : ACQUISE, avec le detail de ce qui n'a pas pu etre teste
+Invariant 7bis applique a la metrique elle-meme. Aucun des quatre controles ne
+la tue. Elle est adoptee, mais deux d'entre eux sont partiels et c'est dit ici
+plutot que passe sous silence.
+
+**1. Circularite -- ECARTEE, et c'etait le risque le plus serieux.**
+L'inquietude etait fondee : un systeme que T0 resout instantanement tombe en
+PLAT, donc est exclu des candidats. Le filtre de candidature selectionne bien
+de la resistance, la mesure le confirme :
+
+    PLAT           0,9 %      LIBRE          7,2 %
+    SUR-CONTRAINT 34,0 %      CANDIDAT      36,1 %      DEVINETTE 56,2 %
+
+Mais l'ecart connect/static **ne vient pas de la** : il survit hors du filtre,
+et il y est **plus grand** :
+
+    CANDIDATS seuls   connect 44,4 % (n= 50)  static 26,8 % (n= 45)  p=0,0030
+    NON candidats     connect 19,8 % (n=210)  static  5,1 % (n=215)  p=0,0005
+    TOUS evaluables   connect 24,5 % (n=260)  static  8,9 % (n=260)  p=0,0005
+
+Controle plus severe, **a verdict egal**, qui neutralise entierement la
+selection :
+
+    LIBRE     connect 14,3 % (n=59)  static  4,5 % (n=154)  p=0,0010
+    CANDIDAT  connect 50,6 % (n=55)  static 24,6 % (n= 49)  p=0,0005
+    PLAT      connect  1,3 % (n=59)  static  2,1 % (n= 54)  p=0,5077
+    SUR-CONTRAINT : static n=3, non testable
+
+L'absence d'ecart sur PLAT n'est pas un echec : PLAT designe precisement les
+systemes que T0 resout, la mesure y est au plancher dans les deux familles
+(1,3 % et 2,1 %). C'est meme une verification de coherence.
+
+**2. total_grids -- PASSE sur la strate dominante, non testable sur l'autre.**
+Premiere tentative **invalide** : terciles effondres, parce que `total_grids`
+est **censure a droite** par `cap = MIN_GRIDS + 1 = 13`. Distribution reelle :
+`{1:2, 2:39, 3:13, 4:24, 13:442}`. Refait sur la seule coupure que la donnee
+autorise :
+
+    au plafond (>=13)   connect 23,7 % (n=185)  static 7,8 % (n=257)  p=0,0005
+    sous le plafond     connect 33,8 % (n= 75)  static 33,3 % (n=  3)  static n=3
+
+La strate au plafond represente **85 % des donnees** et l'ecart y survit. Sous
+le plafond, `static` n'a que 3 systemes : **non testable**. A noter, sans y
+lire quoi que ce soit, que les deux estimations ponctuelles y sont quasi egales
+(33,8 contre 33,3).
+
+Le confondant est fortement desequilibre -- `connect` est au plafond a 71 %,
+`static` a 99 % -- ce qui rendait ce controle indispensable.
+
+**3. d -- PASSE aux deux domaines, avec une stabilite frappante.**
+
+    d=3  connect 24,4 % (n=130)  static 8,6 % (n=130)  p=0,0005
+    d=4  connect 24,7 % (n=130)  static 9,1 % (n=130)  p=0,0005
+
+**4. n -- NON TESTABLE.** `n` vaut 4 dans toutes les configurations de la file :
+aucune variance, aucun test possible. **Marque non teste, pas reussi.** A
+refaire si n=5 est ajoute.
+
+**Controle supplementaire, clue_frac stratifie** (la normalisation suffit-elle,
+ou reste-t-il un effet residuel ?) :
+
+    tercile faible  connect 30,3 % (n=94)  static 17,0 % (n= 57)  p=0,0120
+    tercile moyen   connect 23,0 % (n=60)  static  9,1 % (n= 90)  p=0,0005
+    tercile eleve   connect  5,4 % (n=31)  static  2,1 % (n=110)  p=0,1454
+
+Survit dans deux terciles sur trois. Le troisieme n'est pas significatif mais
+va dans le meme sens (facteur 2,6) avec seulement 31 systemes `connect` :
+manque de puissance, pas contradiction. Il subsiste une correlation residuelle
+entre resistance et densite d'indices **a l'interieur de chaque famille**
+(r = -0,29 pour connect, -0,31 pour static) : plus d'indices, moins de
+resistance. Elle joue dans les deux familles de la meme facon, donc ne
+fabrique pas l'ecart.
+
+**Verdict : metrique ACQUISE.** Aucun controle ne la tue, l'ecart survit a la
+candidature, au verdict, au domaine, au nombre de grilles et a la densite
+d'indices. Limites a rappeler a chaque usage :
+- `n` n'est pas teste et ne peut pas l'etre a n=4 seul ;
+- la strate `total_grids` sous le plafond n'est pas testee (static n=3) ;
+- le tercile de forte densite d'indices n'est pas significatif ;
+- tous les p viennent de tests de permutation sans correction pour tests
+  multiples, sur des candidats non independants (memes graines, meme
+  generateur).
+
+Reouverture : si n=5 est ajoute, refaire le controle 4. Si la censure de
+`total_grids` est levee (cap plus haut), refaire le controle 2 en terciles.
+
+
+## 2026-08-26 - graine d'instance journalisee
+Defaut de reproductibilite constate en rejouant les journaux : `gen_system`
+etant deterministe a partir de `random.Random(seed)`, les **systemes** se
+rejouent exactement, mais pas les **instances** -- `random_solution` et
+`minimal_clues` consomment le `random` global, dont l'etat depend de tout ce
+qui a ete evalue avant dans le bloc.
+
+Correction : `inst_seed = seed * 1000 + idx`, applique par `random.seed()`
+avant chaque systeme, et journalise dans le record. Rejouer une evaluation
+devient : `gen_system` x `idx`, puis `random.seed(inst_seed)`.
+
+Ecart avec la formulation initiale de la demande, assume : un
+`random.Random(...)` **local** passe aux fonctions d'instance aurait ete plus
+propre, mais `random_solution` et `minimal_clues` vivent dans `engine/` et
+consomment le module global -- leur passer un generateur demanderait de
+changer leur signature, donc de toucher au moteur. Le resemage du global
+atteint le meme resultat sans y toucher.
+
+Effet de bord : le flux aleatoire des instances change. Chaque systeme part
+desormais d'un etat frais au lieu de continuer le flux du bloc. Sans
+consequence sur la validite -- les systemes generes sont inchanges,
+`gen_system` utilisant son propre generateur -- mais les instances des blocs a
+venir ne sont pas celles qu'on aurait eues sans ce changement.
+
+`dsl_hash` inchange : `run.py` n'est pas dans `engine/`.
