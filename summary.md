@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 16:58 UTC — 54928 systemes evalues
+genere 2026-08-26 16:58 UTC — 54943 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -9,7 +9,7 @@ genere 2026-08-26 16:58 UTC — 54928 systemes evalues
 - `e3baecf8377b` : 5149 systemes
 - `e40600351a72` : 1441 systemes
 - `0327bdc4c76a` : 853 systemes
-- `23303c299f39` : 578 systemes
+- `23303c299f39` : 593 systemes
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
@@ -18,7 +18,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (11186 systemes) : `06fe04a859f1`, `23303c299f39`, `e40600351a72`
+- moteur actif `0caa9267db60` (11201 systemes) : `06fe04a859f1`, `23303c299f39`, `e40600351a72`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -34,7 +34,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 24670 | 12323 | 1676 | 837 | 2443 | 1942 | 2631 | 2510 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 24143 | 5584 | 10204 | 14 | 3385 | 1226 | 10 | 3720 | 15.4% |
+| ref | 4 | 3 | 24158 | 5589 | 10211 | 14 | 3386 | 1227 | 10 | 3721 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -46,7 +46,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 2637, dont T2 : 100%
-- candidats SANS connectivite : 4030, dont T2 : 100%
+- candidats SANS connectivite : 4031, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -67,7 +67,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*2377 candidats sur 6667 portent les champs bruts (36%).*
+*2378 candidats sur 6668 portent les champs bruts (36%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -85,10 +85,10 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (87) : resistance **40.0%**
   - SANS connectivite (107) : resistance **20.5%**
   - test de permutation : **p = 0.0005** — significatif.
-- `23303c299f39` — 67 candidats
+- `23303c299f39` — 68 candidats
   - AVEC connectivite (23) : resistance **38.9%**
-  - SANS connectivite (44) : resistance **21.2%**
-  - test de permutation : **p = 0.0005** — significatif.
+  - SANS connectivite (45) : resistance **21.6%**
+  - test de permutation : **p = 0.0015** — significatif.
 
 ## profondeur en continu (secondaire — le seuil binaire sature, pas ceci)
 
@@ -126,10 +126,10 @@ qui ne sature pas.
   - AVEC connectivite (38) : T0=12.34 T1=0.00 T2=2.92 — pondere **5.84**
   - SANS connectivite (69) : T0=15.97 T1=0.00 T2=2.45 — pondere **4.90**
   - test de permutation : **p = 0.1569** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
-- `23303c299f39` — 67 candidats
+- `23303c299f39` — 68 candidats
   - AVEC connectivite (23) : T0=12.96 T1=0.00 T2=2.91 — pondere **5.83**
-  - SANS connectivite (44) : T0=16.91 T1=0.00 T2=2.75 — pondere **5.50**
-  - test de permutation : **p = 0.7731** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
+  - SANS connectivite (45) : T0=16.87 T1=0.00 T2=2.80 — pondere **5.60**
+  - test de permutation : **p = 0.8201** — **NON SIGNIFICATIF**, l'ecart est compatible avec le bruit. Ne pas conclure.
 - `12564867381b` — 75 candidats
   - AVEC connectivite (28) : T0=12.82 T1=0.00 T2=2.79 — pondere **5.57**
   - SANS connectivite (47) : T0=15.09 T1=0.00 T2=2.68 — pondere **5.36**
