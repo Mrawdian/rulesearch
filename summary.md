@@ -1,19 +1,19 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 10:39 UTC — 39261 systemes evalues
+genere 2026-08-26 10:39 UTC — 39276 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
-- `e3baecf8377b` : 668 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
+- `e3baecf8377b` : 683 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `12564867381b` : 531 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `6680f7b47e6f` : 124 systemes
 
 Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
-**8134 enregistrements (21%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
+**8149 enregistrements (21%) proviennent d'un moteur dont la source n'existe plus** — ni dans git, ni sur le disque. Donnee valide mais non rejouable : ne pas la citer comme reproductible.
 
 ## verdicts par configuration
 
@@ -22,7 +22,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 16752 | 8363 | 1078 | 579 | 1665 | 1335 | 1831 | 1690 | 10.1% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 16394 | 3857 | 6943 | 11 | 2237 | 827 | 7 | 2512 | 15.3% |
+| ref | 4 | 3 | 16409 | 3866 | 6946 | 11 | 2240 | 827 | 7 | 2512 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
