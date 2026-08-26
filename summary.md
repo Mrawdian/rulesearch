@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 08:44 UTC — 34175 systemes evalues
+genere 2026-08-26 08:44 UTC — 34190 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 25201 systemes
+- `89c65c03c4ad` : 25216 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 15210 | 7589 | 991 | 523 | 1490 | 1218 | 1666 | 1540 | 10.1% |
-| d4 | 4 | 4 | 3938 | 1799 | 1013 | 22 | 283 | 262 | 195 | 270 | 6.9% |
+| d4 | 4 | 4 | 3953 | 1801 | 1022 | 22 | 285 | 263 | 196 | 270 | 6.8% |
 | ref | 4 | 3 | 14903 | 3525 | 6258 | 9 | 2047 | 762 | 6 | 2296 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -110,9 +110,9 @@ qui ne sature pas.
 - `T2` indices=0.12 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-4)@grid + PAIRDIFF(>=1)@adj + PAIRDIFF(>=1)@knight
 
 ## cout
-- temps total 10.8 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 1867 systemes abandonnes (5.5% des systemes), 96% du temps total
-  dont 1856 avec CONNECTED, 11 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- temps total 10.9 h, dont 2% brule sur des systemes MORT
+- TROP-CHER : 1868 systemes abandonnes (5.5% des systemes), 96% du temps total
+  dont 1856 avec CONNECTED, 12 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
   - avec CONNECTED : 13.4% sur 12442 systemes
   - sans CONNECTED : 0.0% sur 2768 systemes
