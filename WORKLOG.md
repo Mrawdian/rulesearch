@@ -11,6 +11,114 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-26 - resistance != profondeur, file reduite, PERIMETRE-A.md
+
+**Demande** : ecrire noir sur blanc que la resistance a T0 n'est pas la
+profondeur ; mettre a jour l'hypothese en cours ; reduire la file a deux
+configurations ; preparer le perimetre de A sans coder.
+
+**1. La distinction est ecrite dans `CLAUDE.md`**, a cote de la metrique, sous
+le titre *CE QU'ELLE MESURE, ET CE QU'ELLE NE MESURE PAS* :
+
+  - la resistance a T0 mesure la **non-localite de la contrainte**, pas la
+    **profondeur de la deduction** ;
+  - un systeme qui resiste a T0 et tombe entierement a T2 est **PLAT au sens du
+    projet** ;
+  - acquis : la connectivite produit des systemes que la propagation locale ne
+    resout pas ;
+  - **non demontre** : l'hypothese de fracture. Le resultat en est coherent,
+    coherence n'est pas demonstration.
+
+Formule comme septieme piege potentiel de la serie des metriques qui mesurent
+autre chose que ce qu'elles annoncent.
+
+**2. `Hypothese en cours` reecrite** en trois parties : ACQUIS / PAS ACQUIS /
+POURQUOI n=4 NE PEUT PAS Y REPONDRE. Le troisieme point est **etabli, pas
+suppose** : T0 resout integralement 60 a 92 % des instances, il ne reste que
+0,3 a 4,1 cases, une hierarchie n'a structurellement pas la place de s'y
+deployer.
+
+Priorites reordonnees : **A d'abord, n=5 ensuite**, avec le motif -- a n=5 le
+cout par systeme explose et `--max-seconds` censurerait exactement les systemes
+profonds, donc lancer n=5 avant A produirait un echantillon tronque du cote
+qui compte.
+
+**3. `queue.json` reduit a deux configurations** : `connect` et `static-ref`
+a d=3, la paire a domaine egal qui alimente la metrique acquise. Les deux tags
+`-d4` sont retires. Machine liberee de moitie.
+
+**4. `PERIMETRE-A.md`** (nouveau, 12 Ko) -- document de decision, aucun code.
+Redige apres lecture integrale de `rulesearch.py`, `dsl2.py`, `deduction.py`,
+`prefilter.py`.
+
+    7 contraintes faciles : AllDiff, Count, SumRange, NeqAdj, Mono,
+                            PairDiff, PairRatio -- propagateurs de manuel
+    2 moyennes            : NoTriple (fenetres glissantes),
+                            NoSquare (modele en cause : region = grille
+                            entiere, a decomposer en (n-1)^2 fenetres 2x2)
+    1 difficile           : Connected
+
+Pour `Connected`, trois regles saines et calculables sont identifiees : retrait
+par inaccessibilite, forcage par point d'articulation (Tarjan, O(V+E)), et la
+detection de contradiction actuelle qui se garde telle quelle. **Le filtrage
+complet est hors de portee** (probleme de type Steiner) -- affirmation
+signalee dans le document comme **non verifiee experimentalement ici**.
+
+**Trois consequences non anticipees, mises en avant dans le document** :
+- **T0 changerait de sens.** `candidates()` filtre contre les valeurs
+  ASSIGNEES ; une propagation filtre contre les DOMAINES, strictement plus
+  fort. Donc **la metrique acquise change de definition** et ses chiffres ne se
+  comparent pas de part et d'autre du chantier, independamment du `dsl_hash`.
+- La hierarchie devrait etre redefinie : la propagation absorbe T0 et une
+  partie de T1.
+- `canary3` doit etre etendu **avant** la premiere ligne de propagation.
+
+**Recommandation, avec un motif different de celui avance jusqu'ici** : ouvrir
+A, mais **pour le debit et non pour les techniques d'elimination**. A n=4 la
+hierarchie n'a pas la place de se deployer, donc les techniques debloquees
+n'auraient rien a mesurer. L'argument qui tient : la profondeur ne sera
+mesurable qu'a n=5/n=6, et a ces tailles le recalcul integral de
+`candidates()` devient le goulot. **A n'est pas un detour avant n=5, c'est sa
+condition de possibilite.**
+
+Si A n'est pas ouvert, la consequence est ecrite : le projet reste a n=4, la
+profondeur n'y est pas mesurable, l'hypothese centrale reste ouverte
+indefiniment. Choix defendable, mais un choix et non un report.
+
+**Verifie** (execute et observe) :
+- **Les sept canaris passent depuis la racine ET depuis `engine/` : 14/14.**
+- `queue.json` relu : deux tags, `block_systems` inchange a 15.
+- `PERIMETRE-A.md` present a la racine, 11998 octets.
+- Structure de `CLAUDE.md` relue section par section.
+
+**Non verifie / suppose** :
+- **Aucune ligne de A n'a ete ecrite.** Tout le document est une analyse de
+  lecture : les regles de propagation proposees ne sont ni implementees ni
+  testees.
+- La NP-difficulte du filtrage complet de la connexite est une **affirmation de
+  litterature**, non verifiee dans ce projet.
+- Le gain de debit attendu de A n'est **pas chiffre**. Aucune mesure ne
+  l'appuie ; c'est une attente.
+- **Aucune estimation de duree n'est donnee**, faute de base de mesure. Une
+  estimation inventee serait exactement le genre de chiffre que ce projet passe
+  son temps a corriger.
+- L'effet de la reduction de la file sur le debit des deux tags restants n'est
+  pas mesure.
+
+**Bloque sur** : rien. Aucun redemarrage requis, `queue.json` est relu a chaque
+cycle.
+
+**Pour Claude chat** :
+- **`PERIMETRE-A.md` est le document de decision sur A.** Le lire avant toute
+  discussion sur la reecriture du moteur.
+- **La resistance a T0 n'est pas la profondeur.** Ne jamais ecrire qu'un
+  systeme resistant est "profond" : il est non-local.
+- **n=4 ne peut pas repondre a l'hypothese centrale.** C'est etabli. Toute
+  proposition de technique intermediaire a cette taille se heurtera au fait que
+  T0 resout deja 60 a 92 % des instances.
+- La file ne compte plus que **deux** tags. L'absence de `connect-d4` et
+  `static-d4` dans `summary.md` est deliberee.
+
 ## 2026-08-26 - invariant 7bis applique a la resistance a T0 : ACQUISE
 
 **Demande** : la resistance des candidats `static` (18,1 %) etant tres

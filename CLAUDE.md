@@ -196,6 +196,27 @@ journalise ne se recalcule pas.
 `canary7` garde ses deux bornes : nulle quand T0 resout tout, strictement
 positive sinon.
 
+### CE QU'ELLE MESURE, ET CE QU'ELLE NE MESURE PAS
+
+**La resistance a T0 mesure la NON-LOCALITE de la contrainte, pas la
+PROFONDEUR de la deduction.** Ce sont deux choses differentes et les confondre
+serait la septieme metrique du projet a mesurer autre chose que ce qu'elle
+annonce.
+
+Un systeme qui resiste a T0 et tombe **entierement** a T2 est **PLAT au sens du
+projet** : il a demande une technique plus forte que la propagation locale, pas
+une hierarchie de techniques. La resistance dit "la propagation locale ne suffit
+pas ici", elle ne dit rien de la richesse de ce qu'il faut a la place.
+
+**Ce qui est ACQUIS au 26/08/2026** : la connectivite produit des systemes que
+la propagation locale ne resout pas. Etabli, teste, survivant a la candidature,
+au verdict, au domaine, au nombre de grilles et a la densite d'indices.
+
+**Ce que cela ne demontre PAS** : l'hypothese de fracture locale / non-locale.
+Le resultat en est **coherent** -- c'est meme ce qu'elle predirait -- mais
+coherence n'est pas demonstration. L'hypothese porte sur la PROFONDEUR des
+systemes a connectivite, et la profondeur n'est pas ce qui a ete mesure.
+
 ## Etat de la mesure de profondeur -- a lire avant d'en tirer quoi que ce soit
 
 - `max_level >= 2` vaut **100 % partout** : le seuil est SATURE, il ne
@@ -249,83 +270,65 @@ T0+T1" y est donc **exactement identique a T2**, pas une version affaiblie.
 
 ## Hypothese en cours
 
-La ligne de fracture entre systemes plats et systemes profonds n'est pas
-"quelles contraintes" mais **decomposable localement ou non**. La
+**Enonce.** La ligne de fracture entre systemes plats et systemes profonds
+n'est pas "quelles contraintes" mais **decomposable localement ou non**. La
 connectivite (`Connected`) est le seul type non decomposable en contraintes
 locales.
 
-Test : parmi les CANDIDATS, ceux contenant CONNECTED atteignent-ils T2
-nettement plus souvent que les autres, a taux de candidats comparable ?
-`summarize.py` calcule cet ecart et refuse de conclure sous 20 par groupe.
+### Ce qui est ACQUIS
 
-Sur 49 systemes (echantillon sans valeur statistique) : config `connect`
-12,5 % de candidats tous a T2, config statique 0 %. Va dans le sens de
-l'hypothese, ne la prouve pas.
+- **La connectivite produit des systemes que la propagation locale ne resout
+  pas.** Resistance a T0 : `connect` 24,5 % contre `static` 8,9 % sur tous les
+  systemes evaluables (p = 0,0005), 44,4 % contre 26,8 % sur les seuls
+  candidats. Survit hors du filtre de candidature, a verdict egal, aux deux
+  domaines, a `total_grids` et a `clue_frac` stratifie. Voir DECISIONS.md.
+- **T0 resout integralement 60 a 92 % des instances a n=4** (60 % sur
+  `connect` d=3, 92 % sur `static` d=3). Mesure, pas suppose.
+- **T2 est sature** : 100 % des candidats l'atteignent, dans les deux groupes.
+- **T1 n'a de domaine que sur les systemes portant un ALLDIFF de taille d**,
+  donc jamais sur `connect,relational` qui n'en produit aucun.
 
-Si l'hypothese tombe, le DSL v2 n'est qu'un v1 elargi et il faut chercher la
-fracture ailleurs.
+### Ce qui n'est PAS acquis
 
-## Question ouverte : le budget de noeuds de count_solutions
+- **L'hypothese elle-meme.** Elle porte sur la PROFONDEUR, et ce qui est mesure
+  est la resistance a la propagation locale. Le resultat est **coherent avec**
+  l'hypothese sans la demontrer.
+- Aucune mesure de profondeur exploitable n'existe : `max_level` sature, et il
+  n'y a pas de palier entre T0 et T2.
 
-En construisant `canary5.py`, seul `minimal_clues` avait ete rendu
-pathologique. Des systemes ont pourtant ete interrompus par l'alarme en
-**`phase == "count_solutions"`**, fonction qui n'avait pas ete truquee.
+### Pourquoi n=4 ne peut PAS y repondre
 
-Si `count_solutions` peut consommer 3 s et plus alors qu'elle possede un budget
-de **noeuds**, ce budget ne borne pas ce qu'on croit. Ce serait un **defaut du
-solveur**, pas une simple lenteur : un budget de noeuds cense garantir une
-terminaison bornee qui ne la garantit pas.
+**T0 resout integralement 60 a 92 % des instances.** Il ne reste en moyenne
+que 0,3 a 4,1 cases apres la propagation la plus faible. Une hierarchie de
+techniques n'a **structurellement pas la place** de se deployer sur ce residu :
+seize cases se resolvent par la technique la plus faible, et aucune technique
+intermediaire n'y changera rien.
 
-Non tranche, et **a ne pas corriger a l'aveugle**. La mesure qui repond est la
-distribution du champ `phase` sur les vrais TROP-CHER de production. Si
-`count_solutions` y domine, le budget de noeuds est a revoir ; s'il est
-marginal, l'observation etait un artefact du banc.
+Ce n'est pas un echec, c'est un **resultat** : la profondeur n'est pas
+mesurable a n=4. Elle ne le deviendra qu'a n=5 ou n=6, ou le residu apres
+propagation locale est assez grand pour qu'une hierarchie ait un sens.
 
-Ne pas toucher au solveur avant d'avoir cette distribution.
+Consequence directe sur l'ordre des travaux : **le debit redevient le
+probleme**, et il le redevient avant la profondeur. Voir la priorite 1
+ci-dessous.
 
 ## Prochaine tache, par priorite
 
-1. **Debit.** ~70 % du temps machine part a decouvrir par solveur complet
-   qu'un systeme n'a aucune solution.
+L'ordre a change le 26/08/2026 : **A d'abord, n=5 ensuite.**
 
-   FAIT (25/08) : le pre-filtre par propagation est en place
-   (`engine/prefilter.py`, canari `canary/canary4.py`). Il attrape 15-30 %
-   des morts pour un cout negligeable, zero faux positif. Gain reel : de
-   l'ordre de 20 %, pas le facteur ~30 qui figurait ici. Cette estimation
-   etait fausse d'un ordre de grandeur.
+1. **Decider d'ouvrir A ou non** -- etat de candidats explicite dans `engine/`.
+   Le perimetre exact, contrainte par contrainte, est dans `PERIMETRE-A.md`.
+   C'est la seule voie connue vers une metrique de profondeur non saturee, et
+   c'est aussi ce qui rend n=5 abordable.
 
-   MESURE ET ECARTE : renforcer le pre-filtre avec T2 attrape 52 % des morts
-   mais coute un tiers du temps qu'il economise. Ratio nettement moins bon
-   que T0 seul.
+2. **n=5 -- PAS ENCORE LANCABLE.** Le cout par systeme y explose, et la borne
+   `--max-seconds` censurerait **exactement les systemes profonds**, c'est-a-dire
+   ceux qu'on cherche. Lancer n=5 avant A produirait un echantillon tronque du
+   cote qui compte. A d'abord.
 
-   MESURE ET ECARTE : reordonner le solveur n'apporte rien. MRV dynamique
-   reduit les noeuds de 35 % mais DOUBLE le temps -- le calcul du domaine a
-   chaque noeud coute plus que les branches evitees. L'ordre statique par
-   degre gagne 5 %, dans le bruit. Les trois variantes donnent des comptes
-   de solutions identiques, donc la mesure est fiable.
-
-   GOULOT RESTANT, non traite : le cout par appel a `feasible`. Chaque
-   contrainte recalcule sa region entiere a chaque assignation. C'est la que
-   part le temps, et le rendre incrementiel demanderait de toucher au
-   solveur -- ce que la section suivante interdit. A rouvrir explicitement
-   dans DECISIONS.md si le debit reste bloquant.
-2. Etendre a n=5 et n=6 une fois le pre-filtre en place.
-3. **T2 a sature, donc T3 est requis -- mais T3 tel qu'implemente est
-   inerte.** Choix a trancher, non tranche :
-   - **A.** donner au moteur un etat de candidats explicite (un domaine par
-     cellule, propage et reduit). Rend operantes T3 et toute technique
-     d'elimination. Touche `engine/` en profondeur.
-   - **B.** une technique qui POSE des valeurs au lieu d'en eliminer.
-     Compatible avec le moteur actuel. La seule famille connue qui
-     convienne est la contradiction (comme T2), mais a profondeur 2 le
-     cout est **multiplicatif** et non additif : T2 imbrique dans T2. Elle
-     censurerait davantage de systemes profonds -- donc detruirait la
-     mesure qu'elle permet. Non retenue en l'etat.
-   Reformulation retenue : A etant la **seule voie connue** vers une
-   metrique non saturee, la question n'est plus *quand* reecrire le
-   moteur mais **accepte-t-on de ne jamais mesurer la profondeur au-dela
-   de T2**. Une piste moins couteuse existe : combler le trou entre T0 et
-   T2, puisque T1 est sans emploi dans l'espace explore.
+3. Ne pas ajouter de technique de deduction avant A : sans etat de candidats,
+   toute technique d'ELIMINATION est inerte (deux l'ont ete), et la seule
+   famille de POSE au-dela de T2 a un cout multiplicatif.
 
 ## Ce qu'il ne faut pas faire
 
