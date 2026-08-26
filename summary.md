@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 16:27 UTC — 53683 systemes evalues
+genere 2026-08-26 16:27 UTC — 53697 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
-- `06fe04a859f1` : 8500 systemes
+- `06fe04a859f1` : 8514 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `e3baecf8377b` : 5149 systemes
 - `e40600351a72` : 1441 systemes
@@ -17,7 +17,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (9941 systemes) : `06fe04a859f1`, `e40600351a72`
+- moteur actif `0caa9267db60` (9955 systemes) : `06fe04a859f1`, `e40600351a72`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -33,7 +33,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 24044 | 11995 | 1638 | 814 | 2383 | 1902 | 2566 | 2444 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 23524 | 5446 | 9939 | 14 | 3291 | 1200 | 10 | 3624 | 15.4% |
+| ref | 4 | 3 | 23538 | 5450 | 9948 | 14 | 3292 | 1200 | 10 | 3624 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
