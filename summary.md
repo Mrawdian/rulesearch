@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 09:25 UTC — 36123 systemes evalues
+genere 2026-08-26 09:25 UTC — 36138 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 27149 systemes
+- `89c65c03c4ad` : 27164 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -20,7 +20,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 15703 | 7832 | 1025 | 536 | 1555 | 1253 | 1716 | 1586 | 10.1% |
-| d4 | 4 | 4 | 4912 | 2261 | 1251 | 26 | 347 | 327 | 233 | 345 | 7.0% |
+| d4 | 4 | 4 | 4927 | 2271 | 1252 | 26 | 348 | 328 | 233 | 347 | 7.0% |
 | ref | 4 | 3 | 15384 | 3615 | 6484 | 11 | 2112 | 781 | 6 | 2375 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -32,13 +32,13 @@ ci-dessous.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 1681, dont T2 : 100%
+- candidats AVEC connectivite : 1683, dont T2 : 100%
 - candidats SANS connectivite : 2632, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
 
-- **1940 systemes avec CONNECTED sur 14898 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **1940 systemes avec CONNECTED sur 14911 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -54,10 +54,10 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*23 candidats sur 4313 portent les champs bruts (1%).*
+*25 candidats sur 4315 portent les champs bruts (1%).*
 
-- `89c65c03c4ad` — 23 candidats
-  - AVEC connectivite (4) : resistance **49.6%**
+- `89c65c03c4ad` — 25 candidats
+  - AVEC connectivite (6) : resistance **54.4%**
   - SANS connectivite (19) : resistance **22.8%**
   - *groupes trop petits (< 20) — aucun test*
 
@@ -73,8 +73,8 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 3148 candidats
-  - AVEC connectivite (1202) : T0=13.13 T1=0.00 T2=2.94 — pondere **5.88**
+- `89c65c03c4ad` — 3150 candidats
+  - AVEC connectivite (1204) : T0=13.13 T1=0.00 T2=2.94 — pondere **5.88**
   - SANS connectivite (1946) : T0=15.87 T1=0.02 T2=2.66 — pondere **5.34**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
@@ -121,6 +121,7 @@ qui ne sature pas.
 - `T2` indices=0.12 — CONNECTED(v2) + COUNT(v2,1-5)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@adj
 - `T2` indices=0.12 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-2)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@adj
 - `T2` indices=0.12 — PAIRDIFF(>=1)@adj + CONNECTED(v2) + COUNT(v2,1-2)@grid + PAIRDIFF(>=1)@knight
+- `T2` indices=0.12 — CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid + PAIRDIFF(>=1)@knight + PAIRDIFF(>=2)@adj
 - `T2` indices=0.12 — PAIRDIFF(>=1)@adj + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-5)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.12 — PAIRDIFF(>=1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-3)@grid + PAIRDIFF(>=1)@adj
 - `T2` indices=0.12 — PAIRDIFF(>=1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,1-5)@grid + PAIRDIFF(>=1)@adj
@@ -129,7 +130,6 @@ qui ne sature pas.
 - `T2` indices=0.12 — PAIRDIFF(>=1)@knight + CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,1-2)@grid + PAIRDIFF(>=1)@adj
 - `T2` indices=0.12 — PAIRSTEP(1)@knight + CONNECTED(v2) + COUNT(v2,1-3)@grid + PAIRDIFF(>=1)@knight
 - `T2` indices=0.12 — PAIRDIFF(>=1)@knight + PAIRDIFF(>=1)@adj + CONNECTED(v1) + COUNT(v1,1-5)@grid
-- `T2` indices=0.12 — PAIRDIFF(>=1)@adj + PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-3)@grid
 
 ## cout
 - temps total 11.4 h, dont 2% brule sur des systemes MORT
