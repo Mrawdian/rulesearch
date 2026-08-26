@@ -45,9 +45,11 @@ mecaniquement.
 **Non verifie / suppose** :
 - `propagate.py` n'est toujours **pas branche**. `engine_active_hash` reste
   `0caa9267db60` alors que `dsl_hash` passe a `06fe04a859f1`.
-- **La section de regroupement de `summarize.py` n'a toujours jamais ete vue
-  s'afficher** : il faut que la production ait ecrit des enregistrements sous
-  le nouveau `dsl_hash`. C'est son premier test reel et il est **en attente**.
+- ~~section de regroupement jamais vue s'afficher~~ **VERIFIEE apres le
+  commit** : la production a bascule sur `06fe04a859f1` et `summarize.py`
+  affiche desormais « moteur actif `0caa9267db60` (1628 systemes) :
+  `06fe04a859f1`, `e40600351a72` ». Le dispositif a ete VU fonctionner sur
+  son premier cas reel, pas seulement ecrit.
 - Interaction AllDiff x Count : couverte uniquement sur les systemes du
   generateur qui portent les deux. Le controle de fond -- propagation contre
   `count_solutions` -- reste a ajouter **au branchement**.
