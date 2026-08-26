@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-08-26 03:18 UTC — 20590 systemes evalues
+genere 2026-08-26 03:21 UTC — 20605 systemes evalues
 
 ## versions du DSL presentes
-- `89c65c03c4ad` : 11616 systemes
+- `89c65c03c4ad` : 11631 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `0327bdc4c76a` : 853 systemes
 - `12564867381b` : 531 systemes
@@ -19,7 +19,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 10343 | 5211 | 676 | 358 | 989 | 823 | 1114 | 1043 | 10.1% |
+| connect | 4 | 3 | 10358 | 5214 | 677 | 358 | 989 | 825 | 1122 | 1044 | 10.1% |
 | ref | 4 | 3 | 10123 | 2426 | 4273 | 5 | 1342 | 512 | 4 | 1561 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
@@ -27,14 +27,14 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 1046, dont T2 : 100%
+- candidats AVEC connectivite : 1047, dont T2 : 100%
 - candidats SANS connectivite : 1565, dont T2 : 100%
 - **INDICATEUR SATURE — la mesure ne discrimine plus, verdict impossible**
   Les deux groupes sont a 100%. `max_level >= 2` ne separe plus rien : ce n'est pas une absence d'effet, c'est un instrument aveugle. Aucune conclusion, ni pour ni contre l'hypothese, ne peut etre tiree de cette ligne.
 
 ### censure de l'echantillon
 
-- **1114 systemes avec CONNECTED sur 8546 (13.0%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **1122 systemes avec CONNECTED sur 8558 (13.1%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -51,10 +51,10 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `89c65c03c4ad` — 1446 candidats
-  - AVEC connectivite (567) : T0=13.37 T1=0.00 T2=2.85 — pondere **5.70**
+- `89c65c03c4ad` — 1447 candidats
+  - AVEC connectivite (568) : T0=13.37 T1=0.00 T2=2.85 — pondere **5.71**
   - SANS connectivite (879) : T0=15.79 T1=0.00 T2=2.66 — pondere **5.33**
-  - test de permutation : **p = 0.0325** — ecart significatif au seuil 0.05
+  - test de permutation : **p = 0.0245** — ecart significatif au seuil 0.05
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
   - SANS connectivite (548) : T0=15.85 T1=0.00 T2=2.67 — pondere **5.34**
@@ -110,8 +110,8 @@ intermediaire est vide, ce qui explique en partie que le seuil sature.
 
 ## cout
 - temps total 6.5 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 1118 systemes abandonnes (5.4% des systemes), 96% du temps total
-  dont 1114 avec CONNECTED, 4 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- TROP-CHER : 1126 systemes abandonnes (5.5% des systemes), 96% du temps total
+  dont 1122 avec CONNECTED, 4 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 13.1% sur 8489 systemes
-  - sans CONNECTED : 0.0% sur 1854 systemes
+  - avec CONNECTED : 13.2% sur 8501 systemes
+  - sans CONNECTED : 0.0% sur 1857 systemes
