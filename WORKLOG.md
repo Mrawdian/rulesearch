@@ -11,6 +11,60 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-27 - gain_propagation MESURE : la fracture est portee par Connected
+
+**La prediction, poussee avant la mesure, est confirmee. Le controle decisif
+isole `Connected`. Une reserve de circularite est signalee.**
+
+    static-ref               gain 0,557 agrege / 0,699 moyen   (n=9258)
+    connect                  gain 0,260 / 0,237                (n=12015)
+    ecart                    p = 0,0005
+
+    CONTROLE INTRA-TAG :
+    connect SANS Connected   T0=47760   prop=0        gain 1,000
+    connect AVEC Connected   T0=299562  prop=250801   gain 0,158
+                             p = 0,0005
+
+Meme tag, meme generateur : la composition ne peut pas expliquer l'ecart. Les
+systemes sans `Connected` sont **relationnels purs, verifie et non suppose**.
+
+**LA PROPAGATION LOCALE RECUPERE INTEGRALEMENT LA RESISTANCE DES SYSTEMES
+RELATIONNELS PURS, ET 16 % DE CELLE DES SYSTEMES A CONNECTIVITE.**
+
+**LE GARDE 1 A MORDU DEUX FOIS, CONTRE MES PROPRES INSTRUMENTS** :
+1. domaines initialises PLEINS au lieu du forward-checking gele -- l'instrument
+   ne testait pas ce que l'hypothese dit. Corrige.
+2. **l'echantillon du garde etait un PREFIXE** : invariant 15, que j'ai ecrit
+   ce matin, viole dans le dispositif charge de l'appliquer. Onzieme occurrence
+   du motif, quatrieme dans un instrument ecrit pour prevenir les precedents.
+   Le garde avait conclu « les deux resistances coincident PARTOUT » sur un
+   coin de l'espace.
+
+**LE PLAFOND EST VERIFIE** : `gain = 1,000` sur 28539 instances est un
+indicateur sature. 200 grilles pleines sur 200, **0 fausse**. Reel, pas un bug.
+Consequence : la comparaison `static` vs `connect-sans-Connected` est une
+comparaison AU PLAFOND et **ma lecture annoncee avant la mesure etait invalide
+dans sa forme**. Le contraste qui tient est l'intra-tag.
+
+**Confondant `clue_frac` ecarte** : dans chaque tercile, le groupe a
+`Connected` reste tres en dessous des deux autres.
+
+**RESERVE NON DEMANDEE, ET C'EST LA PLUS IMPORTANTE** : le resultat est
+partiellement **circulaire**. L'articulation a ete ecartee parce qu'on
+s'attendait a ce qu'elle dissolve la difficulte ; on mesure ensuite que la
+difficulte n'est pas dissoute par les regles faibles. Le controle intra-tag
+ecarte la composition, **pas la force du propagateur**.
+
+L'enonce que la mesure autorise : **`Connected` resiste aux propagateurs locaux
+QUE NOUS AVONS CHOISI D'ECRIRE**, et ce choix a ete informe par l'attente qu'il
+resiste.
+
+**Non explique** : non-monotonie du gain avec `Connected` selon `clue_frac` --
+0,196 / 0,062 / 0,268. Residu.
+
+**Non fait** : la file lente a n=5. Elle n'etait justifiee que si le gain
+discrimine ; il discrimine. **La decision de la lancer n'est pas prise ici.**
+
 ## 2026-08-26 - gain_propagation : prediction posee, mesure pas encore lancee
 
 **Aucun resultat. Ce commit n'existe que pour horodater la prediction.**

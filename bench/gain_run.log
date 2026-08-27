@@ -1,0 +1,25 @@
+gain_propagation  d=3  tags=static-ref,connect  systemes/tag=150  instances=6
+  PREDICTION (ecrite avant, DECISIONS.md) :
+    gain FORT sur static-ref, gain FAIBLE sur connect
+
+  static-ref   systemes reconstruits : 31379
+  connect      systemes reconstruits : 32608
+
+== GARDE 1 : canari de non-redondance ==
+  systemes : 57   resistances identiques : 45   differentes : 12
+  brut : inconnues=2729  restantes_T0=696  restantes_prop=531
+  OK : les deux mesures different, aucune ne sature.
+
+== MESURE ==
+  static-ref   n=9258  inconnues=434704 (434704)  restantes_T0=113438  restantes_prop=50197 
+               gain agrege = 0.557   gain moyen par systeme = 0.699
+  connect      n=12015  inconnues=639201 (639201)  restantes_T0=380544  restantes_prop=281769
+               gain agrege = 0.260   gain moyen par systeme = 0.237
+
+  ECART ENTRE TAGS : static-ref 0.699  vs  connect 0.237   p = 0.0005
+
+  GARDE 2 -- la prediction etait : gain FORT sur static-ref,
+  gain FAIBLE sur connect. Si ce resultat la confirme, il
+  merite EXACTEMENT le controle qu'aurait recu son contraire.
+  Les quatre bruts ci-dessus sont la pour ca : refaire le
+  rapport a la main, sans passer par le chiffre agrege.

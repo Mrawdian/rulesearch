@@ -2059,3 +2059,76 @@ objectif **vingt candidats par groupe et non un debit**.
 
 **S'il ne discrimine pas, l'hypothese a un probleme plus profond que le debit**,
 et la file lente mesurerait cher une question mal posee. Elle n'est pas lancee.
+
+## 2026-08-27 - RESULTAT : la fracture est portee par Connected, et la mesure le montre
+
+### La prediction, ecrite et poussee avant la mesure, est confirmee
+    static-ref   n= 9258  inconnues=434704  T0=113438  prop= 50197   gain 0,557 / 0,699
+    connect      n=12015  inconnues=639201  T0=380544  prop=281769   gain 0,260 / 0,237
+    ECART : 0,699 vs 0,237   p = 0,0005
+
+Recalcule a la main depuis les bruts, sans passer par l'agrege :
+`63241/113438 = 0,5575` et `98775/380544 = 0,2596`.
+
+### LE CONTROLE DECISIF : a l'interieur du tag `connect`
+    connect SANS Connected   inst=28539  T0=47760   prop=0       gain 1,000
+    connect AVEC Connected   inst=60947  T0=299562  prop=250801  gain 0,158
+    p = 0,0005
+
+**Meme tag, meme generateur, memes familles.** La composition du tag ne peut pas
+expliquer cet ecart. Les systemes sans `Connected` sont **relationnels purs** --
+verifie, et non suppose : `PAIRDIFF`/`PAIRSTEP` seuls, aucun `NoSquare`, aucun
+`Count`.
+
+**La propagation locale recupere INTEGRALEMENT la resistance des systemes
+relationnels purs, et 16 % de celle des systemes a connectivite.** C'est
+l'enonce de l'hypothese centrale, mesure.
+
+### LE PLAFOND, ET IL EST VERIFIE
+`gain = 1,000` exactement sur 28539 instances est un **indicateur sature** --
+troisieme cas du motif. Verifie que ce n'est pas un bug : sur 200 instances,
+**200 grilles pleines, 0 fausse**. Le plafond est reel.
+
+**Consequence sur la lecture** : la comparaison `static 0,669` vs
+`connect-sans-Connected 1,000` est une comparaison **AU PLAFOND** et ne peut pas
+etayer un « ils se ressemblent ». J'avais annonce cette lecture avant la
+mesure ; elle est **invalide dans sa forme**, meme si sa direction est
+favorable. Le contraste qui tient est celui **a l'interieur du tag**, ou le
+groupe avec `Connected` (0,158, resistance 0,526) est loin de tout plafond
+comme de tout plancher.
+
+### CONFONDANT 1 : la densite d'indices n'explique pas l'ecart
+    static-ref            bas 0,641   median 0,714   haut 0,831
+    connect sans Connected bas 1,000   median 1,000   haut  (plus rien a recuperer)
+    connect avec Connected bas 0,196   median 0,062   haut  0,268
+**Dans chaque strate**, le groupe a `Connected` reste tres en dessous des deux
+autres. L'ecart survit a la stratification.
+
+**Non explique** : la non-monotonie du groupe a `Connected` -- 0,196 / 0,062 /
+0,268. Le tercile median tombe a 6 %. Consigne comme residu, pas explique.
+
+### LA RESERVE QUI COMPTE, ET ELLE N'A PAS ETE DEMANDEE
+**Ce resultat est partiellement circulaire, et il faut le dire.**
+
+Le propagateur `Connected` est **deliberement faible** : l'articulation a ete
+ecartee, et le motif de cette exclusion etait qu'un `Connected` trop fort
+**dissoudrait localement la difficulte que le projet mesure**.
+
+    On a donc ecarte la regle forte PARCE QU'ON S'ATTENDAIT A CE QU'ELLE
+    dissolve la difficulte, et on mesure ensuite que la difficulte n'est pas
+    dissoute par les regles faibles.
+
+Le controle intra-tag ecarte la composition comme confondant. Il n'ecarte
+**pas** la force du propagateur. L'enonce que la mesure autorise est donc :
+
+> `Connected` resiste aux propagateurs locaux **que nous avons choisi
+> d'ecrire**, et ce choix a ete informe par l'attente qu'il resiste.
+
+**Le controle qui leverait la circularite existe et il est a portee** : le
+forcage par point d'articulation est **prouve sur (relaxation + monotonie)**,
+il ne reste rien a etablir avant de l'ecrire. Mesurer le gain AVEC lui
+repondrait a la question : si `Connected` reste non recuperable meme avec la
+regle la plus forte, la circularite tombe. S'il devient recuperable, alors ce
+qu'on mesurait etait la faiblesse du propagateur.
+
+**Ce n'est pas une decision d'ingenierie et elle n'est pas prise ici.**
