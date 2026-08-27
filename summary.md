@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-27 05:46 UTC — 83596 systemes evalues
+genere 2026-08-27 05:46 UTC — 83611 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -18,7 +18,7 @@ genere 2026-08-27 05:46 UTC — 83596 systemes evalues
 - `8f22f0d2d442` : 507 systemes
 - `b71bb0907fb5` : 381 systemes
 - `12a0c0c5e34b` : 294 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
-- `5c556c16ea8b` : 252 systemes
+- `5c556c16ea8b` : 267 systemes
 - `e8a1f930f7b9` : 207 systemes
 - `84fba70921e0` : 206 systemes
 - `6680f7b47e6f` : 124 systemes
@@ -29,7 +29,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (39854 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (39869 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -45,7 +45,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 39151 | 19491 | 2694 | 1337 | 3893 | 3085 | 4128 | 4015 | 10.3% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 38330 | 8846 | 16306 | 22 | 5307 | 1996 | 21 | 5832 | 15.2% |
+| ref | 4 | 3 | 38345 | 8849 | 16312 | 22 | 5309 | 1997 | 21 | 5835 | 15.2% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -57,7 +57,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 4142, dont T2 : 100%
-- candidats SANS connectivite : 6142, dont T2 : 100%
+- candidats SANS connectivite : 6145, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -78,7 +78,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*5994 candidats sur 10284 portent les champs bruts (58%).*
+*5997 candidats sur 10287 portent les champs bruts (58%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -124,9 +124,9 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (22) : resistance **42.1%**
   - SANS connectivite (31) : resistance **15.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `5c556c16ea8b` — 29 candidats
+- `5c556c16ea8b` — 32 candidats
   - AVEC connectivite (14) : resistance **42.5%**
-  - SANS connectivite (15) : resistance **26.7%**
+  - SANS connectivite (18) : resistance **25.1%**
   - *groupes trop petits (< 20) — aucun test*
 - `e8a1f930f7b9` — 28 candidats
   - AVEC connectivite (11) : resistance **46.0%**
@@ -209,9 +209,9 @@ qui ne sature pas.
   - AVEC connectivite (13) : T0=13.31 T1=0.00 T2=3.08 — pondere **6.15**
   - SANS connectivite (18) : T0=15.83 T1=0.00 T2=2.94 — pondere **5.89**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
-- `5c556c16ea8b` — 29 candidats
+- `5c556c16ea8b` — 32 candidats
   - AVEC connectivite (14) : T0=12.50 T1=0.00 T2=3.21 — pondere **6.43**
-  - SANS connectivite (15) : T0=17.80 T1=0.00 T2=2.73 — pondere **5.47**
+  - SANS connectivite (18) : T0=17.61 T1=0.00 T2=2.72 — pondere **5.44**
   - *groupes trop petits (< 20) — aucun test, aucune conclusion*
 - `e8a1f930f7b9` — 28 candidats
   - AVEC connectivite (11) : T0=13.45 T1=0.00 T2=3.55 — pondere **7.09**
