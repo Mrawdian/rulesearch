@@ -11,6 +11,43 @@ Entree la plus recente **en haut**.
 
 ---
 
+## 2026-08-27 - LE VRAI LIVRABLE N'EST PAS r, C'EST CE QUI PERMET DE CROIRE r
+
+**Verdict du controle de circularite : elle tombe. `r = 0,034`, contre une
+borne pre-inscrite a 0,194.** Le detail est dans DECISIONS.md ; ceci est la
+note qui se perdrait sinon.
+
+**CE RESULTAT A ETE ETABLI CONTRE DOUZE INSTRUMENTS DEMASQUES EN CHEMIN.** Non
+pas malgre eux : contre eux. Chacun rendait des chiffres d'apparence normale.
+
+Les dix premiers sont en tete de CLAUDE.md. Les deux derniers sont du 27/08 :
+
+    11. Le garde d'echantillonnage du `gain_propagation` tirait un PREFIXE --
+        l'invariant 15, ecrit le matin meme, viole dans le dispositif charge
+        de l'appliquer. Il avait conclu « les deux resistances coincident
+        PARTOUT » sur un coin de l'espace.
+    12. Un test negatif de l'articulation rendait 0 violation. Non parce que
+        son bug etait sur : parce qu'il etait INERTE -- la grille 3x3 pleine
+        est 2-connexe, donc sans sommet separateur. UN TEST NEGATIF DONT LE
+        BUG NE SE DECLENCHE PAS NE TESTE RIEN, IL RASSURE.
+
+**Plusieurs de ces douze avaient ete ecrits pour prevenir les precedents.** Le
+motif s'applique recursivement, et c'est la sa lecon la plus couteuse.
+
+**LA CHAINE DE CONTROLE EST CE QUE CES DOUZE ECHECS ONT COUTE A CONSTRUIRE** :
+pre-inscription d'un seuil derive de valeurs deja publiees ; verification que
+ce seuil ne bouge pas quand la population double ; controles bloquants lus
+AVANT le chiffre et dans un ordre fixe d'avance ; tirage aleatoire partout ;
+bruts imprimes a cote de chaque agrege pour refaire le rapport a la main ;
+tests negatifs vus mordre ; deux issues ecrites avant la mesure, dont aucune
+n'etait l'issue esperee.
+
+**Aucune de ces regles n'a ete deduite. Chacune a ete payee.**
+
+Le chiffre `0,034` vaudra ce que vaudra la confiance qu'on peut lui accorder
+dans six mois, hors de cette session. C'est le dispositif qui la porte, pas le
+chiffre.
+
 ## PROTOCOLE : lancer une mesure longue sur le serveur
 
 **Trois coupures SSH ont tue trois lancements le 27/08**, dont un diagnostic a

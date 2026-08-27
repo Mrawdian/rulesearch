@@ -2202,3 +2202,105 @@ Le residu de **non-monotonie du gain selon `clue_frac`** (0,196 / 0,062 /
 Elle ne depend plus du gain seul, mais du resultat de ce controle. Si la
 circularite tombe, elle se lance. Sinon, **ce qu'elle mesurerait serait notre
 propre choix de propagateur, et elle n'a pas d'objet**.
+
+## 2026-08-27 - VERDICT DU CONTROLE DE CIRCULARITE : la circularite tombe
+
+Journaux bruts : commit `1c67fade`, fichiers `bench/ctrl_canary3.log`,
+`bench/ctrl_localisation.log`, `bench/ctrl_gain.log`, `bench/ctrl_strates.log`.
+Regle mesuree : commit `958fa8c8`. `engine_active_hash` = `0caa9267db60`,
+inchange : la mesure a tourne A PART, `t0_legacy` reste la reference de la
+serie, rien n'a ete branche en production.
+
+### L'ENONCE ETABLI, ET SA BORNE
+
+> La resistance de `Connected` a la recuperation par propagation locale
+> survit a la regle locale la plus forte CALCULABLE -- le forcage par sommet
+> separateur, dit articulation -- qui n'en recupere que **r = 0,034**, soit
+> **un sixieme de ce que les neuf propagateurs ordinaires recuperent
+> ensemble**.
+
+**LA BORNE EST COMPUTATIONNELLE, PAS LOGIQUE, ET LA DISTINCTION EST LE
+RESULTAT AUTANT QUE LE CHIFFRE.**
+
+    CE QUI EST ETABLI    : aucune regle locale CALCULABLE ne recupere cette
+                           resistance.
+    CE QUI N'EST PAS     : aucune regle locale ne la recupere.
+
+La regle suivante en puissance est le filtrage type Steiner, ecarte a
+l'ouverture de A **pour complexite** et non pour surete. Elle n'a donc pas ete
+mesuree et ne peut pas l'etre. Tout enonce de la forme « `Connected` n'est pas
+localement decomposable », sans le qualificatif *calculable*, SURESTIME ce
+qui a ete mesure.
+
+### CE QUE LE RESULTAT N'ETABLIT PAS : L'HYPOTHESE CENTRALE A DEUX MOITIES
+
+L'hypothese centrale porte sur la **PROFONDEUR** : la fracture entre systemes
+plats et systemes profonds tiendrait a la decomposabilite locale. Ce qui vient
+d'etre mesure est la **NON-LOCALITE**. Ce n'est pas l'hypothese, c'est **sa
+moitie testable**.
+
+    NON-LOCALITE  : mesuree, etablie contre le controle le plus fort
+                    disponible. C'est ce verdict.
+    PROFONDEUR    : HORS D'ATTEINTE A n=4, ou T0 sature. A visait a la rendre
+                    mesurable a n=5 et A A ECHOUE (verdict du 26/08).
+
+**UN LECTEUR FUTUR NE DOIT PAS LIRE CE VERDICT COMME « L'HYPOTHESE EST
+CONFIRMEE ». ELLE NE L'EST PAS.** Sa moitie non-locale l'est ; sa moitie
+profondeur n'a jamais ete mesuree et aucune voie vers elle n'est ouverte.
+
+### LES CHIFFRES
+
+    connect_avec_CONNECTED   T0 = 411 839   prop = 345 609   ART = 333 786
+    r = (345 609 - 333 786) / 345 609 = 11 823 / 345 609 = 0,034
+
+    ECART ENTRE TAGS   static-ref 0,700  vs  connect 0,262   p = 0,0005
+    CONTROLE INTRA-TAG sans CONNECTED 1,000 vs avec 0,183    p = 0,0005
+
+Contre-verification sur la moyenne par systeme : 0,155 -> 0,183, soit
+0,028 / 0,845 = **0,033**. Meme bande, ecart de 0,001.
+
+### LA CHAINE DE CONTROLE, ET C'EST ELLE QUI REND LE CHIFFRE CROYABLE
+
+**Sans cette chaine, `r = 0,034` est un nombre. Avec elle, c'est un
+resultat.**
+
+1. **Seuil PRE-INSCRIT avant la mesure**, et derive de valeurs DEJA PUBLIEES
+   (26/08) : bande basse `r < 0,194` = parite avec les neuf autres
+   propagateurs ; bande haute `r >= 0,471` = alignement sur le gain total de
+   `static-ref`. **Aucune constante ronde, donc aucun degre de liberte a
+   regler apres coup.**
+2. **La borne de parite est STABLE** : recalculee sur la population
+   d'aujourd'hui, `66 230 / 345 609 = 0,192` contre `0,194` hier -- **0,002
+   d'ecart alors que la population a quasi double**. Le seuil n'etait pas
+   porte par le tirage du 26/08.
+3. **Quatre controles BLOQUANTS passes**, lus AVANT `r` et dans cet ordre :
+   zero solution fausse (`canary3` complet, sortie 0) ; localisation du
+   forcage (277 cellules, 100 % sur le sous-groupe ou `r` se lit, 145 appels
+   y forcant -- le risque reel etait un forcage NUL, il est ecarte) ; aucune
+   inversion `T0 >= prop >= ART` ; sens des divergences toutes conformes.
+4. **`p = 0,0005` sur les DEUX comparaisons** -- entre tags et a l'interieur
+   du tag `connect`. La seconde tient la composition du tag hors de cause.
+5. **Confondant `clue_frac` ecarte** : dans chacune des trois strates, le
+   groupe a `Connected` reste tres en dessous des deux autres.
+
+Controle lateral qui vaut d'etre note : sur `static-ref` et
+`connect_sans_CONNECTED`, `ART` vaut `prop` **au chiffre pres** (72 993 =
+72 993 ; 0 = 0). L'articulation est exactement inerte la ou aucun `Connected`
+n'existe -- la seule valeur admissible, et elle n'a pas ete supposee.
+
+### LE RENVERSEMENT DE DECISION QUI A RENDU CE VERDICT POSSIBLE
+L'articulation avait ete fermee deux fois. Ce qui a change n'est pas son
+critere de reouverture -- il portait sur le DEBIT -- mais **la question** :
+sous « quelle est la resistance a T0 ? » une regle forte DISSOUT ce qu'on
+mesure et l'ecarter protege l'instrument ; sous « cette resistance est-elle
+recuperable localement ? » elle EST le controle. **Un instrument se protege de
+ce qui le fausse, pas de ce qui le teste.**
+
+### RESTENT OUVERTS, ET RIEN N'EST ENGAGE
+- **File lente a n=5** : debloquee par ce verdict, mais son objet a change --
+  elle devait rendre le controle menable, il l'etait a n=4. Non lancee.
+- **Non-monotonie du gain selon `clue_frac`** (0,247 / 0,079 / 0,240) : a
+  survecu a un changement de propagateur ET a un doublement de population.
+  L'hypothese « bruit » est plus faible qu'hier. Non poursuivie.
+- **1 divergence `max_level` plus haute sur 132** : inchangee, non expliquee,
+  sans consequence de surete.
