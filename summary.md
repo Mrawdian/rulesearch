@@ -1,11 +1,11 @@
 # rulesearch — resume automatique
 
-genere 2026-08-27 01:31 UTC — 73946 systemes evalues
+genere 2026-08-27 01:31 UTC — 73961 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
 - `06fe04a859f1` : 9167 systemes
-- `ab89a63b01ef` : 9039 systemes
+- `ab89a63b01ef` : 9054 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `62448a55927e` : 6239 systemes
 - `e3baecf8377b` : 5149 systemes
@@ -27,7 +27,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (30204 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (30219 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -43,7 +43,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 34287 | 17049 | 2349 | 1165 | 3408 | 2728 | 3659 | 3490 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 33544 | 7739 | 14252 | 20 | 4656 | 1746 | 17 | 5114 | 15.2% |
+| ref | 4 | 3 | 33559 | 7743 | 14258 | 20 | 4656 | 1746 | 17 | 5119 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -55,7 +55,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 3617, dont T2 : 100%
-- candidats SANS connectivite : 5424, dont T2 : 100%
+- candidats SANS connectivite : 5429, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -76,7 +76,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*4751 candidats sur 9041 portent les champs bruts (53%).*
+*4756 candidats sur 9046 portent les champs bruts (53%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -86,9 +86,9 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (476) : resistance **41.0%**
   - SANS connectivite (719) : resistance **20.8%**
   - test de permutation : **p = 0.0005** — significatif.
-- `ab89a63b01ef` — 1074 candidats
+- `ab89a63b01ef` — 1079 candidats
   - AVEC connectivite (437) : resistance **41.1%**
-  - SANS connectivite (637) : resistance **21.7%**
+  - SANS connectivite (642) : resistance **21.7%**
   - test de permutation : **p = 0.0005** — significatif.
 - `62448a55927e` — 798 candidats
   - AVEC connectivite (333) : resistance **40.1%**
@@ -151,9 +151,9 @@ qui ne sature pas.
   - AVEC connectivite (476) : T0=13.10 T1=0.00 T2=3.02 — pondere **6.05**
   - SANS connectivite (719) : T0=15.94 T1=0.00 T2=2.61 — pondere **5.22**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
-- `ab89a63b01ef` — 1074 candidats
+- `ab89a63b01ef` — 1079 candidats
   - AVEC connectivite (437) : T0=13.05 T1=0.00 T2=3.05 — pondere **6.09**
-  - SANS connectivite (637) : T0=15.88 T1=0.00 T2=2.64 — pondere **5.28**
+  - SANS connectivite (642) : T0=15.89 T1=0.00 T2=2.64 — pondere **5.28**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `615abe43d6bc` — 945 candidats
   - AVEC connectivite (397) : T0=12.99 T1=0.00 T2=2.95 — pondere **5.90**
