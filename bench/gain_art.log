@@ -1,0 +1,36 @@
+gain_propagation  d=3  tags=static-ref,connect  systemes/tag=150  instances=6
+  PREDICTION (ecrite avant, DECISIONS.md) :
+    gain FORT sur static-ref, gain FAIBLE sur connect
+
+  static-ref   systemes reconstruits : 41833
+  connect      systemes reconstruits : 43393
+
+== GARDE 1 : canari de non-redondance ==
+  systemes : 84   T0 vs prop -- identiques : 58   differentes : 26
+  articulation : identiques : 82   differentes : 2
+  brut : inconnues=3542  restantes_T0=1024  restantes_prop=594  restantes_ART=590
+  OK : les trois mesures different, aucune ne sature.
+
+== MESURE ==
+  static-ref   n=12310  inconnues=578451   restantes_T0=151371   restantes_prop=66457    restantes_ART=66457  
+               SANS articulation : agrege = 0.561   moyen = 0.700
+               AVEC articulation : agrege = 0.561   moyen = 0.700
+  connect      n=15978  inconnues=850548   restantes_T0=504758   restantes_prop=374051   restantes_ART=361509 
+               SANS articulation : agrege = 0.259   moyen = 0.234
+               AVEC articulation : agrege = 0.284   moyen = 0.263
+
+  ECART ENTRE TAGS, SANS articulation (bras du 26/08) :
+    static-ref 0.700  vs  connect 0.234   p = 0.0005
+  ECART ENTRE TAGS, AVEC articulation (controle du 27/08) :
+    static-ref 0.700  vs  connect 0.263   p = 0.0005
+
+  LE CONTROLE DE CIRCULARITE SE LIT SUR LA LIGNE `connect`,
+  ET SUR ELLE SEULE :
+    - si le gain AVEC articulation y reste bas, la resistance
+      est une propriete de LA CONTRAINTE et non de notre
+      implementation : la circularite tombe ;
+    - s'il monte vers celui de static-ref, ce qu'on mesurait
+      etait la FAIBLESSE DE NOTRE PROPAGATEUR, et l'hypothese
+      centrale perd son meilleur soutien.
+  Les deux issues etaient ecrites AVANT la mesure
+  (DECISIONS.md, 27/08). Aucune n'est l'issue esperee.

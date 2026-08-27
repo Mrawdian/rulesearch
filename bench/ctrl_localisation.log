@@ -1,0 +1,12 @@
+CONTROLE BLOQUANT : LOCALISATION DU FORCAGE  (d=3, n=4)
+
+  static-ref               systemes=500   appels=0      precond=0      forcent=0      cellules=0     
+  connect_sans_CONNECTED   systemes=500   appels=0      precond=0      forcent=0      cellules=0     
+  connect_avec_CONNECTED   systemes=500   appels=1223   precond=865    forcent=145    cellules=277   
+
+  cellules forcees au total          : 277
+  dont sur connect_avec_CONNECTED    : 277
+  part                               : 100.0 %
+
+  CONTROLE PASSE : la regle s'applique bien la ou `r` se lit.
+  865 appels y atteignent la precondition, 145 y forcent.

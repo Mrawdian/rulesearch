@@ -39,6 +39,7 @@ sys.path.insert(0, RACINE)
 
 from rulesearch import UNASSIGNED, random_solution, minimal_clues
 from propagate import domaines, propager
+import propagate as PG
 from t0_legacy import (apply_T0_legacy, candidates_legacy,
                        resistance as resistance_t0)
 import run as RUN
@@ -54,7 +55,24 @@ def domaines_fc(rs, g):
             for i in range(rs.n * rs.n)]
 
 
-def resistance_prop(rs, puzzle):
+def resistance_prop(rs, puzzle, articulation=False):
+    """Enveloppe : pose ET RESTAURE le drapeau `ARTICULATION`.
+
+    Le forcage par sommet separateur (27/08/2026) est active ici et nulle part
+    ailleurs. La restauration en `finally` est ce qui garantit qu'aucune fuite
+    n'atteint le bras de reference, qui doit rester BYTE POUR BYTE celui du
+    26/08 -- sans quoi les deux bras ne seraient pas comparables, et le
+    controle de circularite ne controlerait rien.
+    """
+    ancien = PG.ARTICULATION
+    PG.ARTICULATION = articulation
+    try:
+        return _resistance_prop(rs, puzzle)
+    finally:
+        PG.ARTICULATION = ancien
+
+
+def _resistance_prop(rs, puzzle):
     """(inconnues, restantes) apres saturation par un propagateur local PLUS
     FORT : forward-checking gele, PUIS propagation sur ces domaines.
 
@@ -148,9 +166,21 @@ def permutation(a, b, n_iter=2000, graine=20260826):
 # ---------- mesure d'un systeme ----------
 
 def mesurer_systeme(rs, instances, graine):
-    """Rend (inc_t0, left_t0, inc_pr, left_pr) en BRUT, jamais de ratio."""
+    """Rend (inconnues, left_T0, left_prop, left_prop_ART, n) en BRUT.
+
+    LES TROIS MESURES SONT APPARIEES sur le MEME puzzle. C'est ce qui rend le
+    controle de circularite lisible : entre le bras du 26/08 et celui du
+    27/08, la SEULE chose qui change est le drapeau -- pas le tirage, pas le
+    systeme, pas les indices.
+
+    ORDRE ATTENDU PAR CONSTRUCTION, et non par observation :
+        left_T0  >=  left_prop  >=  left_prop_ART
+    la propagation etant un FILTRE devant la meme saturation T0 gelee, et
+    l'articulation n'ajoutant que des deductions. Toute inversion est un BUG :
+    le banc s'arrete plutot que de la rapporter.
+    """
     random.seed(graine)
-    it = lt = ip = lp = 0
+    it = lt = lp = la = 0
     n = 0
     for _ in range(instances):
         sol = random_solution(rs)
@@ -158,46 +188,67 @@ def mesurer_systeme(rs, instances, graine):
             continue
         puz = minimal_clues(rs, sol)
         a, b = resistance_t0(rs, puz)
-        c, e = resistance_prop(rs, puz)
-        assert a == c, "les deux mesures ne partent pas du meme puzzle"
+        c, e = resistance_prop(rs, puz, articulation=False)
+        c2, f = resistance_prop(rs, puz, articulation=True)
+        assert a == c == c2, "les mesures ne partent pas du meme puzzle"
         if e > b:
             raise AssertionError(
                 "resistance_prop > resistance_T0 : la saturation forte est "
                 "plus faible que la reference, ce qui est impossible par "
                 "construction. Bug, pas resultat.")
+        if f > e:
+            raise AssertionError(
+                "l'articulation LAISSE PLUS de cellules que sans elle : une "
+                "regle qui n'ajoute que des deductions ne peut pas en "
+                "retirer. Bug, pas resultat.")
         it += a
         lt += b
-        ip += c
         lp += e
+        la += f
         n += 1
-    return (it, lt, ip, lp, n)
+    return (it, lt, lp, la, n)
 
 
 # ---------- GARDE 1 : le canari de non-redondance ----------
 
 def canari_non_redondance(echantillon, instances):
-    """Si les deux resistances coincident partout, le gain ne mesure rien.
-    Si l'une sature -- 0 % ou 100 % -- c'est le troisieme cas du motif.
-    Dans les deux cas : ARRET, pas d'interpretation."""
+    """Si deux resistances coincident partout, le gain ne mesure rien. Si
+    l'une sature -- 0 % ou 100 % -- c'est le troisieme cas du motif. Dans
+    tous ces cas : ARRET, pas d'interpretation.
+
+    AJOUT DU 27/08 : le meme test porte desormais sur l'ARTICULATION. Si elle
+    ne change aucune resistance, le controle de circularite comparerait deux
+    fois le MEME propagateur -- et un resultat « la resistance survit » ne
+    dirait alors rien du tout. Un instrument qui ne distingue pas ne controle
+    pas.
+    """
     print("== GARDE 1 : canari de non-redondance ==")
     identiques = differentes = 0
-    lt_tot = lp_tot = it_tot = 0
+    art_id = art_diff = 0
+    it_tot = lt_tot = lp_tot = la_tot = 0
     for rs in echantillon:
-        it, lt, ip, lp, n = mesurer_systeme(rs, instances, 909)
+        it, lt, lp, la, n = mesurer_systeme(rs, instances, 909)
         if not n:
             continue
         it_tot += it
         lt_tot += lt
         lp_tot += lp
+        la_tot += la
         if lt == lp:
             identiques += 1
         else:
             differentes += 1
+        if lp == la:
+            art_id += 1
+        else:
+            art_diff += 1
     tot = identiques + differentes
-    print("  systemes : %d   resistances identiques : %d   differentes : %d"
+    print("  systemes : %d   T0 vs prop -- identiques : %d   differentes : %d"
           % (tot, identiques, differentes))
-    print("  brut : inconnues=%d  restantes_T0=%d  restantes_prop=%d"
-          % (it_tot, lt_tot, lp_tot))
+    print("  articulation : identiques : %d   differentes : %d"
+          % (art_id, art_diff))
+    print("  brut : inconnues=%d  restantes_T0=%d  restantes_prop=%d  "
+          "restantes_ART=%d" % (it_tot, lt_tot, lp_tot, la_tot))
     if not tot:
         print("  ECHEC : aucun systeme mesurable.")
         return False
@@ -206,6 +257,14 @@ def canari_non_redondance(echantillon, instances):
         print("  Le gain ne mesure rien -- une seconde mesure qui suit")
         print("  exactement la premiere n'ajoute pas d'information, elle")
         print("  ajoute de la confiance injustifiee.")
+        return False
+    if art_diff == 0:
+        print("  ARRET : L'ARTICULATION EST INERTE sur ces systemes.")
+        print("  Elle ne change AUCUNE resistance. Le controle de circularite")
+        print("  comparerait alors deux fois le MEME propagateur, et son")
+        print("  resultat -- quel qu'il soit -- ne dirait rien sur la force")
+        print("  du propagateur. C'est exactement le piege qu'il vient")
+        print("  fermer : un instrument qui ne distingue pas ne controle pas.")
         return False
     if it_tot and (lt_tot == 0 or lt_tot == it_tot):
         print("  ARRET : la reference SATURE (0 %% ou 100 %% de restantes).")
@@ -216,7 +275,7 @@ def canari_non_redondance(echantillon, instances):
         print("  ARRET : la saturation forte resout TOUT : le gain vaut 1")
         print("  partout et ne peut plus discriminer.")
         return False
-    print("  OK : les deux mesures different, aucune ne sature.")
+    print("  OK : les trois mesures different, aucune ne sature.")
     return True
 
 
@@ -273,42 +332,56 @@ def main():
     print("== MESURE ==")
     brut = {}
     gains = {}
+    gains_art = {}
     for t in tags:
-        it = lt = ip = lp = 0
-        g = []
+        it = lt = lp = la = 0
+        g, ga = [], []
         for rs in par_tag[t]:
-            a1, b1, c1, e1, n1 = mesurer_systeme(rs, a.instances, 707)
+            a1, b1, e1, f1, n1 = mesurer_systeme(rs, a.instances, 707)
             if not n1 or b1 == 0:
                 continue
             it += a1
             lt += b1
-            ip += c1
             lp += e1
+            la += f1
             g.append((b1 - e1) / float(b1))
-        brut[t] = (it, lt, ip, lp)
+            ga.append((b1 - f1) / float(b1))
+        brut[t] = (it, lt, lp, la)
         gains[t] = g
-        # les QUATRE bruts, jamais le ratio seul : `ip` doit valoir `it`,
-        # et l'imprimer est le controle que les deux mesures partent bien du
-        # meme puzzle.
-        print("  %-12s n=%-4d  inconnues=%-6d (%d)  restantes_T0=%-6d  "
-              "restantes_prop=%-6d" % (t, len(g), it, ip, lt, lp))
+        gains_art[t] = ga
+        # LES BRUTS, JAMAIS LE RATIO SEUL : refaire le rapport a la main est le
+        # seul controle qui ne passe pas par le chiffre qu'on veut lire.
+        print("  %-12s n=%-4d  inconnues=%-7d  restantes_T0=%-7d  "
+              "restantes_prop=%-7d  restantes_ART=%-7d"
+              % (t, len(g), it, lt, lp, la))
         if lt:
-            print("               gain agrege = %.3f   gain moyen par systeme "
-                  "= %.3f" % ((lt - lp) / float(lt),
-                              sum(g) / len(g) if g else float("nan")))
+            print("               SANS articulation : agrege = %.3f   "
+                  "moyen = %.3f" % ((lt - lp) / float(lt),
+                                    sum(g) / len(g) if g else float("nan")))
+            print("               AVEC articulation : agrege = %.3f   "
+                  "moyen = %.3f" % ((lt - la) / float(lt),
+                                    sum(ga) / len(ga) if ga else float("nan")))
     print()
     if len(tags) == 2 and all(gains[t] for t in tags):
-        p = permutation(gains[tags[0]], gains[tags[1]])
-        m0 = sum(gains[tags[0]]) / len(gains[tags[0]])
-        m1 = sum(gains[tags[1]]) / len(gains[tags[1]])
-        print("  ECART ENTRE TAGS : %s %.3f  vs  %s %.3f   p = %.4f"
-              % (tags[0], m0, tags[1], m1, p))
+        for nom, G in (("SANS articulation (bras du 26/08)", gains),
+                       ("AVEC articulation (controle du 27/08)", gains_art)):
+            p = permutation(G[tags[0]], G[tags[1]])
+            m0 = sum(G[tags[0]]) / len(G[tags[0]])
+            m1 = sum(G[tags[1]]) / len(G[tags[1]])
+            print("  ECART ENTRE TAGS, %s :" % nom)
+            print("    %s %.3f  vs  %s %.3f   p = %.4f"
+                  % (tags[0], m0, tags[1], m1, p))
         print()
-        print("  GARDE 2 -- la prediction etait : gain FORT sur static-ref,")
-        print("  gain FAIBLE sur connect. Si ce resultat la confirme, il")
-        print("  merite EXACTEMENT le controle qu'aurait recu son contraire.")
-        print("  Les quatre bruts ci-dessus sont la pour ca : refaire le")
-        print("  rapport a la main, sans passer par le chiffre agrege.")
+        print("  LE CONTROLE DE CIRCULARITE SE LIT SUR LA LIGNE `connect`,")
+        print("  ET SUR ELLE SEULE :")
+        print("    - si le gain AVEC articulation y reste bas, la resistance")
+        print("      est une propriete de LA CONTRAINTE et non de notre")
+        print("      implementation : la circularite tombe ;")
+        print("    - s'il monte vers celui de static-ref, ce qu'on mesurait")
+        print("      etait la FAIBLESSE DE NOTRE PROPAGATEUR, et l'hypothese")
+        print("      centrale perd son meilleur soutien.")
+        print("  Les deux issues etaient ecrites AVANT la mesure")
+        print("  (DECISIONS.md, 27/08). Aucune n'est l'issue esperee.")
 
 
 if __name__ == "__main__":

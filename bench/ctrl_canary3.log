@@ -1,0 +1,599 @@
+== PARTIE 1 : hierarchie de deduction T0/T1/T2 ==
+sudoku4        instances=12 resolues=12 DIVERGENCES=0 (T1 sur 12 regions)
+connect        instances=12 resolues=12 DIVERGENCES=0 (T1 sur 0 regions)
+count+neqadj   instances=12 resolues=12 DIVERGENCES=0 (T1 sur 0 regions)
+cages+sum      instances=11 resolues=11 DIVERGENCES=0 (T1 sur 8 regions)
+pairdiff       instances=12 resolues=12 DIVERGENCES=0 (T1 sur 8 regions)
+OK : aucune divergence.
+
+== PARTIE 2 : propagateurs de domaines ==
+
+-- AllDiff : les trois tailles de region, construites a la main --
+  A |R| == d             solutions=12    essais=60   VIOLATIONS=0
+  B |R| > d              0 solution (systeme mort) -- surete vide
+  C |R| < d              solutions=192   essais=300  VIOLATIONS=0
+
+-- AllDiff sur les systemes de la partie 1 --
+  sudoku4                essais=45   VIOLATIONS=0
+  cages+sum              essais=36   VIOLATIONS=0
+  pairdiff               essais=45   VIOLATIONS=0
+
+-- mesure : contradiction detectee sur |R| > d (grille vide) ? NON (incomplet, correct) --
+-- mesure : idem avec un indice pose ? OUI --
+
+-- test negatif : un AllDiff trop zele doit etre REJETE --
+  zele A |R| == d        solutions=12    essais=60   VIOLATIONS=0
+  zele C |R| < d         solutions=192   essais=300  VIOLATIONS=98
+  OK : le canari mord -- la version trop zelee est rejetee.
+
+-- Count : surete sur les trois formes de bornes --
+  D lo == hi             solutions=6     essais=30   VIOLATIONS=0
+  E lo < hi              solutions=14    essais=70   VIOLATIONS=0
+  F lo == 0              solutions=11    essais=55   VIOLATIONS=0
+
+-- Count : chaque sens doit etre INVOQUE au moins une fois --
+  D lo == hi             interdiction=6    forcage=4   
+  E lo < hi              interdiction=1    forcage=1   
+  F lo == 0              interdiction=3    forcage=0   
+  OK : les deux sens sont operants.
+
+-- test negatif Count : chaque sens rejete SEPAREMENT --
+  INTERDICTION / D lo == hi solutions=6     essais=30   VIOLATIONS=0
+  INTERDICTION / E lo < hi solutions=14    essais=70   VIOLATIONS=20
+  INTERDICTION / F lo == 0 solutions=11    essais=55   VIOLATIONS=21
+  OK : INTERDICTION zelee est rejetee.
+  FORCAGE zele / D lo == hi solutions=6     essais=30   VIOLATIONS=0
+  FORCAGE zele / E lo < hi solutions=14    essais=70   VIOLATIONS=19
+  FORCAGE zele / F lo == 0 solutions=11    essais=55   VIOLATIONS=9
+  OK : FORCAGE zele est rejetee.
+
+-- SumRange : surete sur les trois formes de bornes --
+  G lo == hi             solutions=19    essais=95   VIOLATIONS=0
+  H lo < hi              solutions=51    essais=255  VIOLATIONS=0
+  I vacuous              solutions=81    essais=300  VIOLATIONS=0
+
+-- SumRange : chaque sens doit etre INVOQUE au moins une fois --
+  G lo == hi             plafond=17   plancher=19  
+  H lo < hi              plafond=13   plancher=24  
+  I vacuous              plafond=0    plancher=0   
+  OK : les deux sens sont operants.
+
+-- test negatif SumRange : chaque sens rejete SEPAREMENT --
+  PLAFOND z / G lo == hi solutions=19    essais=95   VIOLATIONS=86
+  PLAFOND z / H lo < hi  solutions=51    essais=255  VIOLATIONS=191
+  PLAFOND z / I vacuous  solutions=81    essais=300  VIOLATIONS=0
+  OK : PLAFOND zele est rejete.
+  PLANCHER  / G lo == hi solutions=19    essais=95   VIOLATIONS=87
+  PLANCHER  / H lo < hi  solutions=51    essais=255  VIOLATIONS=188
+  PLANCHER  / I vacuous  solutions=81    essais=300  VIOLATIONS=0
+  OK : PLANCHER zele est rejete.
+
+-- NeqAdj : surete --
+  J |R| = 2              solutions=54    essais=270  VIOLATIONS=0
+  K |R| = 3              solutions=36    essais=180  VIOLATIONS=0
+  L |R|=3, d=2           solutions=4     essais=20   VIOLATIONS=0
+
+-- NeqAdj : la regle doit etre INVOQUEE --
+  declenchements = 127
+  OK : la regle est operante.
+
+-- test negatif NeqAdj : traite comme un AllDiff --
+  zele J |R| = 2         solutions=54    essais=270  VIOLATIONS=0
+  zele K |R| = 3         solutions=36    essais=180  VIOLATIONS=58
+  zele L |R|=3, d=2      solutions=4     essais=20   VIOLATIONS=14
+  OK : le canari mord.
+
+-- Mono : surete --
+  M |R| = 2              solutions=54    essais=270  VIOLATIONS=0
+  N |R| = 3              solutions=30    essais=150  VIOLATIONS=0
+  O |R|=4, d=2           solutions=5     essais=25   VIOLATIONS=0
+
+-- Mono : chaque sens doit etre INVOQUE au moins une fois --
+  M |R| = 2              avant=19   arriere=9   
+  N |R| = 3              avant=17   arriere=15  
+  O |R|=4, d=2           avant=1    arriere=3   
+  OK : les deux sens sont operants.
+
+-- test negatif Mono : chaque sens rejete SEPAREMENT --
+  AVANT ze / M |R| = 2   solutions=54    essais=270  VIOLATIONS=76
+  AVANT ze / N |R| = 3   solutions=30    essais=150  VIOLATIONS=75
+  AVANT ze / O |R|=4,d=2 solutions=5     essais=25   VIOLATIONS=10
+  OK : AVANT zele est rejete.
+  ARRIERE  / M |R| = 2   solutions=54    essais=270  VIOLATIONS=50
+  ARRIERE  / N |R| = 3   solutions=30    essais=150  VIOLATIONS=41
+  ARRIERE  / O |R|=4,d=2 solutions=5     essais=25   VIOLATIONS=7
+  OK : ARRIERE zele est rejete.
+
+-- PairDiff : surete --
+  P k = 1                solutions=54    essais=270  VIOLATIONS=0
+  Q k = d-1              solutions=18    essais=90   VIOLATIONS=0
+  R k = 0 vacuous        solutions=81    essais=300  VIOLATIONS=0
+  S chaine               solutions=36    essais=180  VIOLATIONS=0
+
+-- PairDiff : la regle doit etre INVOQUEE --
+  declenchements = 135
+  OK : la regle est operante.
+
+-- test negatif PairDiff : valeur absolue oubliee --
+  dirige P k = 1         solutions=54    essais=270  VIOLATIONS=270
+  dirige Q k = d-1       solutions=18    essais=90   VIOLATIONS=90
+  dirige R k = 0 vacuous solutions=81    essais=300  VIOLATIONS=84
+  dirige S chaine        solutions=36    essais=180  VIOLATIONS=180
+  OK : le canari mord.
+
+-- PairRatio : surete --
+  T delta = 1            solutions=63    essais=300  VIOLATIONS=0
+  U delta = d-1          solutions=45    essais=225  VIOLATIONS=0
+  V delta >= d           solutions=27    essais=135  VIOLATIONS=0
+  W chaine               solutions=51    essais=255  VIOLATIONS=0
+
+-- PairRatio : la regle doit etre INVOQUEE --
+  declenchements = 130
+  OK : la regle est operante.
+
+-- test negatif PairRatio : support cherche aux BORNES --
+  bornes T delta = 1     solutions=63    essais=300  VIOLATIONS=0
+  bornes U delta = d-1   solutions=45    essais=225  VIOLATIONS=28
+  bornes V delta >= d    solutions=27    essais=135  VIOLATIONS=24
+  bornes W chaine        solutions=51    essais=255  VIOLATIONS=0
+  OK : le canari mord -- ce qui est exact pour PairDiff est faux ici.
+
+-- NoTriple : surete --
+  AA |R| = 3             solutions=72    essais=300  VIOLATIONS=0
+  AB |R| = 4             solutions=66    essais=300  VIOLATIONS=0
+  AC d = 2               solutions=10    essais=50   VIOLATIONS=0
+
+-- NoTriple : la regle doit etre INVOQUEE --
+  declenchements = 44
+  OK : la regle est operante.
+
+-- test negatif NoTriple : traite comme un NeqAdj --
+  neqadj AA |R| = 3      solutions=72    essais=300  VIOLATIONS=97
+  neqadj AB |R| = 4      solutions=66    essais=300  VIOLATIONS=129
+  neqadj AC d = 2        solutions=10    essais=50   VIOLATIONS=32
+  OK : le canari mord.
+
+-- NoSquare : surete --
+  BA n = 2               solutions=15    essais=75   VIOLATIONS=0
+  BB n=3 d=2             solutions=417   essais=300  VIOLATIONS=0
+  BC n=3 d=3             solutions=18826 essais=300  VIOLATIONS=0
+
+-- NoSquare : la regle doit etre INVOQUEE --
+  declenchements = 2
+  OK : la regle est operante.
+
+-- test negatif NoSquare : declenche a DEUX au lieu de trois --
+  a-deux BA n = 2        solutions=15    essais=75   VIOLATIONS=6
+  a-deux BB n=3 d=2      solutions=417   essais=300  VIOLATIONS=26
+  a-deux BC n=3 d=3      solutions=18826 essais=300  VIOLATIONS=11
+  OK : le canari mord.
+
+-- 14bis : l'objet d'inference est-il FIXE sous rognage ? --
+  AllDiff    FIXE                (2 elements)
+  Count      FIXE                (2 elements)
+  SumRange   FIXE                (2 elements)
+  NeqAdj     FIXE                (2 elements)
+  Mono       FIXE                (2 elements)
+  PairDiff   FIXE                (1 elements)
+  PairRatio  FIXE                (1 elements)
+  NoTriple   FIXE                (2 elements)
+  NoSquare   FIXE                (4 elements)
+  Connected  INDUIT-PROUVE       (9 elements)
+  OK : aucun objet induit sans preuve.
+  preuve declaree pour CONNECTED : retrait par inaccessibilite depuis une cellule certainement `val` ; detection de contradiction ; forcage des sommets separant deux cellules certainement `val` (drapeau ARTICULATION, defaut False). Valides dans la relaxation : toute solution a son ensemble de cellules `val` inclus dans P et connexe.
+
+-- 14ter : les trois issues sont-elles atteignables ? --
+  kind fixe                -> FIXE                OK
+  kind induit declare      -> INDUIT-PROUVE       OK
+  kind induit NON declare  -> INDUIT-SANS-PREUVE  OK
+
+-- Connected : surete --
+  CA d = 2               solutions=219   essais=300  VIOLATIONS=0
+  CB ancre               solutions=107   essais=300  VIOLATIONS=0
+  CC d = 3               solutions=8227  essais=300  VIOLATIONS=0
+
+-- Connected : la regle doit etre INVOQUEE --
+  retraits = 46   contradictions = 0
+  OK : la regle est operante.
+
+-- test negatif Connected : ancre PRISE PARMI LES POSSIBLES --
+  sans-ancre CA d = 2    solutions=219   essais=300  VIOLATIONS=2
+  sans-ancre CB ancre    solutions=107   essais=300  VIOLATIONS=5
+  sans-ancre CC d = 3    solutions=8227  essais=300  VIOLATIONS=8
+  OK : le canari mord -- l'ancre doit etre CERTAINE.
+
+-- croisements AllDiff x Count : surete --
+  X1 |R|<d x lo=0 (chevauche)    sols=48/48 essais=768    exhaustif VIOLATIONS=0
+  X2 |R|<d x lo=1 (chevauche)    sols=30/30 essais=480    exhaustif VIOLATIONS=0
+  X3 meme paire, DISJOINT        sols=30/30 essais=480    exhaustif VIOLATIONS=0
+
+-- test negatif d'INTERACTION : hypothese « plein ou singleton » --
+  bug X1 |R|<d x lo=0 (chevauche) sols=48/48 essais=768    exhaustif VIOLATIONS=0
+  bug X2 |R|<d x lo=1 (chevauche) sols=30/30 essais=480    exhaustif VIOLATIONS=24
+  bug X3 meme paire, DISJOINT    sols=30/30 essais=480    exhaustif VIOLATIONS=0
+  OK : le bug mord sur le croisement qui CHEVAUCHE (24 violations) et le temoin DISJOINT reste muet (0).
+  Le chevauchement est bien le mecanisme, pas un decor.
+
+-- croisement AllDiff |R|<d  x  SumRange --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=48
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (48), temoin disjoint muet (0).
+
+-- croisement Count lo=hi=1  x  SumRange --
+    surete chevauche             sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    surete disjoint              sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    bug chevauche                sols=24/24 essais=384    exhaustif VIOLATIONS=24
+    bug disjoint                 sols=24/24 essais=384    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (24), temoin disjoint muet (0).
+
+-- croisement AllDiff |R|<d  x  NeqAdj --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=42
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (42), temoin disjoint muet (0).
+
+-- croisement Count lo=hi=1  x  NeqAdj --
+    surete chevauche             sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    surete disjoint              sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    bug chevauche                sols=24/24 essais=384    exhaustif VIOLATIONS=12
+    bug disjoint                 sols=24/24 essais=384    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (12), temoin disjoint muet (0).
+
+-- croisement SumRange  x  NeqAdj --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=18
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (18), temoin disjoint muet (0).
+
+-- croisement AllDiff |R|<d  x  Mono --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=6
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (6), temoin disjoint muet (0).
+
+-- croisement Count lo=hi=1  x  Mono --
+    surete chevauche             sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    surete disjoint              sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    bug chevauche                sols=24/24 essais=384    exhaustif VIOLATIONS=12
+    bug disjoint                 sols=24/24 essais=384    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (12), temoin disjoint muet (0).
+
+-- croisement SumRange  x  Mono --
+    surete chevauche             sols=30/30 essais=480    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=30/30 essais=480    exhaustif VIOLATIONS=6
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (6), temoin disjoint muet (0).
+
+-- croisement NeqAdj  x  Mono --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=6
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (6), temoin disjoint muet (0).
+
+-- croisement AllDiff |R|<d  x  PairDiff --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=42
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (42), temoin disjoint muet (0).
+
+-- croisement Count lo=hi=1  x  PairDiff --
+    surete chevauche             sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    surete disjoint              sols=24/24 essais=384    exhaustif VIOLATIONS=0
+    bug chevauche                sols=24/24 essais=384    exhaustif VIOLATIONS=12
+    bug disjoint                 sols=24/24 essais=384    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (12), temoin disjoint muet (0).
+
+-- croisement SumRange  x  PairDiff --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=18
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (18), temoin disjoint muet (0).
+
+-- croisement NeqAdj  x  PairDiff --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=42
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (42), temoin disjoint muet (0).
+
+-- croisement Mono  x  PairDiff --
+    surete chevauche             sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    surete disjoint              sols=36/36 essais=576    exhaustif VIOLATIONS=0
+    bug chevauche                sols=36/36 essais=576    exhaustif VIOLATIONS=12
+    bug disjoint                 sols=36/36 essais=576    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (12), temoin disjoint muet (0).
+
+-- croisement AllDiff |R|<d  x  PairRatio --
+    surete chevauche             sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    surete disjoint              sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    bug chevauche                sols=42/42 essais=672    exhaustif VIOLATIONS=30
+    bug disjoint                 sols=42/42 essais=672    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (30), temoin disjoint muet (0).
+
+-- croisement Count lo=hi=1  x  PairRatio --
+    surete chevauche             sols=30/30 essais=480    exhaustif VIOLATIONS=0
+    surete disjoint              sols=28/28 essais=448    exhaustif VIOLATIONS=0
+    bug chevauche                sols=30/30 essais=480    exhaustif VIOLATIONS=18
+    bug disjoint                 sols=28/28 essais=448    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (18), temoin disjoint muet (0).
+
+-- croisement SumRange  x  PairRatio --
+    surete chevauche             sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    surete disjoint              sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    bug chevauche                sols=42/42 essais=672    exhaustif VIOLATIONS=12
+    bug disjoint                 sols=42/42 essais=672    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (12), temoin disjoint muet (0).
+
+-- croisement NeqAdj  x  PairRatio --
+    surete chevauche             sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    surete disjoint              sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    bug chevauche                sols=42/42 essais=672    exhaustif VIOLATIONS=30
+    bug disjoint                 sols=42/42 essais=672    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (30), temoin disjoint muet (0).
+
+-- croisement Mono  x  PairRatio --
+    surete chevauche             sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    surete disjoint              sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    bug chevauche                sols=42/42 essais=672    exhaustif VIOLATIONS=12
+    bug disjoint                 sols=42/42 essais=672    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (12), temoin disjoint muet (0).
+
+-- croisement PairDiff (helper partage)  x  PairRatio --
+    surete chevauche             sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    surete disjoint              sols=42/42 essais=672    exhaustif VIOLATIONS=0
+    bug chevauche                sols=42/42 essais=672    exhaustif VIOLATIONS=30
+    bug disjoint                 sols=42/42 essais=672    exhaustif VIOLATIONS=0
+  OK : mord sur le chevauchant (30), temoin disjoint muet (0).
+
+-- croisement AllDiff |R|<d  x  NoTriple --
+    surete chevauche             sols=120/11664 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    surete disjoint              sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    bug chevauche                sols=120/11664 essais=15600  ECHANTILLON<=3 VIOLATIONS=48
+    bug disjoint                 sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+  OK : mord sur le chevauchant (48), temoin disjoint muet (0).
+
+-- croisement Count lo=hi=1  x  NoTriple --
+    surete chevauche             sols=120/7776 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    surete disjoint              sols=120/7128 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    bug chevauche                sols=120/7776 essais=15600  ECHANTILLON<=3 VIOLATIONS=60
+    bug disjoint                 sols=120/7128 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+  OK : mord sur le chevauchant (60), temoin disjoint muet (0).
+
+-- croisement SumRange  x  NoTriple --
+    surete chevauche             sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    surete disjoint              sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    bug chevauche                sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=72
+    bug disjoint                 sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+  OK : mord sur le chevauchant (72), temoin disjoint muet (0).
+
+-- croisement NeqAdj  x  NoTriple --
+    surete chevauche             sols=120/11664 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    surete disjoint              sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    bug chevauche                sols=120/11664 essais=15600  ECHANTILLON<=3 VIOLATIONS=48
+    bug disjoint                 sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+  OK : mord sur le chevauchant (48), temoin disjoint muet (0).
+
+-- croisement Mono  x  NoTriple --
+    surete chevauche             sols=120/10206 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    surete disjoint              sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    bug chevauche                sols=120/10206 essais=15600  ECHANTILLON<=3 VIOLATIONS=290
+    bug disjoint                 sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+  OK : mord sur le chevauchant (290), temoin disjoint muet (0).
+
+-- croisement PairDiff  x  NoTriple --
+    surete chevauche             sols=120/11664 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    surete disjoint              sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    bug chevauche                sols=120/11664 essais=15600  ECHANTILLON<=3 VIOLATIONS=48
+    bug disjoint                 sols=120/10692 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+  OK : mord sur le chevauchant (48), temoin disjoint muet (0).
+
+-- croisement PairRatio  x  NoTriple --
+    surete chevauche             sols=120/12150 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    surete disjoint              sols=120/12474 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+    bug chevauche                sols=120/12150 essais=15600  ECHANTILLON<=3 VIOLATIONS=513
+    bug disjoint                 sols=120/12474 essais=15600  ECHANTILLON<=3 VIOLATIONS=0
+  OK : mord sur le chevauchant (513), temoin disjoint muet (0).
+
+-- croisement AllDiff |R|<d  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=15
+    bug, autre INACTIF           sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (15), muet sans lui (0).
+
+-- croisement Count val=0  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/8474 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/8474 essais=30720  ECHANTILLON<=4 VIOLATIONS=15
+    bug, autre INACTIF           sols=120/8474 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (15), muet sans lui (0).
+
+-- croisement SumRange plancher  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/6338 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/6338 essais=30720  ECHANTILLON<=4 VIOLATIONS=531
+    bug, autre INACTIF           sols=120/6338 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (531), muet sans lui (0).
+
+-- croisement NeqAdj  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=15
+    bug, autre INACTIF           sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (15), muet sans lui (0).
+
+-- croisement Mono  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/12488 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/12488 essais=30720  ECHANTILLON<=4 VIOLATIONS=96
+    bug, autre INACTIF           sols=120/12488 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (96), muet sans lui (0).
+
+-- croisement PairDiff  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=15
+    bug, autre INACTIF           sols=120/12676 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (15), muet sans lui (0).
+
+-- croisement PairRatio  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/14554 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/14554 essais=30720  ECHANTILLON<=4 VIOLATIONS=15
+    bug, autre INACTIF           sols=120/14554 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (15), muet sans lui (0).
+
+-- croisement NoTriple  x  NoSquare (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/15428 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/15428 essais=30720  ECHANTILLON<=4 VIOLATIONS=3
+    bug, autre INACTIF           sols=120/15428 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (3), muet sans lui (0).
+
+-- croisement AllDiff |R|<d  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=1227
+    bug, autre INACTIF           sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1227), muet sans lui (0).
+
+-- croisement Count val=0  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/3604 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/3604 essais=30720  ECHANTILLON<=4 VIOLATIONS=1057
+    bug, autre INACTIF           sols=120/3604 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1057), muet sans lui (0).
+
+-- croisement SumRange plancher  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/2407 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/2407 essais=30720  ECHANTILLON<=4 VIOLATIONS=1633
+    bug, autre INACTIF           sols=120/2407 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1633), muet sans lui (0).
+
+-- croisement NeqAdj  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=1227
+    bug, autre INACTIF           sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1227), muet sans lui (0).
+
+-- croisement Mono  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/5444 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/5444 essais=30720  ECHANTILLON<=4 VIOLATIONS=114
+    bug, autre INACTIF           sols=120/5444 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (114), muet sans lui (0).
+
+-- croisement PairDiff  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=1227
+    bug, autre INACTIF           sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1227), muet sans lui (0).
+
+-- croisement PairRatio  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/5833 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/5833 essais=30720  ECHANTILLON<=4 VIOLATIONS=1337
+    bug, autre INACTIF           sols=120/5833 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1337), muet sans lui (0).
+
+-- croisement NoTriple  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/6240 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/6240 essais=30720  ECHANTILLON<=4 VIOLATIONS=310
+    bug, autre INACTIF           sols=120/6240 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (310), muet sans lui (0).
+
+-- croisement NoSquare(v0)  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/7688 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/7688 essais=30720  ECHANTILLON<=4 VIOLATIONS=20
+    bug, autre INACTIF           sols=120/7688 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (20), muet sans lui (0).
+
+== ARTICULATION : forcage par sommet separateur ==
+
+-- articulation OFF : la regle doit etre INERTE --
+  OK : drapeau OFF, aucun forcage. Le bras de reference est intact.
+
+-- articulation ON : cas limites construits a la main --
+  couloir                  force=[1, 2, 5]    attendu=[1, 2, 5]    OK
+  ancre unique             force=[]           attendu=[]           OK
+  aucune ancre             force=[]           attendu=[]           OK
+  deux chemins             force=[]           attendu=[]           OK
+  ancres adjacentes        force=[]           attendu=[]           OK
+  separateur deja certain  force=[2, 5]       attendu=[2, 5]       OK
+  trois ancres             force=[1, 2, 3, 5] attendu=[1, 2, 3, 5] OK
+
+-- articulation : surete sur les systemes de Connected --
+  art CA d = 2           solutions=219   essais=300  VIOLATIONS=0
+  art CB ancre           solutions=107   essais=300  VIOLATIONS=0
+  art CC d = 3           solutions=8227  essais=300  VIOLATIONS=0
+
+-- test negatif 1 : forcage sur ANCRE UNIQUE --
+  ancre-unique CA d = 2  solutions=219   essais=300  VIOLATIONS=168
+  ancre-unique CB ancre  solutions=107   essais=300  VIOLATIONS=171
+  ancre-unique CC d = 3  solutions=8227  essais=300  VIOLATIONS=114
+  OK : le canari mord -- il faut DEUX ancres certaines.
+
+-- test negatif 2 : ancre = TOUT domaine singleton --
+  singleton CA d = 2     solutions=219   essais=300  VIOLATIONS=143
+  singleton CB ancre     solutions=107   essais=300  VIOLATIONS=160
+  singleton CC d = 3     solutions=8227  essais=300  VIOLATIONS=170
+  OK : le canari mord -- une ancre est {val}, pas un singleton.
+
+-- articulation : la regle doit FORCER quelque chose --
+  cellules forcees par l'articulation SEULE : 65
+  OK : la regle ajoute des deductions.
+
+-- croisement ART AllDiff |R|<d  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=1677
+    bug, autre INACTIF           sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1677), muet sans lui (0).
+
+-- croisement ART Count val=0  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/3604 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/3604 essais=30720  ECHANTILLON<=4 VIOLATIONS=1317
+    bug, autre INACTIF           sols=120/3604 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1317), muet sans lui (0).
+
+-- croisement ART SumRange plancher  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/2407 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/2407 essais=30720  ECHANTILLON<=4 VIOLATIONS=9483
+    bug, autre INACTIF           sols=120/2407 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (9483), muet sans lui (0).
+
+-- croisement ART NeqAdj  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=1677
+    bug, autre INACTIF           sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1677), muet sans lui (0).
+
+-- croisement ART Mono  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/5444 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/5444 essais=30720  ECHANTILLON<=4 VIOLATIONS=1714
+    bug, autre INACTIF           sols=120/5444 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1714), muet sans lui (0).
+
+-- croisement ART PairDiff  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=1677
+    bug, autre INACTIF           sols=120/4814 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1677), muet sans lui (0).
+
+-- croisement ART PairRatio  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/5833 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/5833 essais=30720  ECHANTILLON<=4 VIOLATIONS=1644
+    bug, autre INACTIF           sols=120/5833 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (1644), muet sans lui (0).
+
+-- croisement ART NoTriple  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/6240 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/6240 essais=30720  ECHANTILLON<=4 VIOLATIONS=497
+    bug, autre INACTIF           sols=120/6240 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (497), muet sans lui (0).
+
+-- croisement ART NoSquare  x  Connected (controle : autre propagateur OFF) --
+    surete (tout actif)          sols=120/7688 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+    bug, autre ACTIF             sols=120/7688 essais=30720  ECHANTILLON<=4 VIOLATIONS=15
+    bug, autre INACTIF           sols=120/7688 essais=30720  ECHANTILLON<=4 VIOLATIONS=0
+  OK : mord avec l'autre propagateur (15), muet sans lui (0).
+
+-- drapeau remis a False : True --
+
+OK : aucune divergence, aucune violation de surete.

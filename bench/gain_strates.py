@@ -59,13 +59,15 @@ def mesures_instances(rs, instances, graine):
             continue
         puz = minimal_clues(rs, sol)
         inc, left_t0 = resistance_t0(rs, puz)
-        _, left_pr = resistance_prop(rs, puz)
-        if left_pr > left_t0:
+        _, left_pr = resistance_prop(rs, puz, articulation=False)
+        _, left_ar = resistance_prop(rs, puz, articulation=True)
+        if left_pr > left_t0 or left_ar > left_pr:
             raise AssertionError("gain negatif : bug, pas resultat.")
         out.append({
             "inc": inc,
             "t0": left_t0,
             "pr": left_pr,
+            "ar": left_ar,
             "clue_frac": (n2 - inc) / float(n2),
         })
     return out
@@ -74,29 +76,30 @@ def mesures_instances(rs, instances, graine):
 def agrege(lignes):
     t0 = sum(l["t0"] for l in lignes)
     pr = sum(l["pr"] for l in lignes)
+    ar = sum(l["ar"] for l in lignes)
     inc = sum(l["inc"] for l in lignes)
     if not t0:
         return None
-    return {"n": len(lignes), "inc": inc, "t0": t0, "pr": pr,
+    return {"n": len(lignes), "inc": inc, "t0": t0, "pr": pr, "ar": ar,
             "gain_agrege": (t0 - pr) / float(t0),
+            "gain_art": (t0 - ar) / float(t0),
             "resistance_t0": t0 / float(inc) if inc else 0.0}
 
 
-def gains_par_ligne(lignes):
-    return [(l["t0"] - l["pr"]) / float(l["t0"]) for l in lignes if l["t0"]]
+def gains_par_ligne(lignes, cle="pr"):
+    return [(l["t0"] - l[cle]) / float(l["t0"]) for l in lignes if l["t0"]]
 
 
 def afficher(nom, lignes):
     a = agrege(lignes)
     if a is None:
         print("  %-34s aucune resistance a recuperer" % nom)
-        return None
-    g = gains_par_ligne(lignes)
-    print("  %-34s inst=%-5d inconnues=%-7d T0=%-7d prop=%-7d "
-          "resist=%.3f gain_agr=%.3f gain_moy=%.3f"
-          % (nom, a["n"], a["inc"], a["t0"], a["pr"], a["resistance_t0"],
-             a["gain_agrege"], sum(g) / len(g) if g else float("nan")))
-    return g
+        return [], []
+    print("  %-34s inst=%-5d T0=%-6d prop=%-6d ART=%-6d resist=%.3f "
+          "gain=%.3f gain_ART=%.3f"
+          % (nom, a["n"], a["t0"], a["pr"], a["ar"], a["resistance_t0"],
+             a["gain_agrege"], a["gain_art"]))
+    return gains_par_ligne(lignes, "pr"), gains_par_ligne(lignes, "ar")
 
 
 def main():
@@ -137,23 +140,32 @@ def main():
 
     print("-- par groupe --")
     g = {}
+    ga = {}
     for cle in ("static-ref", "connect_sans_CONNECTED",
                 "connect_avec_CONNECTED"):
-        g[cle] = afficher(cle, lignes[cle]) or []
+        g[cle], ga[cle] = afficher(cle, lignes[cle])
 
     print()
     print("-- LE CONTROLE DECISIF : a l'interieur du tag `connect` --")
     if g["connect_sans_CONNECTED"] and g["connect_avec_CONNECTED"]:
-        p = permutation(g["connect_sans_CONNECTED"], g["connect_avec_CONNECTED"])
-        m1 = sum(g["connect_sans_CONNECTED"]) / len(g["connect_sans_CONNECTED"])
-        m2 = sum(g["connect_avec_CONNECTED"]) / len(g["connect_avec_CONNECTED"])
-        print("  sans CONNECTED %.3f  vs  avec CONNECTED %.3f   p = %.4f"
-              % (m1, m2, p))
+        for nom, G in (("SANS articulation", g), ("AVEC articulation", ga)):
+            p = permutation(G["connect_sans_CONNECTED"],
+                            G["connect_avec_CONNECTED"])
+            m1 = (sum(G["connect_sans_CONNECTED"])
+                  / len(G["connect_sans_CONNECTED"]))
+            m2 = (sum(G["connect_avec_CONNECTED"])
+                  / len(G["connect_avec_CONNECTED"]))
+            print("  %-18s sans CONNECTED %.3f  vs  avec CONNECTED %.3f"
+                  "   p = %.4f" % (nom, m1, m2, p))
         print("  Meme tag, meme generateur, memes familles de contraintes :")
         print("  la composition du tag ne peut PAS expliquer un ecart ici.")
     else:
         print("  INDETERMINE : un des deux sous-groupes est vide.")
 
+    # RAPPEL : `connect_sans_CONNECTED` est AU PLAFOND (gain 1,000). Toute
+    # comparaison qui l'implique est une comparaison DE PLAFOND et ne peut pas
+    # etayer un « ils se ressemblent ». Affiche pour memoire, pas pour
+    # conclure -- c'est la lecture annoncee le 26/08 et invalidee dans sa forme.
     if g["static-ref"] and g["connect_sans_CONNECTED"]:
         p = permutation(g["static-ref"], g["connect_sans_CONNECTED"])
         m1 = sum(g["static-ref"]) / len(g["static-ref"])

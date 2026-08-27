@@ -1,0 +1,9 @@
+=== 1. CANARY3 : zero solution fausse ===
+canary3 exit=0
+=== 2. LOCALISATION DU FORCAGE (bloquant) ===
+localisation exit=0
+=== 3. GAIN_PROPAGATION, deux bras ===
+gain exit=0
+=== 4. GAIN_STRATES : le sous-groupe ou r se lit ===
+strates exit=0
+=== FIN ===

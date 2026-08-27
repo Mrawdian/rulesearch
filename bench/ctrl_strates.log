@@ -1,0 +1,27 @@
+CONTROLE DU RESULTAT FAVORABLE  d=3  instances=5
+
+-- par groupe --
+  static-ref                         inst=184357 T0=145206 prop=60235  ART=60235  resist=0.121 gain=0.585 gain_ART=0.585
+  connect_sans_CONNECTED             inst=39939 T0=65280  prop=0      ART=0      resist=0.154 gain=1.000 gain_ART=1.000
+  connect_avec_CONNECTED             inst=84119 T0=411839 prop=345609 ART=333786 resist=0.524 gain=0.161 gain_ART=0.190
+
+-- LE CONTROLE DECISIF : a l'interieur du tag `connect` --
+  SANS articulation  sans CONNECTED 1.000  vs  avec CONNECTED 0.155   p = 0.0005
+  AVEC articulation  sans CONNECTED 1.000  vs  avec CONNECTED 0.183   p = 0.0005
+  Meme tag, meme generateur, memes familles de contraintes :
+  la composition du tag ne peut PAS expliquer un ecart ici.
+
+  static-ref 0.677  vs  connect SANS CONNECTED 1.000   p = 0.0005
+  Si ces deux-la se ressemblent, c'est `Connected` qui porte
+  l'ecart, et non le tag.
+
+-- CONFONDANT 1 : densite d'indices, stratifiee --
+  static-ref / clue_frac bas         inst=61452 T0=113741 prop=50488  ART=50488  resist=0.170 gain=0.556 gain_ART=0.556
+  static-ref / clue_frac median      inst=61452 T0=29162  prop=9311   ART=9311   resist=0.073 gain=0.681 gain_ART=0.681
+  static-ref / clue_frac haut        inst=61453 T0=2303   prop=436    ART=436    resist=0.017 gain=0.811 gain_ART=0.811
+  connect_sans_CONNECTED / clue_frac bas inst=13313 T0=57780  prop=0      ART=0      resist=0.289 gain=1.000 gain_ART=1.000
+  connect_sans_CONNECTED / clue_frac median inst=13313 T0=7500   prop=0      ART=0      resist=0.052 gain=1.000 gain_ART=1.000
+  connect_sans_CONNECTED / clue_frac haut aucune resistance a recuperer
+  connect_avec_CONNECTED / clue_frac bas inst=28039 T0=229815 prop=182322 ART=173015 resist=0.670 gain=0.207 gain_ART=0.247
+  connect_avec_CONNECTED / clue_frac median inst=28039 T0=139171 prop=129936 ART=128184 resist=0.516 gain=0.066 gain_ART=0.079
+  connect_avec_CONNECTED / clue_frac haut inst=28041 T0=42853  prop=33351  ART=32587  resist=0.246 gain=0.222 gain_ART=0.240

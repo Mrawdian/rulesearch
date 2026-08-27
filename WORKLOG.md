@@ -11,6 +11,27 @@ Entree la plus recente **en haut**.
 
 ---
 
+## PROTOCOLE : lancer une mesure longue sur le serveur
+
+**Trois coupures SSH ont tue trois lancements le 27/08**, dont un diagnostic a
+dix minutes de son terme. La cause n'est pas la coupure -- elle se reproduira
+-- mais le fait que le processus soit rattache a la session.
+
+    setsid nohup python3 -u <script> > <journal> 2>&1 < /dev/null &
+
+Chaque morceau porte : `setsid` detache du groupe de processus (c'est LUI qui
+manque a `nohup` seul, verifie le 27/08 : un `nohup ... &` a quand meme ete
+tue), `-u` rend la sortie lisible pendant l'execution, `< /dev/null` evite le
+blocage sur stdin.
+
+**Ne jamais lire un resultat a travers `| tail`** : le tube bufferise tout
+jusqu'a la fin, donc aucun progres n'est visible et une coupure fait tout
+perdre. Ecrire dans un journal, lire le journal.
+
+**Pour une sequence, un script `sh` detache une seule fois**, chaque etape
+ecrivant son propre journal. Verifie le 27/08 : la coupure a tue l'enveloppe
+SSH, la sequence est allee au bout de ses quatre etapes.
+
 ## 2026-08-27 - gain_propagation MESURE : la fracture est portee par Connected
 
 **La prediction, poussee avant la mesure, est confirmee. Le controle decisif
