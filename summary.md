@@ -1,10 +1,10 @@
 # rulesearch — resume automatique
 
-genere 2026-08-27 03:32 UTC — 78559 systemes evalues
+genere 2026-08-27 03:32 UTC — 78574 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
-- `ab89a63b01ef` : 13652 systemes
+- `ab89a63b01ef` : 13667 systemes
 - `06fe04a859f1` : 9167 systemes
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `62448a55927e` : 6239 systemes
@@ -27,7 +27,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (34817 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (34832 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -43,7 +43,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 36617 | 18195 | 2526 | 1242 | 3643 | 2900 | 3883 | 3751 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 35827 | 8260 | 15242 | 20 | 4959 | 1869 | 19 | 5458 | 15.2% |
+| ref | 4 | 3 | 35842 | 8261 | 15252 | 20 | 4961 | 1869 | 19 | 5460 | 15.2% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -55,7 +55,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 3878, dont T2 : 100%
-- candidats SANS connectivite : 5768, dont T2 : 100%
+- candidats SANS connectivite : 5770, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -76,15 +76,15 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*5356 candidats sur 9646 portent les champs bruts (56%).*
+*5358 candidats sur 9648 portent les champs bruts (56%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
   - SANS connectivite (158) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
-- `ab89a63b01ef` — 1679 candidats
+- `ab89a63b01ef` — 1681 candidats
   - AVEC connectivite (698) : resistance **41.2%**
-  - SANS connectivite (981) : resistance **22.0%**
+  - SANS connectivite (983) : resistance **22.0%**
   - test de permutation : **p = 0.0005** — significatif.
 - `06fe04a859f1` — 1195 candidats
   - AVEC connectivite (476) : resistance **41.0%**
@@ -147,9 +147,9 @@ qui ne sature pas.
   - AVEC connectivite (1304) : T0=13.03 T1=0.00 T2=2.97 — pondere **5.94**
   - SANS connectivite (2085) : T0=15.85 T1=0.02 T2=2.65 — pondere **5.32**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
-- `ab89a63b01ef` — 1679 candidats
+- `ab89a63b01ef` — 1681 candidats
   - AVEC connectivite (698) : T0=13.03 T1=0.00 T2=3.03 — pondere **6.06**
-  - SANS connectivite (981) : T0=15.93 T1=0.00 T2=2.71 — pondere **5.41**
+  - SANS connectivite (983) : T0=15.93 T1=0.00 T2=2.70 — pondere **5.41**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `06fe04a859f1` — 1195 candidats
   - AVEC connectivite (476) : T0=13.10 T1=0.00 T2=3.02 — pondere **6.05**
