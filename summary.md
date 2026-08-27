@@ -1,6 +1,6 @@
 # rulesearch — resume automatique
 
-genere 2026-08-27 06:59 UTC — 86196 systemes evalues
+genere 2026-08-27 06:59 UTC — 86211 systemes evalues
 
 ## versions du DSL presentes
 - `89c65c03c4ad` : 29619 systemes
@@ -9,7 +9,7 @@ genere 2026-08-27 06:59 UTC — 86196 systemes evalues
 - `615abe43d6bc` : 7172 systemes — **NON REPRODUCTIBLE** (aucun commit ne porte ce moteur)
 - `62448a55927e` : 6239 systemes
 - `e3baecf8377b` : 5149 systemes
-- `5c556c16ea8b` : 2852 systemes
+- `5c556c16ea8b` : 2867 systemes
 - `23303c299f39` : 1743 systemes
 - `e40600351a72` : 1441 systemes
 - `0327bdc4c76a` : 853 systemes
@@ -29,7 +29,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (42454 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (42469 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -45,7 +45,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 40463 | 20149 | 2769 | 1377 | 4046 | 3186 | 4262 | 4151 | 10.3% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 39618 | 9133 | 16842 | 22 | 5496 | 2071 | 21 | 6033 | 15.2% |
+| ref | 4 | 3 | 39633 | 9136 | 16848 | 22 | 5498 | 2072 | 21 | 6036 | 15.2% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -57,7 +57,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 4278, dont T2 : 100%
-- candidats SANS connectivite : 6343, dont T2 : 100%
+- candidats SANS connectivite : 6346, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -78,7 +78,7 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*6331 candidats sur 10621 portent les champs bruts (60%).*
+*6334 candidats sur 10624 portent les champs bruts (60%).*
 
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -100,9 +100,9 @@ la grille la rendait confondue par la densite d'indices.
   - AVEC connectivite (268) : resistance **42.1%**
   - SANS connectivite (389) : resistance **21.0%**
   - test de permutation : **p = 0.0005** — significatif.
-- `5c556c16ea8b` — 366 candidats
+- `5c556c16ea8b` — 369 candidats
   - AVEC connectivite (150) : resistance **42.1%**
-  - SANS connectivite (216) : resistance **21.2%**
+  - SANS connectivite (219) : resistance **21.3%**
   - test de permutation : **p = 0.0005** — significatif.
 - `23303c299f39` — 225 candidats
   - AVEC connectivite (91) : resistance **43.9%**
@@ -173,10 +173,10 @@ qui ne sature pas.
   - AVEC connectivite (268) : T0=13.02 T1=0.00 T2=3.09 — pondere **6.18**
   - SANS connectivite (389) : T0=16.01 T1=0.00 T2=2.62 — pondere **5.23**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
-- `5c556c16ea8b` — 366 candidats
+- `5c556c16ea8b` — 369 candidats
   - AVEC connectivite (150) : T0=13.07 T1=0.00 T2=3.09 — pondere **6.17**
-  - SANS connectivite (216) : T0=15.81 T1=0.00 T2=2.66 — pondere **5.31**
-  - test de permutation : **p = 0.0145** — ecart significatif au seuil 0.05, sur une serie reproductible.
+  - SANS connectivite (219) : T0=15.84 T1=0.00 T2=2.67 — pondere **5.34**
+  - test de permutation : **p = 0.0160** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `23303c299f39` — 225 candidats
   - AVEC connectivite (91) : T0=13.08 T1=0.00 T2=3.23 — pondere **6.46**
   - SANS connectivite (134) : T0=16.22 T1=0.00 T2=2.61 — pondere **5.22**
@@ -224,7 +224,7 @@ qui ne sature pas.
 
 ### ce que les series reproductibles etablissent
 
-**7 serie(s) reproductible(s) sur 14 etablissent l'ecart** : `89c65c03c4ad` (p=0.0005), `ab89a63b01ef` (p=0.0005), `06fe04a859f1` (p=0.0005), `e3baecf8377b` (p=0.0005), `5c556c16ea8b` (p=0.0145), `23303c299f39` (p=0.0060), `b71bb0907fb5` (p=0.0110).
+**7 serie(s) reproductible(s) sur 14 etablissent l'ecart** : `89c65c03c4ad` (p=0.0005), `ab89a63b01ef` (p=0.0005), `06fe04a859f1` (p=0.0005), `e3baecf8377b` (p=0.0005), `5c556c16ea8b` (p=0.0160), `23303c299f39` (p=0.0060), `b71bb0907fb5` (p=0.0110).
 
 *Test de permutation bilateral, 2000 melanges, stdlib seule. Un ecart non*
 *significatif ne dit pas qu'il n'y a pas d'effet : il dit que ces donnees*
