@@ -2186,6 +2186,305 @@ echecs += _paire_connected(
     "NOSQUARE", _nosquare_bugue_forme(3), kind_bugue="NOSQUARE")
 
 
+
+# ==========================================================================
+# ARTICULATION -- le forcage par sommet separateur (drapeau, defaut OFF)
+# ==========================================================================
+#
+# LA PREUVE NE DISPENSE PAS DU TEST. Le forcage etait prouve depuis le 26/08 et
+# n'a jamais tourne. La journee du 26 a produit dix cas ou un raisonnement juste
+# accompagnait un instrument faux ; c'est ce que cette section refuse de
+# reproduire.
+#
+# Les cas limites ci-dessous sont construits A LA MAIN, sur des domaines poses
+# cellule par cellule : le generateur ne produit pas de couloirs.
+
+import propagate as _PG
+
+print()
+print("== ARTICULATION : forcage par sommet separateur ==")
+
+
+def _co(val=1, n=3):
+    for cn in RuleSystem(n, 2, [Connected(n, val)], "x").constraints:
+        if getattr(cn, "kind", None) == "CONNECTED":
+            return cn
+    raise AssertionError("Connected sans propagateur")
+
+
+def _dom_de(spec, n=3):
+    """spec : {indice: ensemble}. Absent -> {0} (impassable)."""
+    return [set(spec.get(i, {0})) for i in range(n * n)]
+
+
+def _forces(dom_avant, dom_apres, val=1):
+    return sorted(i for i in range(len(dom_avant))
+                  if dom_apres[i] == {val} and dom_avant[i] != {val})
+
+
+# GRILLE 3x3, indices 0..8 en lignes. `val` = 1.
+#   0 1 2
+#   3 4 5
+#   6 7 8
+CAS_ART = (
+    # COULOIR : seuls 0,1,2,5,8 peuvent valoir 1 ; ancres en 0 et 8. Tout
+    # chemin de 0 a 8 passe par 1, 2 et 5 : les trois sont forces.
+    ("couloir",
+     {0: {1}, 1: {0, 1}, 2: {0, 1}, 5: {0, 1}, 8: {1}},
+     [1, 2, 5]),
+    # ANCRE UNIQUE : meme couloir, mais 8 n'est que POSSIBLE. S peut se reduire
+    # a {0} : RIEN n'est force. C'est le piege de la regle.
+    ("ancre unique",
+     {0: {1}, 1: {0, 1}, 2: {0, 1}, 5: {0, 1}, 8: {0, 1}},
+     []),
+    # AUCUNE ANCRE : rien, evidemment, mais il faut que ce soit teste.
+    ("aucune ancre",
+     {0: {0, 1}, 1: {0, 1}, 2: {0, 1}, 5: {0, 1}, 8: {0, 1}},
+     []),
+    # DEUX CHEMINS : la grille entiere est passable, deux ancres opposees. Il
+    # n'existe aucun sommet separateur : rien n'est force. Un propagateur trop
+    # zele mord ici.
+    ("deux chemins",
+     dict([(0, {1}), (8, {1})] + [(i, {0, 1}) for i in range(1, 8)]),
+     []),
+    # ANCRES ADJACENTES : aucun sommet entre elles.
+    ("ancres adjacentes",
+     dict([(0, {1}), (1, {1})] + [(i, {0, 1}) for i in range(2, 9)]),
+     []),
+    # SEPARATEUR DEJA CERTAIN : 1 est deja {1}. Separateur, mais rien a
+    # forcer -- et surtout, pas de boucle infinie ni de faux progres.
+    ("separateur deja certain",
+     {0: {1}, 1: {1}, 2: {0, 1}, 5: {0, 1}, 8: {1}},
+     [2, 5]),
+    # TROIS ANCRES, separateur qui ne separe PAS de la premiere ancre : il
+    # separe 8 de 6. L'ancrage unique doit quand meme l'attraper (il separe
+    # alors 0 de l'une des deux).
+    ("trois ancres",
+     {0: {1}, 3: {0, 1}, 6: {1}, 1: {0, 1}, 2: {0, 1}, 5: {0, 1}, 8: {1}},
+     [1, 2, 5, 3]),
+)
+
+print()
+print("-- articulation OFF : la regle doit etre INERTE --")
+_PG.ARTICULATION = False
+_faute = 0
+for _nom, _spec, _att in CAS_ART:
+    _d0 = _dom_de(_spec)
+    _d1 = _dom_de(_spec)
+    propager_connected(_co(), _d1)
+    _f = _forces(_d0, _d1)
+    if _f:
+        print("  %-24s ECHEC : force %s alors que le drapeau est OFF"
+              % (_nom, _f))
+        _faute += 1
+if _faute:
+    echecs += _faute
+else:
+    print("  OK : drapeau OFF, aucun forcage. Le bras de reference est intact.")
+
+print()
+print("-- articulation ON : cas limites construits a la main --")
+_PG.ARTICULATION = True
+for _nom, _spec, _att in CAS_ART:
+    _d0 = _dom_de(_spec)
+    _d1 = _dom_de(_spec)
+    _, _ct = propager_connected(_co(), _d1)
+    _f = _forces(_d0, _d1)
+    _ok = (not _ct) and _f == sorted(_att)
+    print("  %-24s force=%-12s attendu=%-12s %s"
+          % (_nom, _f, sorted(_att), "OK" if _ok else "ECHEC"))
+    if not _ok:
+        echecs += 1
+
+print()
+print("-- articulation : surete sur les systemes de Connected --")
+for _nom, _rs in CO_CAS:
+    _v = cas_surete("art " + _nom, _rs)
+    if _v is None or _v > 0:
+        echecs += 1
+
+# ---- TEST NEGATIF 1 : FORCAGE SUR ANCRE UNIQUE --------------------------
+# Le piege propre a l'articulation. Avec une seule ancre, S peut se reduire a
+# {a} : aucun sommet n'est traverse, et tout forcage est faux.
+
+def _art_ancre_unique(cn, dom):
+    val, n = cn.val, cn.n
+    passables = set(i for i in cn.region if val in dom[i])
+    certaines = [i for i in cn.region if dom[i] == {val}]
+    if not certaines:
+        return False, False
+    depart = certaines[0]
+    vus = _PG._accessibles(passables, depart, n)
+    for f in certaines:
+        if f not in vus:
+            return False, True
+    prog = False
+    for i in passables:
+        if i not in vus:
+            dom[i].discard(val)
+            prog = True
+            if not dom[i]:
+                return prog, True
+    passables = set(i for i in cn.region if val in dom[i])
+    # LE BUG : les « autres » ancres sont remplacees par les cellules
+    # ACCESSIBLES, donc une seule ancre suffit a declencher le forcage.
+    autres = [i for i in passables if i != depart]                  # LE BUG
+    for v in passables:
+        if v == depart or dom[v] == {val}:
+            continue
+        joignables = _PG._accessibles(passables - {v}, depart, n)
+        if any(b not in joignables for b in autres):
+            dom[v] = {val}
+            prog = True
+    return prog, False
+
+
+print()
+print("-- test negatif 1 : forcage sur ANCRE UNIQUE --")
+_det = False
+for _nom, _rs in CO_CAS:
+    if cas_surete("ancre-unique " + _nom, _rs,
+                  prop=_moteur_simple({"CONNECTED": _art_ancre_unique})):
+        _det = True
+if _det:
+    print("  OK : le canari mord -- il faut DEUX ancres certaines.")
+else:
+    print("  ECHEC : un forcage sur ancre unique passe le canari.")
+    echecs += 1
+
+
+# ---- TEST NEGATIF 2 : ANCRE = TOUT DOMAINE SINGLETON ---------------------
+#
+# PREMIERE VERSION ECARTEE, ET LA RAISON VAUT D'ETRE ECRITE. Le bug candidat
+# etait « calculer la separation sur la REGION au lieu des passables ». Il rend
+# 0 violation -- non parce qu'il serait sur, mais parce qu'il est INERTE : la
+# grille 3x3 pleine est 2-connexe, donc sans sommet separateur. Un canari qui
+# ne mord pas parce que son bug ne fait rien ne teste rien. C'est le motif du
+# projet applique au test negatif lui-meme.
+#
+# LE BUG RETENU est unsound et il se declenche : toute cellule au domaine
+# SINGLETON est prise pour une ancre, quelle que soit sa valeur. Une cellule
+# fixee a `0` devient un point d'attache de la composante des `1`.
+
+def _art_ancre_singleton(cn, dom):
+    val, n = cn.val, cn.n
+    passables = set(i for i in cn.region if val in dom[i])
+    certaines = [i for i in cn.region if len(dom[i]) == 1]           # LE BUG
+    if len(certaines) < 2:
+        return False, False
+    depart, autres = certaines[0], certaines[1:]
+    prog = False
+    for v in passables:
+        if v == depart or dom[v] == {val}:
+            continue
+        joignables = _PG._accessibles(passables - {v}, depart, n)
+        if any(b not in joignables for b in autres):
+            dom[v] = {val}
+            prog = True
+    return prog, False
+
+
+print()
+print("-- test negatif 2 : ancre = TOUT domaine singleton --")
+_det2 = False
+for _nom, _rs in CO_CAS:
+    if cas_surete("singleton " + _nom, _rs,
+                  prop=_moteur_simple({"CONNECTED": _art_ancre_singleton})):
+        _det2 = True
+if _det2:
+    print("  OK : le canari mord -- une ancre est {val}, pas un singleton.")
+else:
+    print("  ECHEC : une ancre de valeur quelconque passe le canari.")
+    echecs += 1
+
+
+# ---- LA REGLE DOIT MORDRE ------------------------------------------------
+print()
+print("-- articulation : la regle doit FORCER quelque chose --")
+_nf = 0
+for _nom, _rs in CO_CAS:
+    _rnd = random.Random(313)
+    for _sol in echantillon(toutes_solutions(_rs) or [], 60):
+        for _k in (3, 4, 5):
+            _g = indices(_sol, _k, _rnd)
+            _dA, _dB = domaines(_rs, _g), domaines(_rs, _g)
+            _PG.ARTICULATION = False
+            for _cn in _rs.constraints:
+                if getattr(_cn, "kind", None) == "CONNECTED":
+                    propager_connected(_cn, _dA)
+            _PG.ARTICULATION = True
+            for _cn in _rs.constraints:
+                if getattr(_cn, "kind", None) == "CONNECTED":
+                    propager_connected(_cn, _dB)
+            _nf += len(_forces(_dA, _dB))
+print("  cellules forcees par l'articulation SEULE : %d" % _nf)
+if not _nf:
+    print("  ECHEC : l'articulation est INERTE -- la mesure de controle ne")
+    print("  comparerait alors que deux fois le meme propagateur, et son")
+    print("  resultat serait vide de sens.")
+    echecs += 1
+else:
+    print("  OK : la regle ajoute des deductions.")
+
+
+# ---- CROISEMENTS : les dix propagateurs, articulation ACTIVE -------------
+# Le bug d'interaction est celui de l'invariant 14, transpose au forcage :
+# une cellule au domaine deja rogne est tenue pour une ANCRE. Il exige qu'un
+# AUTRE propagateur ait produit ce domaine partiel.
+
+def _art_bugue_forme(d):
+    def f(cn, dom):
+        val, n = cn.val, cn.n
+        passables = set(i for i in cn.region if val in dom[i])
+        certaines = [i for i in cn.region
+                     if dom[i] == {val}
+                     or (1 < len(dom[i]) < d and val in dom[i])]     # LE BUG
+        if len(certaines) < 2:
+            return False, False
+        depart, autres = certaines[0], certaines[1:]
+        vus = _PG._accessibles(passables, depart, n)
+        if any(b not in vus for b in autres):
+            return False, True
+        prog = False
+        for v in passables:
+            if v == depart or dom[v] == {val}:
+                continue
+            joignables = _PG._accessibles(passables - {v}, depart, n)
+            if any(b not in joignables for b in autres):
+                dom[v] = {val}
+                prog = True
+        return prog, False
+    return f
+
+
+_PG.ARTICULATION = True
+_bug_art = _art_bugue_forme(3)
+
+for _titre, _autre, _kind in (
+        ("AllDiff |R|<d", AllDiff([0, 1]), "ALLDIFF"),
+        ("Count val=0", Count([0, 1], 0, 1, 1), "COUNT"),
+        ("SumRange plancher", SumRange([0, 1], 3, 4, 3), "SUM"),
+        ("NeqAdj", NeqAdj([0, 1]), "NEQADJ"),
+        ("Mono", Mono([4, 0]), "MONO"),
+        ("PairDiff", PairDiff([(0, 1)], 1, 3), "PAIRDIFF"),
+        ("PairRatio", PairRatio([(0, 1)], 1), "PAIRSTEP"),
+        ("NoTriple", NoTriple([0, 1, 2, 3]), "NOTRIPLE"),
+        ("NoSquare", NoSquare(3, 0), "NOSQUARE"),
+):
+    echecs += _paire_connected(
+        "ART " + _titre,
+        RuleSystem(3, 3, [_autre, Connected(3, 1)], "ARc"),
+        _kind, _bug_art)
+
+# LE DRAPEAU EST REMIS A False. Rien ne doit fuir hors de cette section : le
+# bras de reference de la mesure doit rester celui du 26/08.
+_PG.ARTICULATION = False
+print()
+print("-- drapeau remis a False : %s --" % (not _PG.ARTICULATION))
+if _PG.ARTICULATION:
+    print("  ECHEC : le drapeau a fuite.")
+    echecs += 1
+
 print()
 if echecs:
     print("ECHEC : %d section(s) en defaut." % echecs)

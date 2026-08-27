@@ -566,11 +566,69 @@ def propager_nosquare(cn, dom):
 # domaines, pas fixe. Il est declare dans `SURETE_OBJET_INDUIT` avec les deux
 # regles ci-dessus, et SEULEMENT elles.
 #
-# CE QUI N'EST DELIBEREMENT PAS FAIT : le forcage par point d'articulation.
-# Il est PROUVE sur (relaxation + monotonie) -- ce n'est pas une question de
-# surete -- mais un `Connected` trop fort dissoudrait localement la difficulte
-# que le projet mesure. Voir DECISIONS.md. Sa reouverture est conditionnee a
-# une insuffisance de debit mesuree, rien d'autre.
+# ---------- LE FORCAGE PAR SOMMET SEPARATEUR (articulation) ----------
+#
+# OUVERT LE 27/08/2026, apres avoir ete ferme deux fois. Ce qui a change n'est
+# pas le critere de reouverture -- il portait sur le DEBIT -- mais la QUESTION.
+# Sous « quelle est la resistance a T0 ? », une regle forte DISSOUT ce qu'on
+# mesure et l'ecarter protege l'instrument. Sous « cette resistance est-elle
+# recuperable par propagation LOCALE ? », la regle la plus forte n'est plus une
+# menace : elle EST le controle. Voir DECISIONS.md.
+#
+# PREUVE. Memes notations que ci-dessus : sigma une solution compatible avec
+# les domaines, S = { i : sigma[i] = val }, P les passables, F les certaines.
+# On a (1) S inclus dans P, (2) S connexe, (3) F inclus dans S.
+#
+# Soient a et b deux elements DISTINCTS de F, et v une cellule de P. Par (3),
+# a et b sont dans S ; par (2), il existe un chemin de a a b entierement dans
+# S, donc -- par (1) -- entierement dans P. Si TOUT chemin de a a b dans P
+# passe par v, ce chemin-la y passe aussi, donc v appartient a S :
+# **sigma[v] = val**. Le forcage `dom[v] := {val}` est sur.
+#
+# C'est le meme argument que le retrait, et il vit dans la meme relaxation
+# « chaque cellule peut prendre n'importe quelle valeur de son domaine »
+# (invariant 14ter) : il n'utilise les domaines que comme SUR-APPROXIMATION.
+#
+# CONDITION D'AMORCAGE, plus forte que pour le retrait : il faut |F| >= 2.
+# Avec UNE SEULE ancre, S peut se reduire a {a} et aucun sommet n'est
+# traverse. Un forcage sur ancre unique est FAUX ; `canary3` injecte
+# exactement ce bug.
+#
+# PRECONDITION NON NEGOCIABLE : toutes les ancres doivent DEJA etre reliees a
+# `a` dans P. Sinon le systeme est infaisable, tout sommet « separe »
+# vacuement, et la regle forcerait la grille entiere. Le retrait par
+# inaccessibilite tourne AVANT et rend `contra` dans ce cas : la precondition
+# est donc etablie par construction, et non supposee.
+#
+# ANCRAGE SUR UNE SEULE ANCRE, ET CE N'EST PAS UNE PERTE. On ne teste que les
+# paires (a, b) avec a = certaines[0]. Si v separe b de c, alors apres retrait
+# de v les composantes de a, b, c ne peuvent pas etre toutes egales : v separe
+# donc a de b, ou a de c. **Aucun sommet separateur n'echappe a l'ancrage
+# unique.** Cout ramene de |F|^2.|P|^2 a |F|.|P|^2.
+#
+# MONOTONIE, verifiee dans preuves/monotonie_connected.py : P' inclus dans P
+# implique que l'ensemble des cellules forcees ne peut que CROITRE. Ce n'est
+# pas requis pour la surete -- la sur-approximation suffit -- mais cela ferme
+# la reserve de 14bis sur un objet INDUIT non monotone.
+#
+# DRAPEAU PAR DEFAUT A False. La mesure de controle l'active a part. Le
+# propagateur par defaut reste BYTE POUR BYTE celui qui a produit la mesure du
+# 26/08 : les deux bras sont comparables sans qu'il faille en discuter.
+
+ARTICULATION = False
+
+
+def _accessibles(passables, depart, n):
+    if depart not in passables:
+        return set()
+    vus, pile = {depart}, [depart]
+    while pile:
+        x = pile.pop()
+        for y in neighbors4(x, n):
+            if y in passables and y not in vus:
+                vus.add(y)
+                pile.append(y)
+    return vus
 
 
 def propager_connected(cn, dom):
@@ -604,6 +662,22 @@ def propager_connected(cn, dom):
         prog = True
         if not dom[i]:
             return prog, True
+
+    if ARTICULATION and len(certaines) >= 2:
+        # A ce point, toutes les ancres sont reliees a `depart` dans P : la
+        # boucle ci-dessus a rendu `contra` sinon. La precondition tient.
+        passables = set(i for i in cn.region if val in dom[i])
+        autres = certaines[1:]
+        for v in passables:
+            if v == depart or dom[v] == {val}:
+                continue
+            joignables = _accessibles(passables - {v}, depart, n)
+            if any(b not in joignables for b in autres):
+                # `val` est dans dom[v] puisque v est passable : ce forcage ne
+                # peut pas vider un domaine.
+                dom[v] = {val}
+                prog = True
+
     return prog, False
 
 
@@ -636,13 +710,15 @@ def propager_connected(cn, dom):
 # couvertes : une regle non nommee ici n'est PAS couverte, meme sur la meme
 # contrainte. Voir DECISIONS.md, 26/08/2026.
 SURETE_OBJET_INDUIT = {
-    # NE NOMMER QUE LES REGLES REELLEMENT ECRITES. Le forcage par point
-    # d'articulation est prouve sur (relaxation + monotonie) mais DELIBEREMENT
-    # NON ADOPTE : il n'a donc rien a faire dans cette liste, qui autorise.
+    # NE NOMMER QUE LES REGLES REELLEMENT ECRITES. Le forcage par sommet
+    # separateur y figure depuis le 27/08/2026 parce qu'il est ECRIT, et non
+    # parce qu'il est prouve : il l'etait deja quand il n'y avait pas sa place.
     "CONNECTED": ("retrait par inaccessibilite depuis une cellule certainement "
-                  "`val` ; detection de contradiction. Valides dans la "
-                  "relaxation : toute solution a son ensemble de cellules "
-                  "`val` inclus dans P et connexe."),
+                  "`val` ; detection de contradiction ; forcage des sommets "
+                  "separant deux cellules certainement `val` (drapeau "
+                  "ARTICULATION, defaut False). Valides dans la relaxation : "
+                  "toute solution a son ensemble de cellules `val` inclus dans "
+                  "P et connexe."),
 }
 
 
