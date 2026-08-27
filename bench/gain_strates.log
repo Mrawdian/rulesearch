@@ -1,0 +1,26 @@
+CONTROLE DU RESULTAT FAVORABLE  d=3  instances=5
+
+-- par groupe --
+  static-ref                         inst=133151 inconnues=865757  T0=104327  prop=44031   resist=0.121 gain_agr=0.578 gain_moy=0.669
+  connect_sans_CONNECTED             inst=28539 inconnues=303512  T0=47760   prop=0       resist=0.157 gain_agr=1.000 gain_moy=1.000
+  connect_avec_CONNECTED             inst=60947 inconnues=569826  T0=299562  prop=250801  resist=0.526 gain_agr=0.163 gain_moy=0.158
+
+-- LE CONTROLE DECISIF : a l'interieur du tag `connect` --
+  sans CONNECTED 1.000  vs  avec CONNECTED 0.158   p = 0.0005
+  Meme tag, meme generateur, memes familles de contraintes :
+  la composition du tag ne peut PAS expliquer un ecart ici.
+
+  static-ref 0.669  vs  connect SANS CONNECTED 1.000   p = 0.0005
+  Si ces deux-la se ressemblent, c'est `Connected` qui porte
+  l'ecart, et non le tag.
+
+-- CONFONDANT 1 : densite d'indices, stratifiee --
+  static-ref / clue_frac bas         inst=44383 inconnues=482247  T0=81570   prop=36499   resist=0.169 gain_agr=0.553 gain_moy=0.641
+  static-ref / clue_frac median      inst=44383 inconnues=288873  T0=21169   prop=7225    resist=0.073 gain_agr=0.659 gain_moy=0.714
+  static-ref / clue_frac haut        inst=44385 inconnues=94637   T0=1588    prop=307     resist=0.017 gain_agr=0.807 gain_moy=0.831
+  connect_sans_CONNECTED / clue_frac bas inst=9513  inconnues=142695  T0=42195   prop=0       resist=0.296 gain_agr=1.000 gain_moy=1.000
+  connect_sans_CONNECTED / clue_frac median inst=9513  inconnues=103564  T0=5565    prop=0       resist=0.054 gain_agr=1.000 gain_moy=1.000
+  connect_sans_CONNECTED / clue_frac haut aucune resistance a recuperer
+  connect_avec_CONNECTED / clue_frac bas inst=20315 inconnues=248429  T0=166049  prop=131064  resist=0.668 gain_agr=0.211 gain_moy=0.196
+  connect_avec_CONNECTED / clue_frac median inst=20315 inconnues=195821  T0=101590  prop=95237   resist=0.519 gain_agr=0.063 gain_moy=0.062
+  connect_avec_CONNECTED / clue_frac haut inst=20317 inconnues=125576  T0=31923   prop=24500   resist=0.254 gain_agr=0.233 gain_moy=0.268

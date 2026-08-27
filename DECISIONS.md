@@ -2132,3 +2132,73 @@ regle la plus forte, la circularite tombe. S'il devient recuperable, alors ce
 qu'on mesurait etait la faiblesse du propagateur.
 
 **Ce n'est pas une decision d'ingenierie et elle n'est pas prise ici.**
+
+## 2026-08-27 - L'ARTICULATION EST OUVERTE, et c'est une decision de RECHERCHE
+
+**Renversement assume d'une decision prise deux fois (26/08, matin et soir).**
+Elle avait ete fermee, puis re-fermee avec le motif que son critere de
+reouverture etait mal concu. Ce qui a change n'est pas le critere : **c'est la
+question**.
+
+### Le motif qui l'ecartait s'est INVERSE avec le changement de question
+
+    QUESTION D'HIER  : quelle est la resistance a T0 ?
+                       -> un `Connected` fort DISSOUT ce qu'on mesure.
+                          L'ecarter PROTEGE l'instrument.
+
+    QUESTION D'AUJOURD'HUI : cette resistance est-elle recuperable par
+                       propagation LOCALE ?
+                       -> la regle la plus forte n'est plus une menace,
+                          elle est LE CONTROLE.
+
+**Un instrument se protege de ce qui le fausse, pas de ce qui le teste.**
+La meme regle etait un confondant sous la premiere question et devient le
+controle decisif sous la seconde. Le critere de reouverture de PERIMETRE-A.md
+-- « si a n=5 le debit reste insuffisant » -- n'est PAS ce qui declenche :
+il portait sur le debit, et le debit n'est plus la question.
+
+### Ce que la mesure d'hier autorisait, et pourquoi ca ne suffit pas
+L'enonce etroit, qui reste ecrit tel quel :
+
+> `Connected` resiste aux propagateurs locaux **que nous avons choisi
+> d'ecrire**, et ce choix a ete informe par l'attente qu'il resiste.
+
+Le controle intra-tag ecarte la **composition** comme confondant. Il n'ecarte
+pas la **force du propagateur**. Tant que la regle la plus forte disponible
+n'est pas mesuree, le resultat est partiellement circulaire.
+
+### LES DEUX ISSUES SONT ECRITES AVANT LA MESURE, ET LES DEUX SONT DES RESULTATS
+
+- **`Connected` reste non recuperable avec l'articulation** : la circularite
+  tombe. La resistance est une propriete de LA CONTRAINTE, pas de notre
+  implementation. C'est **le premier resultat de fond du projet**, et il est
+  etabli contre le controle le plus fort disponible.
+- **`Connected` devient recuperable** : ce qu'on mesurait etait la faiblesse de
+  notre propagateur. L'hypothese centrale perd son meilleur soutien, et **il
+  faudra le dire aussi nettement que l'echec de A**.
+
+Aucune des deux n'est l'issue esperee. C'est la condition pour que la mesure
+ait un sens.
+
+### CONDITIONS, identiques a tout le chantier
+- **La preuve de surete est faite (relaxation + monotonie), et ne dispense PAS
+  du test.** `canary3` etendu, cas limites construits A LA MAIN, test negatif
+  vu mordre, croisements contre les dix propagateurs existants. La journee du
+  26 a montre dix fois qu'une conviction n'est pas une verification.
+- **Aucun branchement.** La mesure tourne a part, `t0_legacy` reste la
+  reference de la serie, `engine_active_hash` ne doit pas bouger. La regle est
+  derriere un drapeau **par defaut a False** : le propagateur par defaut reste
+  BYTE POUR BYTE celui qui a produit la mesure d'hier, ce qui rend les deux
+  bras comparables sans argument.
+- **`gain_propagation` relance a l'identique**, avec l'articulation en plus, et
+  **les MEMES gardes** -- y compris le tirage aleatoire (invariant 15) dont
+  l'absence a ete payee hier dans le dispositif meme charge de l'appliquer.
+
+### Non poursuivi
+Le residu de **non-monotonie du gain selon `clue_frac`** (0,196 / 0,062 /
+0,268) reste **ouvert et non poursuivi**.
+
+### La file lente a n=5 est RECONDITIONNEE
+Elle ne depend plus du gain seul, mais du resultat de ce controle. Si la
+circularite tombe, elle se lance. Sinon, **ce qu'elle mesurerait serait notre
+propre choix de propagateur, et elle n'a pas d'objet**.
