@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-09-01 19:32 UTC — 291131 systemes evalues
+genere 2026-09-01 19:34 UTC — 291145 systemes evalues
 
 ## versions du DSL presentes
-- `5c556c16ea8b` : 207787 systemes
+- `5c556c16ea8b` : 207801 systemes
 - `89c65c03c4ad` : 29619 systemes
 - `ab89a63b01ef` : 18378 systemes
 - `06fe04a859f1` : 9167 systemes
@@ -29,7 +29,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (247389 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (247403 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -43,7 +43,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | tag | n | d | total | MORT | LIBRE | DEVIN. | PLAT | S-CONTR | TROP-CHER | CAND | %cand |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
-| connect | 4 | 3 | 143947 | 71506 | 9777 | 4818 | 14618 | 11349 | 15213 | 14805 | 10.3% |
+| connect | 4 | 3 | 143961 | 71510 | 9779 | 4819 | 14619 | 11349 | 15217 | 14807 | 10.3% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
 | ref | 4 | 3 | 141069 | 32796 | 59671 | 59 | 19558 | 7287 | 63 | 21624 | 15.3% |
 
@@ -56,13 +56,13 @@ ci-dessous.
 Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
-- candidats AVEC connectivite : 14932, dont T2 : 100%
+- candidats AVEC connectivite : 14934, dont T2 : 100%
 - candidats SANS connectivite : 21934, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
 
-- **15487 systemes avec CONNECTED sur 119965 (12.9%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
+- **15491 systemes avec CONNECTED sur 119977 (12.9%) sont abandonnes en TROP-CHER** et ne figurent donc pas dans la mesure ci-dessus.
 - Ces systemes sont les plus couteux a evaluer, donc vraisemblablement les plus profonds -- ceux que l'hypothese predit justement comme atteignant T2.
 - **L'echantillon est donc tronque du cote meme que l'hypothese predit, et la troncature joue CONTRE elle.** Tout ecart T2 favorable observe est une **borne inferieure**, pas une estimation.
 - Corollaire : un ecart faible ou nul ne refute PAS l'hypothese. Il peut n'etre qu'un effet de la borne de temps.
@@ -78,10 +78,10 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*32576 candidats sur 36866 portent les champs bruts (88%).*
+*32578 candidats sur 36868 portent les champs bruts (88%).*
 
-- `5c556c16ea8b` — 26611 candidats
-  - AVEC connectivite (10804) : resistance **41.0%**
+- `5c556c16ea8b` — 26613 candidats
+  - AVEC connectivite (10806) : resistance **41.0%**
   - SANS connectivite (15807) : resistance **21.4%**
   - test de permutation : **p = 0.0005** — significatif.
 - `89c65c03c4ad` — 264 candidats
@@ -149,8 +149,8 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `5c556c16ea8b` — 26611 candidats
-  - AVEC connectivite (10804) : T0=13.02 T1=0.00 T2=2.98 — pondere **5.96**
+- `5c556c16ea8b` — 26613 candidats
+  - AVEC connectivite (10806) : T0=13.02 T1=0.00 T2=2.98 — pondere **5.96**
   - SANS connectivite (15807) : T0=15.92 T1=0.00 T2=2.66 — pondere **5.31**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `89c65c03c4ad` — 3389 candidats
@@ -260,9 +260,9 @@ qui ne sature pas.
 - `T2` indices=0.06 — CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,1-4)@grid + PAIRDIFF(>=1)@knight + PAIRSTEP(1)@knight
 
 ## cout
-- temps total 90.1 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 15560 systemes abandonnes (5.3% des systemes), 96% du temps total
-  dont 15487 avec CONNECTED, 73 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- temps total 90.2 h, dont 2% brule sur des systemes MORT
+- TROP-CHER : 15564 systemes abandonnes (5.3% des systemes), 96% du temps total
+  dont 15491 avec CONNECTED, 73 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
-  - avec CONNECTED : 13.0% sur 117464 systemes
-  - sans CONNECTED : 0.0% sur 26483 systemes
+  - avec CONNECTED : 13.0% sur 117476 systemes
+  - sans CONNECTED : 0.0% sur 26485 systemes
