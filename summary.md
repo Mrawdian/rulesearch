@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-09-04 04:52 UTC — 356331 systemes evalues
+genere 2026-09-04 04:53 UTC — 356346 systemes evalues
 
 ## versions du DSL presentes
-- `5c556c16ea8b` : 272987 systemes
+- `5c556c16ea8b` : 273002 systemes
 - `89c65c03c4ad` : 29619 systemes
 - `ab89a63b01ef` : 18378 systemes
 - `06fe04a859f1` : 9167 systemes
@@ -29,7 +29,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (312589 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (312604 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -45,7 +45,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 176862 | 87894 | 12027 | 5920 | 17993 | 13920 | 18748 | 18108 | 10.2% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 173354 | 40276 | 73220 | 70 | 24075 | 8984 | 69 | 26646 | 15.4% |
+| ref | 4 | 3 | 173369 | 40281 | 73224 | 70 | 24078 | 8986 | 70 | 26646 | 15.4% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -261,8 +261,8 @@ qui ne sature pas.
 
 ## cout
 - temps total 110.6 h, dont 2% brule sur des systemes MORT
-- TROP-CHER : 19101 systemes abandonnes (5.4% des systemes), 96% du temps total
-  dont 19022 avec CONNECTED, 79 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
+- TROP-CHER : 19102 systemes abandonnes (5.4% des systemes), 96% du temps total
+  dont 19022 avec CONNECTED, 80 sans -- **chiffre CONFONDU** : seul le tag connect peut produire des systemes avec CONNECTED, ce ratio melange l'effet de la connectivite et celui de la configuration. Voir la ventilation ci-dessous.
 - taux de TROP-CHER **dans le seul tag connect** (a configuration egale, non confondu) :
   - avec CONNECTED : 13.0% sur 144323 systemes
   - sans CONNECTED : 0.0% sur 32539 systemes
