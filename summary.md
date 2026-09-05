@@ -1,9 +1,9 @@
 # rulesearch — resume automatique
 
-genere 2026-09-05 03:59 UTC — 380677 systemes evalues
+genere 2026-09-05 04:00 UTC — 380692 systemes evalues
 
 ## versions du DSL presentes
-- `5c556c16ea8b` : 297333 systemes
+- `5c556c16ea8b` : 297348 systemes
 - `89c65c03c4ad` : 29619 systemes
 - `ab89a63b01ef` : 18378 systemes
 - `06fe04a859f1` : 9167 systemes
@@ -29,7 +29,7 @@ Les lignes de dsl_hash differents ne sont pas comparables entre elles.
 
 ### regroupement possible par moteur ACTIF (lecture, pas equivalence)
 
-- moteur actif `0caa9267db60` (336935 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
+- moteur actif `0caa9267db60` (336950 systemes) : `06fe04a859f1`, `0a74109317e5`, `23303c299f39`, `5c556c16ea8b`, `62448a55927e`, `84fba70921e0`, `8f22f0d2d442`, `9e54e42681ed`, `ab89a63b01ef`, `b71bb0907fb5`, `cf6a4d3246d8`, `e40600351a72`, `e80bc1b2b437`, `e8a1f930f7b9`
   modules actifs : rulesearch.py, dsl2.py, deduction.py, prefilter.py, t0_legacy.py
 
 Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le chemin d'execution**. Les regrouper est defendable et doit etre **dit explicitement** a chaque fois qu'on le fait. **`dsl_hash` reste l'invariant dur** : en cas de doute, ne pas regrouper.
@@ -45,7 +45,7 @@ Ces dsl_hash different par des fichiers de `engine/` **qui n'etaient pas sur le 
 | baseline | 4 | 4 | 124 | 76 | 21 | 2 | 5 | 11 | 0 | 7 | 5.6% |
 | connect | 4 | 3 | 189149 | 93940 | 12874 | 6315 | 19240 | 14902 | 20056 | 19399 | 10.3% |
 | d4 | 4 | 4 | 5991 | 2749 | 1523 | 30 | 421 | 404 | 284 | 430 | 7.2% |
-| ref | 4 | 3 | 185413 | 43132 | 78312 | 77 | 25759 | 9595 | 70 | 28454 | 15.3% |
+| ref | 4 | 3 | 185428 | 43136 | 78321 | 77 | 25759 | 9596 | 70 | 28455 | 15.3% |
 
 ## hypothese : la fracture est locale / non-locale
 
@@ -57,7 +57,7 @@ Attendu si l'hypothese tient : parmi les CANDIDATS, ceux dont le systeme
 contient CONNECTED atteignent T2 nettement plus souvent que les autres.
 
 - candidats AVEC connectivite : 19526, dont T2 : 100%
-- candidats SANS connectivite : 28764, dont T2 : 100%
+- candidats SANS connectivite : 28765, dont T2 : 100%
 - **l'hypothese ne tient pas — le v2 n'est qu'un v1 elargi**
 
 ### censure de l'echantillon
@@ -78,11 +78,11 @@ depend d'aucune technique dont la disponibilite varie selon les familles
 Normalisee sur les cases **inconnues**, pas sur la grille : normaliser sur
 la grille la rendait confondue par la densite d'indices.
 
-*44000 candidats sur 48290 portent les champs bruts (91%).*
+*44001 candidats sur 48291 portent les champs bruts (91%).*
 
-- `5c556c16ea8b` — 38035 candidats
+- `5c556c16ea8b` — 38036 candidats
   - AVEC connectivite (15398) : resistance **41.1%**
-  - SANS connectivite (22637) : resistance **21.2%**
+  - SANS connectivite (22638) : resistance **21.2%**
   - test de permutation : **p = 0.0005** — significatif.
 - `89c65c03c4ad` — 264 candidats
   - AVEC connectivite (106) : resistance **46.7%**
@@ -149,9 +149,9 @@ annonce.
 nombre d'invocations par niveau, lui, varie -- c'est une mesure continue
 qui ne sature pas.
 
-- `5c556c16ea8b` — 38035 candidats
+- `5c556c16ea8b` — 38036 candidats
   - AVEC connectivite (15398) : T0=13.01 T1=0.00 T2=2.97 — pondere **5.95**
-  - SANS connectivite (22637) : T0=15.93 T1=0.00 T2=2.65 — pondere **5.30**
+  - SANS connectivite (22638) : T0=15.93 T1=0.00 T2=2.65 — pondere **5.30**
   - test de permutation : **p = 0.0005** — ecart significatif au seuil 0.05, sur une serie reproductible.
 - `89c65c03c4ad` — 3389 candidats
   - AVEC connectivite (1304) : T0=13.03 T1=0.00 T2=2.97 — pondere **5.94**
