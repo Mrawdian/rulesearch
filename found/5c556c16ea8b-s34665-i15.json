@@ -1,8 +1,8 @@
 {
-  "ts": 1788600655.6996148,
+  "ts": 1788600655.8625262,
   "dsl_hash": "5c556c16ea8b",
   "seed": 34665,
-  "idx": 5,
+  "idx": 15,
   "engine_active": [
     "rulesearch.py",
     "dsl2.py",
@@ -11,21 +11,21 @@
     "t0_legacy.py"
   ],
   "engine_active_hash": "0caa9267db60",
-  "inst_seed": 34665005,
+  "inst_seed": 34665015,
   "n": 4,
   "d": 3,
-  "sys": "NEQADJ@diags + MONO@cols",
-  "ms": 30,
+  "sys": "NEQADJ@blocks + MONO@cols",
+  "ms": 15,
   "total_grids": 13,
-  "clue_frac": 0.385,
+  "clue_frac": 0.271,
   "solved_frac": 1.0,
   "level_uses": {
-    "0": 18,
+    "0": 19,
     "1": 0,
-    "2": 3
+    "2": 1
   },
-  "t0_unknown": 59,
-  "t0_left": 12,
+  "t0_unknown": 70,
+  "t0_left": 4,
   "max_level": 2,
   "verdict": "CANDIDAT"
 }
