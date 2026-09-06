@@ -1,8 +1,8 @@
 {
-  "ts": 1788672108.415505,
+  "ts": 1788672128.452169,
   "dsl_hash": "5c556c16ea8b",
   "seed": 35998,
-  "idx": 9,
+  "idx": 11,
   "engine_active": [
     "rulesearch.py",
     "dsl2.py",
@@ -11,21 +11,21 @@
     "t0_legacy.py"
   ],
   "engine_active_hash": "0caa9267db60",
-  "inst_seed": 35998009,
+  "inst_seed": 35998011,
   "n": 4,
   "d": 3,
-  "sys": "PAIRDIFF(>=1)@knight + CONNECTED(v2) + NOSQUARE(v2) + COUNT(v2,4-5)@grid",
-  "ms": 51,
+  "sys": "PAIRDIFF(>=1)@knight + CONNECTED(v0) + NOSQUARE(v0) + COUNT(v0,5-8)@grid",
+  "ms": 35,
   "total_grids": 13,
   "clue_frac": 0.312,
   "solved_frac": 1.0,
   "level_uses": {
-    "0": 14,
+    "0": 16,
     "1": 0,
     "2": 1
   },
   "t0_unknown": 66,
-  "t0_left": 12,
+  "t0_left": 8,
   "max_level": 2,
   "verdict": "CANDIDAT"
 }
