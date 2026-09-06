@@ -1,8 +1,8 @@
 {
-  "ts": 1788659940.8532102,
+  "ts": 1788659940.8955057,
   "dsl_hash": "5c556c16ea8b",
   "seed": 35775,
-  "idx": 11,
+  "idx": 12,
   "engine_active": [
     "rulesearch.py",
     "dsl2.py",
@@ -11,18 +11,18 @@
     "t0_legacy.py"
   ],
   "engine_active_hash": "0caa9267db60",
-  "inst_seed": 35775011,
+  "inst_seed": 35775012,
   "n": 4,
   "d": 3,
-  "sys": "SUM(3+-0)@diags + NEQADJ@cols + SUM(4+-1)@rows",
-  "ms": 54,
+  "sys": "MONO@diags + COUNT(v0,1-2)@rows + COUNT(v1,1-1)@blocks",
+  "ms": 41,
   "total_grids": 13,
   "clue_frac": 0.354,
   "solved_frac": 1.0,
   "level_uses": {
-    "0": 18,
+    "0": 22,
     "1": 0,
-    "2": 2
+    "2": 3
   },
   "t0_unknown": 62,
   "t0_left": 20,
