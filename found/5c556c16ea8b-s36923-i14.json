@@ -1,0 +1,31 @@
+{
+  "ts": 1788723023.299631,
+  "dsl_hash": "5c556c16ea8b",
+  "seed": 36923,
+  "idx": 14,
+  "engine_active": [
+    "rulesearch.py",
+    "dsl2.py",
+    "deduction.py",
+    "prefilter.py",
+    "t0_legacy.py"
+  ],
+  "engine_active_hash": "0caa9267db60",
+  "inst_seed": 36923014,
+  "n": 4,
+  "d": 3,
+  "sys": "SUM(4+-0)@rows + NEQADJ@diags",
+  "ms": 10,
+  "total_grids": 13,
+  "clue_frac": 0.49,
+  "solved_frac": 1.0,
+  "level_uses": {
+    "0": 15,
+    "1": 0,
+    "2": 1
+  },
+  "t0_unknown": 49,
+  "t0_left": 4,
+  "max_level": 2,
+  "verdict": "CANDIDAT"
+}
