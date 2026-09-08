@@ -1,5 +1,5 @@
 {
-  "ts": 1788252740.8938081,
+  "ts": 1788876996.5676477,
   "dsl_hash": "5c556c16ea8b",
   "seed": 39580,
   "idx": 2,
@@ -14,18 +14,18 @@
   "inst_seed": 39580002,
   "n": 4,
   "d": 3,
-  "sys": "SUM(5+-0)@rows + MONO@diags",
-  "ms": 38,
+  "sys": "CONNECTED(v1) + NOSQUARE(v1) + COUNT(v1,2-6)@grid + PAIRSTEP(1)@knight",
+  "ms": 180,
   "total_grids": 13,
-  "clue_frac": 0.406,
+  "clue_frac": 0.479,
   "solved_frac": 1.0,
   "level_uses": {
-    "0": 15,
+    "0": 10,
     "1": 0,
-    "2": 3
+    "2": 5
   },
-  "t0_unknown": 57,
-  "t0_left": 21,
+  "t0_unknown": 50,
+  "t0_left": 32,
   "max_level": 2,
   "verdict": "CANDIDAT"
 }
