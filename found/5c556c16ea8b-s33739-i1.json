@@ -1,5 +1,5 @@
 {
-  "ts": 1788553101.6127753,
+  "ts": 1789034155.5137267,
   "dsl_hash": "5c556c16ea8b",
   "seed": 33739,
   "idx": 1,
@@ -15,7 +15,7 @@
   "n": 4,
   "d": 3,
   "sys": "SUM(3+-1)@diags + MONO@blocks",
-  "ms": 31,
+  "ms": 30,
   "total_grids": 13,
   "clue_frac": 0.469,
   "solved_frac": 1.0,
