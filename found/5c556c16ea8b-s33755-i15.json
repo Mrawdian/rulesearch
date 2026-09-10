@@ -1,5 +1,5 @@
 {
-  "ts": 1788553941.95943,
+  "ts": 1789035187.8641615,
   "dsl_hash": "5c556c16ea8b",
   "seed": 33755,
   "idx": 15,
@@ -15,7 +15,7 @@
   "n": 4,
   "d": 3,
   "sys": "MONO@cols + COUNT(v1,1-1)@diags",
-  "ms": 20,
+  "ms": 19,
   "total_grids": 13,
   "clue_frac": 0.385,
   "solved_frac": 1.0,
