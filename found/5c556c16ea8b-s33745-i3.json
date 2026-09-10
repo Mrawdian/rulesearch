@@ -1,5 +1,5 @@
 {
-  "ts": 1788553394.2608876,
+  "ts": 1789034520.2385573,
   "dsl_hash": "5c556c16ea8b",
   "seed": 33745,
   "idx": 3,
@@ -15,7 +15,7 @@
   "n": 4,
   "d": 3,
   "sys": "NEQADJ@rows + NEQADJ@blocks + SUM(6+-1)@diags",
-  "ms": 29,
+  "ms": 30,
   "total_grids": 13,
   "clue_frac": 0.438,
   "solved_frac": 1.0,
