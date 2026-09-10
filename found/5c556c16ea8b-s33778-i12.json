@@ -1,5 +1,5 @@
 {
-  "ts": 1788555229.0565171,
+  "ts": 1789036755.4523687,
   "dsl_hash": "5c556c16ea8b",
   "seed": 33778,
   "idx": 12,
@@ -15,7 +15,7 @@
   "n": 4,
   "d": 3,
   "sys": "PAIRSTEP(1)@adj + PAIRSTEP(1)@knight + CONNECTED(v1) + COUNT(v1,8-12)@grid",
-  "ms": 14,
+  "ms": 13,
   "total_grids": 13,
   "clue_frac": 0.521,
   "solved_frac": 1.0,
